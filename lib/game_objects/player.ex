@@ -5,6 +5,7 @@ defmodule GameObjects.Player do
   properties field is a list of properites the player owns.
   """
 
-  defstruct [:id, :name, :money, :sprite_id, :position, :in_jail, :jail_turns, :properties]
+  defstruct [:name, :pid, :web_socket, :money, :sprite_id, :position, :in_jail, :jail_turns, :properties]
+
 
 end
