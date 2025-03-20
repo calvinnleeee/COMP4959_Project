@@ -2,8 +2,10 @@ defmodule GameObjects.Game do
     @moduledoc """
     This module represents the Game object, which contains vital data and methods to run it.
 
-    TODO: need to decide on the structure of the game's 'state', an ETS tables
-    `players` is a list
+    TODO: need to decide on the structure of the game's 'state', an ETS table?
+    The struct instances themselves are states of sorts, but is that enough??
+
+    `players` is a list a list of GameObjects.Player structs
     """
 
     defstruct [:state, :players, :board, :current_player, :logs]
