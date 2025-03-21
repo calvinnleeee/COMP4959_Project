@@ -1,0 +1,43 @@
+<.header>
+  Listing Bids
+  <:actions>
+    <.link patch={~p"/bids/new"}>
+      <.button>New Bid</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="bids"
+  rows={@streams.bids}
+  row_click={fn {_id, bid} -> JS.navigate(~p"/bids/#{bid}") end}
+>
+  <:col :let={{_id, bid}} label="Player">{bid.player}</:col>
+  <:col :let={{_id, bid}} label="Bid price">{bid.bid_price}</:col>
+  <:col :let={{_id, bid}} label="Property prices">{bid.property_prices}</:col>
+  <:action :let={{_id, bid}}>
+    <div class="sr-only">
+      <.link navigate={~p"/bids/#{bid}"}>Show</.link>
+    </div>
+    <.link patch={~p"/bids/#{bid}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, bid}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: bid.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="bid-modal" show on_cancel={JS.patch(~p"/bids")}>
+  <.live_component
+    module={MonopolyWeb.BidLive.FormComponent}
+    id={@bid.id || :new}
+    title={@page_title}
+    action={@live_action}
+    bid={@bid}
+    patch={~p"/bids"}
+  />
+</.modal>
