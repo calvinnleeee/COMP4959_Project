@@ -5,30 +5,8 @@ defmodule MonopolyWeb.GameLiveTest do
 
   describe "player dashboard" do
     test "displays player dashboard for current player", %{conn: conn} do
-      # Mock your game state here to include a player
-      game = %{
-        id: "game-1",
-        current_player_id: "player-1",
-        players: [
-          %{
-            id: "player-1",
-            name: "Player 1",
-            color: "#FF0000",
-            money: 1500,
-            total_worth: 1500,
-            properties: [],
-            in_jail: false,
-            get_out_of_jail_cards: 0,
-            has_rolled: false
-          }
-        ]
-      }
-
-      # You'll need to modify this to match how your app initializes the game
-      {:ok, view, _html} = live(conn, ~p"/game/#{game.id}")
-
-      # Set the game state in the socket assigns
-      view |> element("#player-dashboard") |> render()
+      # Navigate to the game page
+      {:ok, view, _html} = live(conn, ~p"/game/game-1")
 
       # Assert that the dashboard contains expected elements
       assert has_element?(view, "#player-dashboard")
@@ -38,79 +16,34 @@ defmodule MonopolyWeb.GameLiveTest do
     end
 
     test "enables/disables buttons based on turn status", %{conn: conn} do
-      # Set up a game where player has already rolled
-      game = %{
-        id: "game-1",
-        current_player_id: "player-1",
-        players: [
-          %{
-            id: "player-1",
-            name: "Player 1",
-            color: "#FF0000",
-            money: 1500,
-            total_worth: 1500,
-            properties: [],
-            in_jail: false,
-            get_out_of_jail_cards: 0,
-            has_rolled: true
-          }
-        ]
-      }
+      # Start with the game
+      {:ok, view, _html} = live(conn, ~p"/game/game-1")
 
-      # You'll need to modify this to match how your app initializes the game
-      {:ok, view, _html} = live(conn, ~p"/game/#{game.id}")
+      # Initially the roll button should be enabled
+      refute has_element?(view, ".roll-dice-btn[disabled]")
 
-      # The roll dice button should be disabled when player has already rolled
-      assert view
-             |> element(".roll-dice-btn")
-             |> render()
-             |> Floki.parse_fragment!()
-             |> Floki.attribute("disabled") == [""]
+      # Roll the dice
+      view |> element(".roll-dice-btn") |> render_click()
 
-      # The end turn button should be enabled
-      assert view
-             |> element(".end-turn-btn")
-             |> render()
-             |> Floki.parse_fragment!()
-             |> Floki.attribute("disabled") == []
+      # Now the roll button should be disabled
+      assert has_element?(view, ".roll-dice-btn[disabled]")
+
+      # And the end turn button should be enabled
+      refute has_element?(view, ".end-turn-btn[disabled]")
     end
 
     test "clicking roll dice button triggers event", %{conn: conn} do
-      game = %{
-        id: "game-1",
-        current_player_id: "player-1",
-        players: [
-          %{
-            id: "player-1",
-            name: "Player 1",
-            color: "#FF0000",
-            money: 1500,
-            total_worth: 1500,
-            properties: [],
-            in_jail: false,
-            get_out_of_jail_cards: 0,
-            has_rolled: false
-          }
-        ]
-      }
-
-      # Setup the mock game
-      {:ok, view, _html} = live(conn, ~p"/game/#{game.id}")
+      # Start the game
+      {:ok, view, _html} = live(conn, ~p"/game/game-1")
 
       # Click the roll dice button
       view |> element(".roll-dice-btn") |> render_click()
 
-      # Now verify that the event handler was called and state was updated
-      # This will depend on your actual implementation
-      # For example, if clicking roll dice causes dice to be displayed:
+      # Verify dice result appears
       assert has_element?(view, ".dice-result")
 
-      # Or if the button gets disabled after clicking:
-      assert view
-             |> element(".roll-dice-btn")
-             |> render()
-             |> Floki.parse_fragment!()
-             |> Floki.attribute("disabled") == [""]
+      # Roll button should now be disabled
+      assert has_element?(view, ".roll-dice-btn[disabled]")
     end
   end
 end
