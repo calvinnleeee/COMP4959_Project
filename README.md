@@ -1,9 +1,18 @@
-# COMP4959_Project
+# Monopoly: Vancouver Housing Market
+## BCIT COMP4959 Project
+
 Elixir / Phoenix implementation of the board game Monopoly.
 
+## Team Members
+| Frontend | Backend | QA |
+|----------|----------|----------|
+| frontend member 1 [![Github](./github-logo.png)](https://example.com)  | backend member 2    | qa member 1      |
+| frontend member 2    | backend member 2    | qa member 2     |
+| frontend member 3    | backend member 3    | qa member 3       |
 
-# Monopoly
+## 0_0
 
+# How To Run
 To start your Phoenix server:
 
   * Run `mix setup` to install and setup dependencies
