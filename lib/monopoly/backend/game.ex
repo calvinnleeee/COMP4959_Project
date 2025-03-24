@@ -66,9 +66,22 @@ defmodule GameObjects.Game do
     Build this out iteratively.
   """
   defp game_loop(state) do
+    # 1. Create Board and add to state
+    # 2.
     receive do
       {:ok, game_start} ->
-        # TODO: do stuff
+        # TODO: implement flow
+
+        # Player's turn
+        Enum.each(state.players, fn player ->
+          Logger.info("#{inspect(player)}'s turn.")
+          # Roll dice
+          # Move player position
+          # Check type of tile, properties, rent...etc.    [Massive Case statement]
+          # React to tile
+        end)
+
+        # Check for win/Game over condition
         game_loop(state)
 
       _ ->
