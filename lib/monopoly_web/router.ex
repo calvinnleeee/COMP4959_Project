@@ -29,6 +29,11 @@ defmodule MonopolyWeb.Router do
 
     live "/testing/backend", BackendTestingLive
 
+<<<<<<< HEAD
+=======
+    get "/", PageController, :home
+    live "/jail", JailLive
+>>>>>>> f217f64 (create jail_screen page with styling)
   end
 
   # Other scopes may use custom stacks.
