@@ -3,9 +3,10 @@ defmodule GameObjects.Player do
   This module represents a player and their attributes.
 
   properties field is a list of properites the player owns.
+
+  id is the session id of the player.
   """
 
-  defstruct [:name, :pid, :web_socket, :money, :sprite_id, :position, :in_jail, :jail_turns, :properties]
-
+  defstruct [:id, :name, :money, :sprite_id, :position, :in_jail, :jail_turns]
 
 end

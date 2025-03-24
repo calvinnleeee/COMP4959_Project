@@ -4,6 +4,8 @@ defmodule GameObjects.Property do
 
   owner field is either nil or a pid
   type field refers to either "house" or "hotel"
+
+  Owner is the id of the player that owns the property.
   """
 
   defstruct [:id, :name, :type, :buy_cost, :rent_cost, :owner]
