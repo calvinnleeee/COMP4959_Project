@@ -16,7 +16,6 @@ defmodule MonopolyWeb.Router do
 
   scope "/", MonopolyWeb do
     pipe_through :browser
-
     # get "/", PageController, :home
     live "/", WelcomeLive, :index
 
