@@ -11,7 +11,7 @@ defmodule GameObjects.Game do
   # CONSTANTS HERE
   # ETS table defined in application.ex
   @game_store Game.Store
-  @max_player = 6
+  @max_player 6
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -34,15 +34,15 @@ defmodule GameObjects.Game do
   Initialize a new Player instance and add it to the Game.
   Assumes the player's client will have a PID and Web socket.
   """
-  def join_game(player_pid, player_web_socket) do
-    GenServer.call(__MODULE__, {:join_game, player_pid, player_web_socket})
+  def join_game(session_id) do
+    GenServer.call(__MODULE__, {:join_game, session_id})
   end
 
   @doc """
   Remove the player from the game.
   """
-  def leave_game(player_pid) do
-    GenServer.call(__MODULE__, {:leave_game, player_pid})
+  def leave_game(session_id) do
+    GenServer.call(__MODULE__, {:leave_game, session_id})
   end
 
   @doc """
@@ -93,7 +93,7 @@ defmodule GameObjects.Game do
   @impl true
   def handle_call({:join_game, session_id}, _from, state) do
     new_player = %Player{
-      id: session_id
+      id: session_id,
       money: 200,
       position: 0,
       sprite_id: 0, #TODO: randomly asign value
@@ -112,10 +112,10 @@ defmodule GameObjects.Game do
     Updates the state in ETS
   """
   @impl true
-  def handle_call({:leave_game, player_pid}, _from, state) do
+  def handle_call({:leave_game, session_id}, _from, state) do
     updated_state =
       update_in(state.players, fn players ->
-        Enum.reject(players, fn player -> player.pid == player_pid end)
+        Enum.reject(players, fn player -> player.id == session_id end)
       end)
 
     :ets.insert(@game_store, {:game, updated_state})
