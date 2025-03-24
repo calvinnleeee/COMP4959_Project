@@ -3,8 +3,11 @@ defmodule GameObjects.Square do
   Square objects are tiles on the Board, each square has attributes and
 
   properties field is a map[type]number. TODO: shouldn't this just be a map of Property structs?
+
+  #TODO: ONLY FOR REFERENCE, Translate this into a static JSON file for ALL the tiles
   """
 
-  defstruct [:id, :name, :type, :color_set, :properties]
+  defstruct [:id, :name, :type, :color_set, :properties]\
+
 
 end
