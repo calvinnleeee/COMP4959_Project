@@ -132,37 +132,44 @@ defmodule MonopolyWeb.GameLive do
     ~H"""
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
+      <%= if @current_player.in_jail do %>
+        <.jail_screen player={@current_player} current_player_id={@current_player.id}
+          on_roll_dice={JS.push("jail_roll_dice")}
+          dice={@dice_values}
+          result={@dice_result} />
+        <% else %>
 
-      <!-- Placeholder for game board -->
-      <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-        Game board will be here
-        <%= if @current_player.in_jail do %>
-          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            IN JAIL (Turn <%= @current_player.jail_turns %>)
+          <!-- Placeholder for game board -->
+          <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+            Game board will be here
+            <%= if @current_player.in_jail do %>
+              <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                IN JAIL (Turn <%= @current_player.jail_turns %>)
+              </div>
+            <% end %>
           </div>
+
+          <!-- Player dashboard with dice results and all notifications -->
+          <.player_dashboard
+            player={@current_player}
+            current_player_id={@current_player.id}
+            properties={@player_properties}
+            on_roll_dice={JS.push("roll_dice")}
+            on_end_turn={JS.push("end_turn")}
+            dice_result={@dice_result}
+            dice_values={@dice_values}
+            is_doubles={@is_doubles}
+            doubles_notification={@doubles_notification}
+            doubles_count={@doubles_count}
+            jail_notification={@jail_notification}
+          />
+
+          <!-- Modal for buying property : @id or "buy-modal"-->
+          <%= if @show_buy_modal && @current_property do %>
+            <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
+              on_cancel={hide_modal("buy-modal")}/>
+          <% end %>
         <% end %>
-      </div>
-
-      <!-- Player dashboard with dice results and all notifications -->
-      <.player_dashboard
-        player={@current_player}
-        current_player_id={@current_player.id}
-        properties={@player_properties}
-        on_roll_dice={JS.push("roll_dice")}
-        on_end_turn={JS.push("end_turn")}
-        dice_result={@dice_result}
-        dice_values={@dice_values}
-        is_doubles={@is_doubles}
-        doubles_notification={@doubles_notification}
-        doubles_count={@doubles_count}
-        jail_notification={@jail_notification}
-      />
-
-      <!-- Modal for buying property : @id or "buy-modal"-->
-      <%= if @show_buy_modal && @current_property do %>
-        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
-          on_cancel={hide_modal("buy-modal")}/>
-      <% end %>
 
     </div>
     """
