@@ -23,10 +23,6 @@ defmodule GameObjects.Game do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  #Create and initialize a new game.
-  def create_game(players) do
-    GenServer.call(__MODULE__, {:create_game, players})
-  end
 
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and Web socket.
@@ -42,6 +38,10 @@ defmodule GameObjects.Game do
   # Start the main game loop.
   def start_game() do
     GenServer.call(__MODULE__, :start_game)
+  end
+
+  def delete_game() do
+    GenServer.call(__MODULE__, :delete_game)
   end
 
   # Return the Game's current state.
@@ -61,38 +61,50 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  # Create a Game struct and store it in the ETS
-  @impl true
-  def handle_call({:create_game, players}, _from, _state) do
-    game = %__MODULE__{
-      players: players,
-      properties: [],
-      current_player: nil,
-      turn: 0,
-    }
-
-    :ets.insert(@game_store, {:game, game})
-    {:reply, :ok, game}
-  end
-
-  # Create and Add new player to the Game.
+  # Create game if it does not exist. Join if it already exists
   @impl true
   def handle_call({:join_game, session_id}, _from, state) do
-    if length(state.players) >= @max_player do
-      {:reply, {:err, state}}
-    else
-      # add player struct to list of players in state
-      new_player = %Player{
-        id: session_id,
-        money: 200,
-        position: 0,
-        sprite_id: 0, #TODO: randomly asign value
-        in_jail: false,
-        jail_turns: 0
-      }
-      updated_state = update_in(state.players, &[new_player | &1])
-      :ets.insert(@game_store, {:game, updated_state})
-      {:reply, {:ok, updated_state}, updated_state}
+    case :ets.lookup(@game_store, :game) do
+      # If the game already exists
+      [{:game, existing_game}] ->
+        if length(existing_game.players) >= @max_player do
+          {:reply, {:err, "Maximum 6 Players"}, state}
+        else
+          # Add player to the existing game
+          new_player = %Player{
+            id: session_id,
+            money: 200,
+            position: 0,
+            sprite_id: 0, # TODO: Randomly assign value
+            in_jail: false,
+            jail_turns: 0
+          }
+
+          updated_game = update_in(existing_game.players, &[new_player | &1])
+          :ets.insert(@game_store, {:game, updated_game})
+          {:reply, {:ok, updated_game}, updated_game}
+        end
+
+      # If the game doesn't exist
+      [] ->
+        new_game = %__MODULE__{
+          players: [
+            %Player{
+              id: session_id,
+              money: 200,
+              position: 0,
+              sprite_id: 0, # TODO: Randomly assign value
+              in_jail: false,
+              jail_turns: 0
+            }
+          ],
+          properties: [],
+          current_player: nil,
+          turn: 0
+        }
+
+        :ets.insert(@game_store, {:game, new_game})
+        {:reply, {:ok, new_game}, new_game}
     end
   end
 
@@ -124,7 +136,22 @@ defmodule GameObjects.Game do
       :ets.insert(@game_store, {:game, updated_state})
       {:reply, {:ok, updated_state}, updated_state}
     else
-      {:reply, {:err, state}, state}
+      {:reply, {:err, "Need at least 2 players"}, state}
+    end
+  end
+
+  # Delete the game
+  @impl true
+  def handle_call(:delete_game, _from, _state) do
+    case :ets.lookup(@game_store, :game) do
+      # If game exists, delete it
+      [{:game, _game}] ->
+        :ets.delete(@game_store, :game)
+        {:reply, :ok, %{}}
+
+      # If no game exists
+      [] ->
+        {:reply, {:err, "No active game to delete!"}, %{}}
     end
   end
 
