@@ -7,6 +7,6 @@ defmodule GameObjects.Player do
   id is the session id of the player.
   """
 
-  defstruct [:id, :name, :money, :sprite_id, :position, :cards, :in_jail, :jail_turns]
+  defstruct [:id, :name, :money, :sprite_id, :position, :in_jail, :jail_turns]
 
 end

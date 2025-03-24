@@ -15,7 +15,7 @@ defmodule GameObjects.Game do
 
   # Game struct definition
   # properties and players are both lists of their respective structs
-  defstruct [:state, :players, :properties, :current_player, :turn]
+  defstruct [:state, :players, :properties, :cards, :current_player, :turn]
 
   # ---- Public API functions ----
 
@@ -69,7 +69,6 @@ defmodule GameObjects.Game do
       money: 200,
       position: 0,
       sprite_id: 0, # TODO: Randomly assign value
-      cards: [],
       in_jail: false,
       jail_turns: 0
     }
@@ -91,6 +90,7 @@ defmodule GameObjects.Game do
         new_game = %__MODULE__{
           players: [new_player],
           properties: [],
+          cards: [],
           current_player: nil,
           turn: 0
         }
