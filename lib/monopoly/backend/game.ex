@@ -14,7 +14,8 @@ defmodule GameObjects.Game do
   @max_player = 6
 
   # Game struct definition
-  defstruct [:state, :players, :board, :current_player, :logs]
+  # properties and players are both lists of their respective structs
+  defstruct [:state, :players, :properties, :current_player, :turn]
 
   # ---- Public API functions ----
 
@@ -60,35 +61,6 @@ defmodule GameObjects.Game do
 
   # ---- Private functions & GenServer Callbacks ----
 
-  @doc """
-    The game's main loop.
-
-    Build this out iteratively.
-  """
-  defp game_loop(state) do
-    # 1. Create Board and add to state
-    # 2.
-    receive do
-      {:ok, game_start} ->
-        # TODO: implement flow
-
-        # Player's turn
-        Enum.each(state.players, fn player ->
-          Logger.info("#{inspect(player)}'s turn.")
-          # Roll dice
-          # Move player position
-          # Check type of tile, properties, rent...etc.    [Massive Case statement]
-          # React to tile
-        end)
-
-        # Check for win/Game over condition
-        game_loop(state)
-
-      _ ->
-        "stub"
-        # do more stuff
-    end
-  end
 
   @impl true
   def init(_) do
@@ -105,11 +77,10 @@ defmodule GameObjects.Game do
   @impl true
   def handle_call({:create_game, players}, _from, _state) do
     game = %__MODULE__{
-      state: [],
       players: players,
-      board: Board.new(),
+      properties: [],
       current_player: List.first(players),
-      logs: []
+      turn: 0,
     }
 
     :ets.insert(@game_store, {:game, game})
@@ -120,13 +91,14 @@ defmodule GameObjects.Game do
     Create and Add new player to the Game.
   """
   @impl true
-  def handle_call({:join_game, player_pid, player_web_socket}, _from, state) do
+  def handle_call({:join_game, session_id}, _from, state) do
     new_player = %Player{
-      pid: player_pid,
-      web_socket: player_web_socket,
+      id: session_id
       money: 200,
       position: 0,
-      in_jail: false
+      sprite_id: 0, #TODO: randomly asign value
+      in_jail: false,
+      jail_turns: 0
     }
 
     # add player struct to list of players in state
@@ -163,7 +135,6 @@ defmodule GameObjects.Game do
   """
   @impl true
   def handle_cast(:start_game, state) do
-    game_loop(state)
     {:noreply, state}
   end
 
