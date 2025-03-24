@@ -64,6 +64,16 @@ defmodule GameObjects.Game do
   # Create game if it does not exist. Join if it already exists
   @impl true
   def handle_call({:join_game, session_id}, _from, state) do
+    new_player = %Player{
+      id: session_id,
+      money: 200,
+      position: 0,
+      sprite_id: 0, # TODO: Randomly assign value
+      cards: [],
+      in_jail: false,
+      jail_turns: 0
+    }
+
     case :ets.lookup(@game_store, :game) do
       # If the game already exists
       [{:game, existing_game}] ->
@@ -71,15 +81,6 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Maximum 6 Players"}, state}
         else
           # Add player to the existing game
-          new_player = %Player{
-            id: session_id,
-            money: 200,
-            position: 0,
-            sprite_id: 0, # TODO: Randomly assign value
-            in_jail: false,
-            jail_turns: 0
-          }
-
           updated_game = update_in(existing_game.players, &[new_player | &1])
           :ets.insert(@game_store, {:game, updated_game})
           {:reply, {:ok, updated_game}, updated_game}
@@ -88,16 +89,7 @@ defmodule GameObjects.Game do
       # If the game doesn't exist
       [] ->
         new_game = %__MODULE__{
-          players: [
-            %Player{
-              id: session_id,
-              money: 200,
-              position: 0,
-              sprite_id: 0, # TODO: Randomly assign value
-              in_jail: false,
-              jail_turns: 0
-            }
-          ],
+          players: [new_player],
           properties: [],
           current_player: nil,
           turn: 0
