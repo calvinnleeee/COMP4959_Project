@@ -6,7 +6,7 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
-  alias GameObjects.{Player, Board}
+  alias GameObjects.Player
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
@@ -23,38 +23,28 @@ defmodule GameObjects.Game do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  @doc """
-  Create and initialize a new game.
-  """
+  #Create and initialize a new game.
   def create_game(players) do
     GenServer.call(__MODULE__, {:create_game, players})
   end
 
-  @doc """
-  Initialize a new Player instance and add it to the Game.
-  Assumes the player's client will have a PID and Web socket.
-  """
+  # Initialize a new Player instance and add it to the Game.
+  # Assumes the player's client will have a PID and Web socket.
   def join_game(session_id) do
     GenServer.call(__MODULE__, {:join_game, session_id})
   end
 
-  @doc """
-  Remove the player from the game.
-  """
+  # Remove the player from the game.
   def leave_game(session_id) do
     GenServer.call(__MODULE__, {:leave_game, session_id})
   end
 
-  @doc """
-  Start the main game loop.
-  """
+  # Start the main game loop.
   def start_game() do
-    GenServer.cast(__MODULE__, :start_game)
+    GenServer.call(__MODULE__, :start_game)
   end
 
-  @doc """
-  Return the Game's current state.
-  """
+  # Return the Game's current state.
   def get_state() do
     GenServer.call(__MODULE__, :get_state)
   end
@@ -71,15 +61,13 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  @doc """
-    Create a Game struct and store it in the ETS
-  """
+  # Create a Game struct and store it in the ETS
   @impl true
   def handle_call({:create_game, players}, _from, _state) do
     game = %__MODULE__{
       players: players,
       properties: [],
-      current_player: List.first(players),
+      current_player: nil,
       turn: 0,
     }
 
@@ -87,30 +75,30 @@ defmodule GameObjects.Game do
     {:reply, :ok, game}
   end
 
-  @doc """
-    Create and Add new player to the Game.
-  """
+  # Create and Add new player to the Game.
   @impl true
   def handle_call({:join_game, session_id}, _from, state) do
-    new_player = %Player{
-      id: session_id,
-      money: 200,
-      position: 0,
-      sprite_id: 0, #TODO: randomly asign value
-      in_jail: false,
-      jail_turns: 0
-    }
-
-    # add player struct to list of players in state
-    updated_state = update_in(state.players, &[new_player | &1])
-    :ets.insert(@game_store, {:game, updated_state})
-    {:reply, :ok, updated_state}
+    if length(state.players) >= @max_player do
+      {:reply, {:err, state}}
+    else
+      # add player struct to list of players in state
+      new_player = %Player{
+        id: session_id,
+        money: 200,
+        position: 0,
+        sprite_id: 0, #TODO: randomly asign value
+        in_jail: false,
+        jail_turns: 0
+      }
+      updated_state = update_in(state.players, &[new_player | &1])
+      :ets.insert(@game_store, {:game, updated_state})
+      {:reply, {:ok, updated_state}, updated_state}
+    end
   end
 
-  @doc """
-    Remove player from the game.
-    Updates the state in ETS
-  """
+
+  # Remove player from the game.
+  # Updates the state in ETS
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     updated_state =
@@ -119,28 +107,28 @@ defmodule GameObjects.Game do
       end)
 
     :ets.insert(@game_store, {:game, updated_state})
-    {:reply, :ok, updated_state}
+    {:reply, {:ok, updated_state}, updated_state}
   end
 
-  @doc """
-    Get current game state.
-  """
+  # Get current game state.
   @impl true
   def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+    {:reply, {:ok, state}, state}
   end
 
-  @doc """
-    Start the game loop.
-  """
+  # Start the game
   @impl true
-  def handle_cast(:start_game, state) do
-    {:noreply, state}
+  def handle_call(:start_game, _from, state) do
+    if length(state.players) > 1 do
+      updated_state = update_in(state.current_player, List.first(state.players))
+      :ets.insert(@game_store, {:game, updated_state})
+      {:reply, {:ok, updated_state}, updated_state}
+    else
+      {:reply, {:err, state}, state}
+    end
   end
 
-  @doc """
-    Terminate and save state on failure.
-  """
+  # Terminate and save state on failure.
   @impl true
   def terminate(_reason, state) do
     :ets.insert(@game_store, {:game, state})
