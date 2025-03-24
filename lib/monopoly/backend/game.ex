@@ -1,78 +1,165 @@
 defmodule GameObjects.Game do
-    @moduledoc """
-    This module represents the Game object, which contains vital data and methods to run it.
+  @moduledoc """
+  This module represents the Game object, which contains vital data and methods to run it.
 
-    TODO: need to decide on the structure of the game's 'state', an ETS table?
-    The struct instances themselves are states of sorts, but is that enough??
+  `players` is a list of GameObjects.Player structs.
+  """
+  require Logger
+  use GenServer
+  alias GameObjects.{Player, Board}
 
-    `players` is a list a list of GameObjects.Player structs
-    """
+  # CONSTANTS HERE
+  # ETS table defined in application.ex
+  @game_store Game.Store
+  @max_player = 6
 
-    defstruct [:state, :players, :board, :current_player, :logs]
+  # Game struct definition
+  defstruct [:state, :players, :board, :current_player, :logs]
 
+  # ---- Public API functions ----
 
-    @doc """
-    Create and initialize a new game.
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+  end
 
-    TODO: How should we actually store this instance once created???
-    """
-    def create_game(players) do
-        %Game{
-            state: [],
-            players: players,
-            board: Board.new(),
-            current_player: List.first(players),
-            logs: []
-        }
+  @doc """
+  Create and initialize a new game.
+  """
+  def create_game(players) do
+    GenServer.call(__MODULE__, {:create_game, players})
+  end
+
+  @doc """
+  Initialize a new Player instance and add it to the Game.
+  Assumes the player's client will have a PID and Web socket.
+  """
+  def join_game(player_pid, player_web_socket) do
+    GenServer.call(__MODULE__, {:join_game, player_pid, player_web_socket})
+  end
+
+  @doc """
+  Remove the player from the game.
+  """
+  def leave_game(player_pid) do
+    GenServer.call(__MODULE__, {:leave_game, player_pid})
+  end
+
+  @doc """
+  Start the main game loop.
+  """
+  def start_game() do
+    GenServer.cast(__MODULE__, :start_game)
+  end
+
+  @doc """
+  Return the Game's current state.
+  """
+  def get_state() do
+    GenServer.call(__MODULE__, :get_state)
+  end
+
+  # ---- Private functions & GenServer Callbacks ----
+
+  @doc """
+    The game's main loop.
+
+    Build this out iteratively.
+  """
+  defp game_loop(state) do
+    receive do
+      {:ok, game_start} ->
+        # TODO: do stuff
+        game_loop(state)
+
+      _ ->
+        "stub"
+        # do more stuff
+    end
+  end
+
+  @impl true
+  def init(_) do
+    unless :ets.whereis(@game_store) != :undefined do
+      :ets.new(@game_store, [:named_table, :public, :set])
     end
 
+    {:ok, %{}}
+  end
 
-    @doc """
-    Initialize a new Player instance and add it to the Game.
-    Assumes the player's client will have a PID and Web socket
-    """
-    def join_game(player_pid, player_web_socket) do
-        new_player = %GameObjects.Player{pid: player_pid, web_socket: player_web_socket, money: 200, position: 0, in_jail: false}
-        update_in(game.players, &[new_player | &1])
-    end
+  @doc """
+    Create a Game struct and store it in the ETS
+  """
+  @impl true
+  def handle_call({:create_game, players}, _from, _state) do
+    game = %__MODULE__{
+      state: [],
+      players: players,
+      board: Board.new(),
+      current_player: List.first(players),
+      logs: []
+    }
 
+    :ets.insert(@game_store, {:game, game})
+    {:reply, :ok, game}
+  end
 
-    @doc """
-    Remove the player from the game.
-    """
-    def leave_game(player_pid) do
-        update_in(game.players, fn players ->
-            Enum.reject(players, fn player -> player.pid == player_pid end)
-        end)
-    end
+  @doc """
+    Create and Add new player to the Game.
+  """
+  @impl true
+  def handle_call({:join_game, player_pid, player_web_socket}, _from, state) do
+    new_player = %Player{
+      pid: player_pid,
+      web_socket: player_web_socket,
+      money: 200,
+      position: 0,
+      in_jail: false
+    }
 
+    # add player struct to list of players in state
+    updated_state = update_in(state.players, &[new_player | &1])
+    :ets.insert(@game_store, {:game, updated_state})
+    {:reply, :ok, updated_state}
+  end
 
-    @doc """
-    Start the main game loop.
+  @doc """
+    Remove player from the game.
+    Updates the state in ETS
+  """
+  @impl true
+  def handle_call({:leave_game, player_pid}, _from, state) do
+    updated_state =
+      update_in(state.players, fn players ->
+        Enum.reject(players, fn player -> player.pid == player_pid end)
+      end)
 
-    TODO: this will be iteratively built
-    """
-    def start_game(game) do
-         receive do
-            {:ok, game_start} ->
-                # do stuff
-                loop(game)
-            _ -> "stub"
-                # do more stuff
-         end
-    end
+    :ets.insert(@game_store, {:game, updated_state})
+    {:reply, :ok, updated_state}
+  end
 
+  @doc """
+    Get current game state.
+  """
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
+  end
 
-    # def end_turn() do
+  @doc """
+    Start the game loop.
+  """
+  @impl true
+  def handle_cast(:start_game, state) do
+    game_loop(state)
+    {:noreply, state}
+  end
 
-    # end
-
-
-    @doc """
-    Return the Game's current state.
-    """
-    def get_state(game) do
-        game.state
-    end
-
+  @doc """
+    Terminate and save state on failure.
+  """
+  @impl true
+  def terminate(_reason, state) do
+    :ets.insert(@game_store, {:game, state})
+    :ok
+  end
 end
