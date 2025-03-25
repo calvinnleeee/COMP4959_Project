@@ -29,10 +29,10 @@ defmodule GameObjects.Deck do
     ]
   end
 
-  def draw_card(deck) do
+  def draw_card(deck, type) do
     shuffled_deck = Enum.shuffle(deck)
 
-    case Enum.find(shuffled_deck, &(&1.owned == false)) do
+    case Enum.find(shuffled_deck, &(&1.owned == false and &1.type == type)) do
       nil -> {:error, "No available cards in the deck"}
       card -> {:ok, card}
     end

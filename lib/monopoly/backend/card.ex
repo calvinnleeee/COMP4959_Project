@@ -15,13 +15,13 @@ defmodule GameObjects.Card do
 
   def apply_effect(%__MODULE__{effect: {:get_out_of_jail, true}, owned: true} = card, player) do
     %{player |
-      get_out_of_jail: true,
+    in_jail: false,
       card: Enum.reject(player.card, fn c -> c.id == card.id end)  # Remove from player's cards
     }
   end
 
   def apply_effect(%__MODULE__{effect: {:get_out_of_jail, true}}, player) do
-    %{player | get_out_of_jail: true}
+    %{player | in_jail: false}
   end
 
   def apply_effect(_, player), do: player
