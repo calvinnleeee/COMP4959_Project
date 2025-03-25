@@ -19,6 +19,8 @@ defmodule Monopoly.Application do
       MonopolyWeb.Endpoint
     ]
 
+    :ets.new(Game.Store, [:named_table, :public])
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Monopoly.Supervisor]
