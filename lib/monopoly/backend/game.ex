@@ -6,7 +6,7 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
-  alias GameObjects.Player
+  alias GameObjects.{Deck, Player}
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
@@ -15,7 +15,7 @@ defmodule GameObjects.Game do
 
   # Game struct definition
   # properties and players are both lists of their respective structs
-  defstruct [:state, :players, :properties, :cards, :current_player, :turn]
+  defstruct [:state, :players, :properties, :deck, :current_player, :turn]
 
   # ---- Public API functions ----
 
@@ -69,6 +69,7 @@ defmodule GameObjects.Game do
       money: 200,
       position: 0,
       sprite_id: 0, # TODO: Randomly assign value
+      cards: [],
       in_jail: false,
       jail_turns: 0
     }
@@ -90,7 +91,7 @@ defmodule GameObjects.Game do
         new_game = %__MODULE__{
           players: [new_player],
           properties: [],
-          cards: [],
+          deck: nil,
           current_player: nil,
           turn: 0
         }
@@ -124,7 +125,8 @@ defmodule GameObjects.Game do
   @impl true
   def handle_call(:start_game, _from, state) do
     if length(state.players) > 1 do
-      updated_state = update_in(state.current_player, List.first(state.players))
+      updated_players = put_in(state.current_player, List.first(state.players))
+      updated_state = put_in(updated_players.deck, Deck.init_deck())
       :ets.insert(@game_store, {:game, updated_state})
       {:reply, {:ok, updated_state}, updated_state}
     else
