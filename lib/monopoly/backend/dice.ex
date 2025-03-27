@@ -24,12 +24,12 @@ defmodule GameObjects.Dice do
   end
 
   # Determine the outcome of a jail roll based on the dice values and the number of attempts
-  def jail_roll(attempts) do
+  def jail_roll(jail_turns) do
     {{die1, die2} = dice, sum, is_doubles} = roll()
 
     cond do
       is_doubles -> {:out_of_jail, dice, sum}
-      attempts >= 2 -> {:failed_to_escape, dice, sum}
+      jail_turns >= 2 -> {:failed_to_escape, dice, sum}
       true -> {:stay_in_jail, dice, sum}
     end
   end
