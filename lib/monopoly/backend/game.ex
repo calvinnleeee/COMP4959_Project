@@ -139,6 +139,10 @@ defmodule GameObjects.Game do
     {:reply, {:ok, updated_state}, updated_state}
   end
 
+  @doc """
+    End the current player's turn, but check if the rolled first, if not make them roll.
+    Set next player as current and up
+  """
   def handle_call({:end_turn, session_id}, _from, state) do
     case :ets.lookup(@game_store, {:game, current_player}) do
       [] ->
@@ -146,29 +150,26 @@ defmodule GameObjects.Game do
 
       {:ok, current_player} ->
         if GameObjects.Player.get_id(current_player) == ^session_id do
-          # TODO: How do I check this???
-          case CHECK_IF_USER_ROLLED do
-            () ->
-              {:reply, {:err, "Must roll first"}, state}
+          if current_player.turns_taken > 0 do
+            # get the next player in the
+            next_player_index =
+              Enum.find_index(state.players, fn player ->
+                player.id == state.current_player.id
+              end)
+              # Move the index of the next position in the list to set next as current. //Copilot did this
+              |> Kernel.+(1)
+              # wraps indexes to avoid out of bounds errors
+              |> rem(length(state.players))
 
-            _ ->
-              # get the next player in the
-              next_player_index =
-                Enum.find_index(state.players, fn player ->
-                  player.id == state.current_player.id
-                end)
-                # Move the index of the next position in the list to set next as current. //Copilot did this
-                |> Kernel.+(1)
-                # wraps indexes to avoid out of bounds errors
-                |> rem(length(state.players))
+            next_player = Enum.at(state.players, next_player_index)
 
-              next_player = Enum.at(state.players, next_player_index)
+            updated_state = %{state | current_player: next_player, turn: state.turn + 1}
+            :ets.insert(@game_store, {:game, updated_state})
+            Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:turn_ended, updated_state})
 
-              updated_state = %{state | current_player: next_player, turn: state.turn + 1}
-              :ets.insert(@game_store, {:game, updated_state})
-              Phoenix.PubSub.broadcast(Monopoly.PubSub,"game_state",{:turn_ended, updated_state})
-
-              {:reply, {:ok, updated_state}, updated_state}
+            {:reply, {:ok, updated_state}, updated_state}
+          else
+            {:reply, {:err, "Must roll first"}, state}
           end
         end
     end
