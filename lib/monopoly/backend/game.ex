@@ -15,7 +15,7 @@ defmodule GameObjects.Game do
 
   # Game struct definition
   # properties and players are both lists of their respective structs
-  defstruct [:state, :players, :properties, :deck, :current_player, :turn]
+  defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
 
   # ---- Public API functions ----
 
@@ -93,6 +93,7 @@ defmodule GameObjects.Game do
           properties: [],
           deck: nil,
           current_player: nil,
+          active_card: nil,
           turn: 0
         }
 
