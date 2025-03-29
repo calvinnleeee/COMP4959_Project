@@ -93,7 +93,7 @@ defmodule GameObjects.Game do
           properties: [],
           deck: nil,
           current_player: nil,
-          active_acrd: nil,
+          active_card: nil,
           turn: 0
         }
 
