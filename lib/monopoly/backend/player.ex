@@ -24,8 +24,8 @@ defmodule GameObjects.Player do
         money: integer(),
         sprite_id: String.t(),
         position: integer(),
-        properties: List.t(),
-        cards: List.t(),
+        properties: [] | [%GameObjects.Property{}],
+        cards: [] | [%GameObjects.Card{}],
         in_jail: boolean(),
         jail_turns: integer()
     }
@@ -49,6 +49,8 @@ defmodule GameObjects.Player do
         }
     end
 
+    # docstring format gifted to us by ̷t̷r̷a̷u̷m̷a Chris.
+
     @doc """
     Gets a player's ID. Returns the session id.
     """
@@ -57,6 +59,9 @@ defmodule GameObjects.Player do
         player.id
     end
 
+    @doc """
+    Gets a player's name. Returns a string representing the player's name.
+    """
     @spec get_name(__MODULE__.t()) :: String.t()
     def get_name(player) do
         player.name
@@ -70,6 +75,9 @@ defmodule GameObjects.Player do
         player.money
     end
 
+    @doc """
+    Gets a player's sprite id. Returns a string representing the player's sprite id.
+    """
     @spec get_sprite_id(__MODULE__.t()) :: String.t()
     def get_sprite_id(player) do
         player.sprite_id
@@ -83,7 +91,18 @@ defmodule GameObjects.Player do
         player.position
     end
 
-    @spec get_cards(__MODULE__.t()) :: List.t()
+    @doc """
+    Gets a player's properties. Returns a list of properties the player owns.
+    """
+    @spec get_properties(__MODULE__.t()) :: [%GameObjects.Property{}]
+    def get_properties(player) do
+        player.properties
+    end
+
+    @doc """
+    Gets a player's cards. Returns a list of cards the player owns.
+    """
+    @spec get_cards(__MODULE__.t()) :: [%GameObjects.Card{}]
     def get_cards(player) do
         player.cards
     end
@@ -96,6 +115,9 @@ defmodule GameObjects.Player do
         player.in_jail
     end
 
+    @doc """
+    Gets a player's jail_turns. Returns an integer representing the number of turns until a player is released from jail.
+    """
     @spec get_jail_turns(__MODULE__.t()) :: integer()
     def get_jail_turns(player) do
         player.jail_turn
@@ -109,11 +131,17 @@ defmodule GameObjects.Player do
         %{player | money: num}
     end
 
+    @doc """
+    Sets the player's position to 'position'. Returns a Player struct.
+    """
     @spec set_position(__MODULE__.t(), integer()) :: __MODULE__.t()
     def set_position(player, position) do
         %{player | position: position}
     end
 
+    @doc """
+    Sets the player's jail status to 'in_jail'. Returns a Player struct.
+    """
     @spec set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t()
     def set_in_jail(player, in_jail) do
         %{player | in_jail: in_jail}
@@ -127,6 +155,9 @@ defmodule GameObjects.Player do
         %{player | jail_turns: num}
     end
 
+    @doc """
+    Adds a property to the player's properties list. Returns a Player struct.
+    """
     @spec add_property(__MODULE__.t(), %GameObjects.Property{}) :: __MODULE__.t()
     def add_property(player, tile) do
         %{player | properties: [get_properties(player) | tile]}
@@ -161,7 +192,7 @@ defmodule GameObjects.Player do
     """
     @spec lose_money(__MODULE__.t(), integer()) :: __MODULE__.t()
     def lose_money(player, amount) do
-        %{player | amount: get_money(player) - amount}
+        %{player | money: get_money(player) - amount}
     end
 
     @doc """
