@@ -24,6 +24,8 @@ defmodule MonopolyWeb.Router do
 
     live "/testmodal", TestModalLive, :show
 
+
+    live "/testing/backend", BackendTestingLive
   end
 
   # Other scopes may use custom stacks.
