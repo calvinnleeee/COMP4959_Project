@@ -6,7 +6,7 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
-  alias GameObjects.{Deck, Player}
+  alias GameObjects.{Deck, Player, Property}
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
@@ -93,7 +93,7 @@ defmodule GameObjects.Game do
           properties: [],
           deck: nil,
           current_player: nil,
-          active_acrd: nil,
+          active_card: nil,
           turn: 0
         }
 
@@ -127,7 +127,8 @@ defmodule GameObjects.Game do
   def handle_call(:start_game, _from, state) do
     if length(state.players) > 1 do
       updated_players = put_in(state.current_player, List.first(state.players))
-      updated_state = put_in(updated_players.deck, Deck.init_deck())
+      updated_cards = put_in(updated_players.deck, Deck.init_deck())
+      updated_state = put_in(updated_cards.properties, Property.init_property_list())
       :ets.insert(@game_store, {:game, updated_state})
       {:reply, {:ok, updated_state}, updated_state}
     else
