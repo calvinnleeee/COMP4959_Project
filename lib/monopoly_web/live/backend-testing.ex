@@ -101,8 +101,8 @@ defmodule MonopolyWeb.BackendTestingLive do
     active_card = socket.assigns.active_card
 
     with player when not is_nil(player) <- Enum.find(game.players, &(&1.id == player_id)),
-         card_from_deck when not is_nil(card_from_deck) <- Enum.find(game.deck, &(&1.id == active_card.id)) do
-
+         card_from_deck when not is_nil(card_from_deck) <-
+           Enum.find(game.deck, &(&1.id == active_card.id)) do
       owned_card = GameObjects.Card.mark_as_owned(card_from_deck)
 
       updated_player = %{
@@ -135,7 +135,6 @@ defmodule MonopolyWeb.BackendTestingLive do
         {:noreply, assign(socket, :message, "Failed to store card: player or card not found.")}
     end
   end
-
 
   def handle_event("use_stored_card", _params, socket) do
     game = socket.assigns.game
@@ -383,8 +382,8 @@ defmodule MonopolyWeb.BackendTestingLive do
         <%= for prop <- @game.properties do %>
           <li>
             {prop.name} - {prop.type} - Cost: ${prop.buy_cost},
-            Rent: ${prop.rent_cost},
-            Owner: {prop.owner || "None"}
+            Rent: {inspect(prop.rent_cost)},
+            Owner: {if prop.owner, do: inspect(prop.owner), else: "None"}
           </li>
         <% end %>
       </ul>
