@@ -83,7 +83,7 @@ defmodule GameObjects.Property do
   end
 
   def get_current_rent(property) do
-    property.rent_cost[property.upgrades]
+    Enum.at(property.rent_cost, property.upgrades, 0)
   end
 
   def get_upgrades(property) do
@@ -254,8 +254,11 @@ defmodule GameObjects.Property do
     end
   end
 
+  @doc """
+  alternate function to get the rent of a property by its stored index instead. does not do utilties
+  """
   defp normal_rent(property) do
-    property.rent_cost[property.upgrades]
+    Enum.at(property.rent_cost, property.upgrades, 0)
   end
 
 
