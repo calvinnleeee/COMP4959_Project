@@ -258,7 +258,7 @@ defmodule GameObjects.Property do
   def upgrade_set_list(property, list) do
     Enum.map(list, fn x ->
       if get_type(x) == get_type(property) do
-        x.inc_upgrade()
+        __MODULE__.inc_upgrade(x)
       else
         x
       end
@@ -273,7 +273,7 @@ defmodule GameObjects.Property do
   def sell_upgrade(property) do
     cond do
       property.upgrades == 0 || property.upgrades == 1 -> {property, 0}
-      6 -> {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
+      property.upgrades == 6 -> {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
       true -> {set_upgrade(property, property.upgrades - 1), get_house_price(property)}
     end
   end
