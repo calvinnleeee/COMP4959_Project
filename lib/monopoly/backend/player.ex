@@ -12,8 +12,8 @@ defmodule GameObjects.Player do
     in_jail: boolean indicating if the player is in jail.
     jail_turns: number of turns until the player leaves jail.
     """
-    @INITIAL_MONEY = 1500
-    @BOARD_SIZE = 40
+    @initial_money = 1500
+    @board_size = 40
 
     defstruct [:id, :name, :money, :sprite_id, :position, :properties, :cards, :in_jail, :jail_turns]
 
@@ -32,14 +32,14 @@ defmodule GameObjects.Player do
 
     @doc """
     Creates a new player with the given id, name, and sprite_id.
-    Default player money is set by the @INITIAL_MONEY constant, everything not passed in is set to 0 or it's type equivalent.
+    Default player money is set by the @initial_money constant, everything not passed in is set to 0 or it's type equivalent.
     """
     @spec new(any(), String.t(), String.t()) :: __MODULE__.t()
     def new(id, name, sprite_id) do
         %__MODULE__{
             id: id,
             name: name,
-            money: @INITIAL_MONEY,
+            money: @initial_money,
             sprite_id: sprite_id,
             position: 0,
             properties: [],
@@ -91,10 +91,10 @@ defmodule GameObjects.Player do
 
     @doc """
     Changes the player's position by the given amount.
-    Uses Integer.mod/2 to wrap around the board, limit is set by the @BOARD_SIZE constant.
+    Uses Integer.mod/2 to wrap around the board, limit is set by the @board_size constant.
     """
     @spec move(__MODULE__.t(), integer()) :: __MODULE__.t()
     def move(player, step_count) do
-        %{player | position: Integer.mod(get_position(player) + step_count, @BOARD_SIZE)}
+        %{player | position: Integer.mod(get_position(player) + step_count, @board_size)}
     end
 end
