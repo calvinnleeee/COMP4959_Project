@@ -49,7 +49,12 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  # ---- Private functions & GenServer Callbacks ----
+  # End the current player's turn
+  def end_turn(session_id) do
+    GenServer.call(__MODULE__, {:end_turn, session_id})
+  end
+
+  # ---- Private functions & GenServer Callbacks ---- #
 
   @impl true
   def init(_) do
@@ -60,7 +65,17 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  # Create game if it does not exist. Join if it already exists
+  # ---- PLayer related handles ---- #
+
+  @doc """
+    Add a new player to the game , update game state in ETS and broadcast change.
+    If game doesn't exist in ETS, create a new game and add player to it.
+
+    session_id:  unique identifier for a player (their socket).
+    name: string, the player's chosen gamertag/nickname
+    sprite_id: a unique number to identify the the sprite they've selected.
+  """
+
   @impl true
   def handle_call({:join_game, session_id, name, sprite_id}, _from, state) do
     new_player = GameObjects.Player.new(session_id, name, sprite_id)
@@ -98,8 +113,10 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Remove player from the game.
-  # Updates the state in ETS
+  @doc """
+    Remove the player from the game, update game state in ETS and broadcast change.
+    session_id:  unique identifier for a player (their socket).
+  """
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     updated_state =
@@ -121,6 +138,43 @@ defmodule GameObjects.Game do
     :ets.insert(@game_store, {:game, updated_state})
     {:reply, {:ok, updated_state}, updated_state}
   end
+
+  def handle_call({:end_turn, session_id}, _from, state) do
+    case :ets.lookup(@game_store, {:game, current_player}) do
+      [] ->
+        {:reply, {:err, "No active game found."}, state}
+
+      {:ok, current_player} ->
+        if GameObjects.Player.get_id(current_player) == ^session_id do
+          # TODO: How do I check this???
+          case CHECK_IF_USER_ROLLED do
+            () ->
+              {:reply, {:err, "Must roll first"}, state}
+
+            _ ->
+              # get the next player in the
+              next_player_index =
+                Enum.find_index(state.players, fn player ->
+                  player.id == state.current_player.id
+                end)
+                # Move the index of the next position in the list to set next as current. //Copilot did this
+                |> Kernel.+(1)
+                # wraps indexes to avoid out of bounds errors
+                |> rem(length(state.players))
+
+              next_player = Enum.at(state.players, next_player_index)
+
+              updated_state = %{state | current_player: next_player, turn: state.turn + 1}
+              :ets.insert(@game_store, {:game, updated_state})
+              Phoenix.PubSub.broadcast(Monopoly.PubSub,"game_state",{:turn_ended, updated_state})
+
+              {:reply, {:ok, updated_state}, updated_state}
+          end
+        end
+    end
+  end
+
+  # ---- Game Related handles ---- #
 
   # Get current game state.
   @impl true
