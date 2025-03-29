@@ -6,6 +6,7 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
+  alias ElixirLS.LanguageServer.Plugins.Phoenix
   alias GameObjects.{Deck, Player, Property}
 
   # CONSTANTS HERE
@@ -23,11 +24,10 @@ defmodule GameObjects.Game do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and Web socket.
-  def join_game(session_id) do
-    GenServer.call(__MODULE__, {:join_game, session_id})
+  def join_game(session_id, name, sprite_id) do
+    GenServer.call(__MODULE__, {:join_game, session_id, name, sprite_id})
   end
 
   # Remove the player from the game.
@@ -49,8 +49,12 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  # ---- Private functions & GenServer Callbacks ----
+  # End the current player's turn
+  def end_turn(session_id) do
+    GenServer.call(__MODULE__, {:end_turn, session_id})
+  end
 
+  # ---- Private functions & GenServer Callbacks ---- #
 
   @impl true
   def init(_) do
@@ -61,18 +65,20 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  # Create game if it does not exist. Join if it already exists
+  # ---- PLayer related handles ---- #
+
+  @doc """
+    Add a new player to the game , update game state in ETS and broadcast change.
+    If game doesn't exist in ETS, create a new game and add player to it.
+
+    session_id:  unique identifier for a player (their socket).
+    name: string, the player's chosen gamertag/nickname
+    sprite_id: a unique number to identify the the sprite they've selected.
+  """
+
   @impl true
-  def handle_call({:join_game, session_id}, _from, state) do
-    new_player = %Player{
-      id: session_id,
-      money: 200,
-      position: 0,
-      sprite_id: 0, # TODO: Randomly assign value
-      cards: [],
-      in_jail: false,
-      jail_turns: 0
-    }
+  def handle_call({:join_game, session_id, name, sprite_id}, _from, state) do
+    new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
     case :ets.lookup(@game_store, :game) do
       # If the game already exists
@@ -83,6 +89,9 @@ defmodule GameObjects.Game do
           # Add player to the existing game
           updated_game = update_in(existing_game.players, &[new_player | &1])
           :ets.insert(@game_store, {:game, updated_game})
+          # Broadcast new game
+          # TODO: Need other modules to subscribe
+          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, updated_game})
           {:reply, {:ok, updated_game}, updated_game}
         end
 
@@ -98,13 +107,16 @@ defmodule GameObjects.Game do
         }
 
         :ets.insert(@game_store, {:game, new_game})
+        # broadcast state update
+        Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, new_game})
         {:reply, {:ok, new_game}, new_game}
     end
   end
 
-
-  # Remove player from the game.
-  # Updates the state in ETS
+  @doc """
+    Remove the player from the game, update game state in ETS and broadcast change.
+    session_id:  unique identifier for a player (their socket).
+  """
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     updated_state =
@@ -112,9 +124,66 @@ defmodule GameObjects.Game do
         Enum.reject(players, fn player -> player.id == session_id end)
       end)
 
+    if Enum.empty?(updated_state.players) do
+      :ets.delete(@game_store, :game)
+      # Broadcast game deletion
+      Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_deleted})
+      {:reply, {:ok, "No players, Game deleted.", %{}}, %{}}
+    else
+      :ets.insert(@game_store, {:game, updated_state})
+      Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, updated_state})
+      {:reply, {:ok, updated_state}, updated_state}
+    end
+
     :ets.insert(@game_store, {:game, updated_state})
     {:reply, {:ok, updated_state}, updated_state}
   end
+
+  @doc """
+    End the current player's turn, but check if the rolled first, if not make them roll.
+    Set next player as new current, reste the current player's turn count, and update state.
+  """
+  def handle_call({:end_turn, session_id}, _from, state) do
+    case :ets.lookup(@game_store, {:game, state.current_player}) do
+      [] ->
+        {:reply, {:err, "No active game found."}, state}
+
+      [{_key, current_player}] ->
+        if GameObjects.Player.get_id(current_player) == session_id do
+          if current_player.turns_taken > 0 do
+            current_player_index = Enum.find_index(state.players, fn player ->
+              player.id == state.current_player.id end)
+
+            # Get next player
+            next_player_index = rem(current_player_index + 1, length(state.players))
+            next_player = Enum.at(state.players, next_player_index)
+
+            # Reset turns_taken for the current player
+            updated_players =
+              List.replace_at(state.players, current_player_index, %{current_player | turns_taken: 0})
+
+            # Update statu
+            updated_state = %{
+              state
+              | players: updated_players,
+                current_player: next_player,
+                turn: state.turn + 1
+            }
+
+            :ets.insert(@game_store, {:game, updated_state})
+            Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:turn_ended, updated_state})
+            {:reply, {:ok, updated_state}, updated_state}
+          else
+            {:reply, {:err, "Must roll first"}, state}
+          end
+        else
+          {:reply, {:err, "Invalid session ID"}, state}
+        end
+    end
+  end
+
+
+  # ---- Game Related handles ---- #
 
   # Get current game state.
   @impl true

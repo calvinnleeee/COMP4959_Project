@@ -1,4 +1,5 @@
 defmodule MonopolyWeb.BackendTestingLive do
+  require Logger
   use MonopolyWeb, :live_view
 
   def mount(_params, _session, socket) do
@@ -51,9 +52,18 @@ defmodule MonopolyWeb.BackendTestingLive do
     end
   end
 
+  # Listend and handle the event when the current player ends their turn
   def handle_event("end_turn", _params, socket) do
-    IO.puts("Turn ended.")
-    {:noreply, assign(socket, :message, "Turn ended.")}
+    case GameObjects.Game.end_turn(socket.assigns.player_id) do
+      {:ok, updated_game_state} ->
+        Logger.info("Ended player turn,")
+        # TODO: What else needs to go here?? Are these noreplies even correct?
+        {:noreply, assign(socket, :message, "Turn ended.")}
+
+      {:err, reason} ->
+        Logger.error("Error ending turn: #{reason}")
+        {:noreply, assign(socket, :message, "Couldn't end turn due to #{reason}")}
+    end
   end
 
   def handle_event("roll_dice", _params, socket) do
