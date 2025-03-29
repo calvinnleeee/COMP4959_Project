@@ -16,6 +16,7 @@ defmodule Monopoly.Application do
       # Start a worker by calling: Monopoly.Worker.start_link(arg)
       # {Monopoly.Worker, arg},
       # Start to serve requests, typically the last entry
+      {GameObjects.Game, []},
       MonopolyWeb.Endpoint
     ]
 
