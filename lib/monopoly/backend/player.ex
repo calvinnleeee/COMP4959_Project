@@ -151,7 +151,7 @@ defmodule GameObjects.Player do
     @doc """
     Creates a new Player with card removed. If card not present returns player with cards as is. Returns a Player struct.
     """
-    @spec remove_card(__MODULE__.t(), %GameObjects.Card()) :: __MODULE__.t()
+    @spec remove_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t()
     def remove_card(player, card) do
         %{player | cards: List.delete(get_cards(player), card) }
     end
