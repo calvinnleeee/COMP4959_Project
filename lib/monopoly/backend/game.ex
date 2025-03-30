@@ -49,6 +49,11 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
+  # Play a card.
+  def play_card(session_id) do
+    GenServer.call(__MODULE__, {:play_card, session_id})
+  end
+
   # ---- Private functions & GenServer Callbacks ----
 
 
@@ -150,6 +155,31 @@ defmodule GameObjects.Game do
         {:reply, {:err, "No active game to delete!"}, %{}}
     end
   end
+
+  @impl true
+  def handle_call({:play_card, session_id}, _from, state) do
+    current_player = state.current_player
+    if current_player.id != session_id do
+      {:reply, {:err, "Invalid session ID"}, state}
+    else
+      case state.active_card do
+        nil ->
+          {:reply, {:err, "No active card to play"}, state}
+          card ->
+            # Apply effect to the current player and update the players list
+            updated_player = GameObjects.Card.apply_effect(card, current_player)
+            updated_players = Enum.map(state.players, fn player ->
+              if player.id == current_player.id, do: updated_player, else: player
+            end)
+            # Clear the active card
+            updated_state = %{state | players: updated_players, current_player: updated_player, active_card: nil}
+            # Broadcast the state change
+            Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_played, updated_state})
+            {:reply, {:ok, updated_state}, updated_state}
+      end
+    end
+  end
+
 
   # Terminate and save state on failure.
   @impl true
