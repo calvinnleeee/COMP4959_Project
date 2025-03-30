@@ -1,7 +1,7 @@
 [
     {
       "id": 1,
-      "name": "St. John's",
+      "name": "East Hastings",
       "type": "brown",
       "buy_cost": 60,
       "rent_cost": [
@@ -20,7 +20,7 @@
     },
     {
       "id": 2,
-      "name": "Charlottetown",
+      "name": "Chinatown",
       "type": "brown",
       "buy_cost": 60,
       "rent_cost": [
@@ -39,7 +39,7 @@
     },
     {
       "id": 3,
-      "name": "Fredericton",
+      "name": "Renfrew-Collingwood",
       "type": "light blue",
       "buy_cost": 100,
       "rent_cost": [
@@ -58,7 +58,7 @@
     },
     {
       "id": 4,
-      "name": "Halifax",
+      "name": "Hastings–Sunrise",
       "type": "light blue",
       "buy_cost": 100,
       "rent_cost": [
@@ -77,7 +77,7 @@
     },
     {
       "id": 5,
-      "name": "Qu\u00e9bec City",
+      "name": "Kensington–Cedar Cottage",
       "type": "light blue",
       "buy_cost": 120,
       "rent_cost": [
@@ -96,7 +96,7 @@
     },
     {
       "id": 6,
-      "name": "Montreal",
+      "name": "Fairview",
       "type": "pink",
       "buy_cost": 140,
       "rent_cost": [
@@ -115,7 +115,7 @@
     },
     {
       "id": 7,
-      "name": "Ottawa",
+      "name": "Oakridge",
       "type": "pink",
       "buy_cost": 140,
       "rent_cost": [
@@ -134,7 +134,7 @@
     },
     {
       "id": 8,
-      "name": "Toronto",
+      "name": "Marpole",
       "type": "pink",
       "buy_cost": 160,
       "rent_cost": [
@@ -153,7 +153,7 @@
     },
     {
       "id": 9,
-      "name": "Winnipeg",
+      "name": "Mount Pleasant",
       "type": "orange",
       "buy_cost": 180,
       "rent_cost": [
@@ -172,7 +172,7 @@
     },
     {
       "id": 10,
-      "name": "Regina",
+      "name": "Coal Harbour",
       "type": "orange",
       "buy_cost": 180,
       "rent_cost": [
@@ -191,7 +191,7 @@
     },
     {
       "id": 11,
-      "name": "Edmonton",
+      "name": "Killarney",
       "type": "orange",
       "buy_cost": 200,
       "rent_cost": [
@@ -210,7 +210,7 @@
     },
     {
       "id": 12,
-      "name": "Calgary",
+      "name": "Kitsilano",
       "type": "red",
       "buy_cost": 220,
       "rent_cost": [
@@ -229,7 +229,7 @@
     },
     {
       "id": 13,
-      "name": "Vancouver",
+      "name": "Quilchena",
       "type": "red",
       "buy_cost": 220,
       "rent_cost": [
@@ -248,7 +248,7 @@
     },
     {
       "id": 14,
-      "name": "Victoria",
+      "name": "Cambie",
       "type": "red",
       "buy_cost": 240,
       "rent_cost": [
@@ -267,7 +267,7 @@
     },
     {
       "id": 15,
-      "name": "Whitehorse",
+      "name": "Kerrisdale",
       "type": "yellow",
       "buy_cost": 260,
       "rent_cost": [
@@ -286,7 +286,7 @@
     },
     {
       "id": 16,
-      "name": "Yellowknife",
+      "name": "Victoria–Fraserview",
       "type": "yellow",
       "buy_cost": 260,
       "rent_cost": [
@@ -305,7 +305,7 @@
     },
     {
       "id": 17,
-      "name": "Iqaluit",
+      "name": "Dunbar",
       "type": "yellow",
       "buy_cost": 280,
       "rent_cost": [
@@ -324,7 +324,7 @@
     },
     {
       "id": 18,
-      "name": "Gatineau",
+      "name": "Arbutus Ridge",
       "type": "green",
       "buy_cost": 300,
       "rent_cost": [
@@ -343,7 +343,7 @@
     },
     {
       "id": 19,
-      "name": "Laval",
+      "name": "South Granville",
       "type": "green",
       "buy_cost": 300,
       "rent_cost": [
@@ -362,7 +362,7 @@
     },
     {
       "id": 20,
-      "name": "Mississauga",
+      "name": "Point Grey",
       "type": "green",
       "buy_cost": 320,
       "rent_cost": [
@@ -381,7 +381,7 @@
     },
     {
       "id": 21,
-      "name": "Burnaby",
+      "name": "Shaughnessy Heights",
       "type": "blue",
       "buy_cost": 350,
       "rent_cost": [
@@ -400,7 +400,7 @@
     },
     {
       "id": 22,
-      "name": "Surrey",
+      "name": "Southlands",
       "type": "blue",
       "buy_cost": 400,
       "rent_cost": [
@@ -419,7 +419,7 @@
     },
     {
       "id": 23,
-      "name": "VIA Rail - East",
+      "name": "Canada Line",
       "type": "railroad",
       "buy_cost": 200,
       "rent_cost": [
@@ -438,7 +438,7 @@
     },
     {
       "id": 24,
-      "name": "VIA Rail - West",
+      "name": "Expo Line",
       "type": "railroad",
       "buy_cost": 200,
       "rent_cost": [
@@ -457,7 +457,7 @@
     },
     {
       "id": 25,
-      "name": "VIA Rail - North",
+      "name": "Millenium Line",
       "type": "railroad",
       "buy_cost": 200,
       "rent_cost": [
@@ -476,7 +476,7 @@
     },
     {
       "id": 26,
-      "name": "VIA Rail - South",
+      "name": "West Coast Express",
       "type": "railroad",
       "buy_cost": 200,
       "rent_cost": [
@@ -495,7 +495,7 @@
     },
     {
       "id": 27,
-      "name": "Hydro-Qu\u00e9bec",
+      "name": "BC Hydro",
       "type": "utility",
       "buy_cost": 150,
       "rent_cost": [
@@ -514,7 +514,7 @@
     },
     {
       "id": 28,
-      "name": "Toronto Hydro",
+      "name": "Fortis BC",
       "type": "utility",
       "buy_cost": 150,
       "rent_cost": [
