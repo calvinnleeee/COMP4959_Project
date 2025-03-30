@@ -54,6 +54,10 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:play_card, session_id})
   end
 
+  def take_turn(session_id, tile) do
+    GenServer.call(__MODULE__, {:take_turn, session_id, tile})
+  end
+
   # ---- Private functions & GenServer Callbacks ----
 
 
@@ -156,6 +160,7 @@ defmodule GameObjects.Game do
     end
   end
 
+  # Play a card
   @impl true
   def handle_call({:play_card, session_id}, _from, state) do
     current_player = state.current_player
@@ -179,6 +184,27 @@ defmodule GameObjects.Game do
       end
     end
   end
+
+  @impl true
+  def handle_call({:take_turn, session_id, tile}, _from, state) do #TBU
+    # Take turn logic
+
+
+    # When a player lands on the card tile
+    if tile.type in ["community", "chance"] do #TBU
+      case Deck.draw_card(state.deck, tile.type) do
+        {:ok, card} ->
+          updated_state = %{state | active_card: card}
+          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_drawn, updated_state})
+          {:reply, {:ok, updated_state}, updated_state}
+        {:error, reason} ->
+          {:reply, {:error, reason}, state}
+      end
+    else
+      {:reply, {:ok, state}, state}
+    end
+  end
+
 
 
   # Terminate and save state on failure.
