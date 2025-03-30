@@ -6,12 +6,15 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
-  alias GameObjects.{Deck, Player, Property}
+  alias Phoenix.PubSub
+  alias ElixirLS.LanguageServer.Plugins.Phoenix
+  alias GameObjects.{Deck, Player, Property, Dice}
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
   @game_store Game.Store
   @max_player 6
+  @jail_position 10 # to be confirmed
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -49,6 +52,10 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
+  def roll_dice(session_id) do
+    GenServer.call(__MODULE__, {:roll_dice, session_id})
+  end
+
   # ---- Private functions & GenServer Callbacks ----
 
 
@@ -71,7 +78,8 @@ defmodule GameObjects.Game do
       sprite_id: 0, # TODO: Randomly assign value
       cards: [],
       in_jail: false,
-      jail_turns: 0
+      jail_turns: 0,
+      turns_taken: 0
     }
 
     case :ets.lookup(@game_store, :game) do
@@ -102,6 +110,96 @@ defmodule GameObjects.Game do
     end
   end
 
+  # Handle dice rolling
+  @impl true
+  def handle_call({:roll_dice, session_id}, _from, state) do
+    case :ets.lookup(@game_store, :game) do
+      [{:game, game}] ->
+        current_player = game.current_player
+
+        if current_player.id != session_id do
+          {:reply, {:err, "Not your turn"}, state}
+        else
+          {dice_result, updated_game} =
+            if current_player.in_jail do
+              handle_jail_roll(game)
+            else
+              handle_normal_roll(game)
+            end
+
+          current_position = updated_game.current_player.position
+          :ets.insert(@game_store, {:game, updated_game})
+          PubSub.broadcast(Monopoly.PubSub, "game", {:game_update, updated_game})
+          {:reply, {:ok, dice_result, current_position, updated_game}, updated_game}
+        end
+
+      [] ->
+        {:reply, {:err, "No active game"}, state}
+    end
+  end
+
+  # Handle rolling dice when player is in jail
+  defp handle_jail_roll(game) do
+    player = game.current_player
+    jail_result = Dice.jail_roll(player.jail_turns)
+    {jail_status, dice, sum} = jail_result
+
+    updated_player =
+      case jail_status do
+        :out_of_jail ->
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          Player.move(player, sum)
+
+        :failed_to_escape ->
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          player = Player.lose_money(player, 50)
+          Player.move(player, sum)
+
+        :stay_in_jail ->
+          %{player | jail_turns: player.jail_turns + 1}
+      end
+
+    updated_game = update_player(game, updated_player)
+    {{dice, sum, jail_status}, updated_game}
+  end
+
+  # Handle rolling dice for not in jail players
+  defp handle_normal_roll(game) do
+    player = game.current_player
+    {dice, sum, is_doubles} = Dice.roll()
+
+    updated_player =
+      if is_doubles do
+        %{player | turns_taken: player.turns_taken + 1}
+      else
+        %{player | turns_taken: 0}
+      end
+
+    should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
+
+    updated_player =
+      if should_go_to_jail do
+        %{updated_player | in_jail: true, position: @jail_position, turns_taken: 0}
+      else
+        Player.move(updated_player, sum)
+      end
+
+    updated_game = update_player(game, updated_player)
+    {{dice, sum, is_doubles}, updated_game}
+  end
+
+  # Update a player in the game state
+  defp update_player(game, updated_player) do
+    updated_players = Enum.map(game.players, fn player ->
+      if player.id == updated_player.id do
+        updated_player
+      else
+        player
+      end
+    end)
+
+    %{game | players: updated_players, current_player: updated_player}
+  end
 
   # Remove player from the game.
   # Updates the state in ETS
