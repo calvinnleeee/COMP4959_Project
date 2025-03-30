@@ -14,7 +14,10 @@ defmodule GameObjects.Game do
   # ETS table defined in application.ex
   @game_store Game.Store
   @max_player 6
-  @jail_position 10 # to be confirmed
+  @jail_position 11
+  @go_position 0
+  @go_bonus 200
+  @jail_fee 50
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -120,7 +123,7 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          {dice_result, updated_game} =
+          {dice_result, current_tile, updated_game} =
             if current_player.in_jail do
               handle_jail_roll(game)
             else
@@ -130,7 +133,7 @@ defmodule GameObjects.Game do
           current_position = updated_game.current_player.position
           :ets.insert(@game_store, {:game, updated_game})
           PubSub.broadcast(Monopoly.PubSub, "game", {:game_update, updated_game})
-          {:reply, {:ok, dice_result, current_position, updated_game}, updated_game}
+          {:reply, {:ok, dice_result, current_position, current_tile, updated_game}, updated_game}
         end
 
       [] ->
@@ -141,26 +144,26 @@ defmodule GameObjects.Game do
   # Handle rolling dice when player is in jail
   defp handle_jail_roll(game) do
     player = game.current_player
-    jail_result = Dice.jail_roll(player.jail_turns)
-    {jail_status, dice, sum} = jail_result
+    {jail_status, dice, sum} = Dice.jail_roll(player.jail_turns)
 
     updated_player =
       case jail_status do
         :out_of_jail ->
           player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
-          Player.move(player, sum)
+          move_player(player, sum)
 
         :failed_to_escape ->
           player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
-          player = Player.lose_money(player, 50)
-          Player.move(player, sum)
+          player = Player.lose_money(player, @jail_fee)
+          move_player(player, sum)
 
         :stay_in_jail ->
           %{player | jail_turns: player.jail_turns + 1}
       end
 
+    current_tile = get_tile(game, updated_player.position)
     updated_game = update_player(game, updated_player)
-    {{dice, sum, jail_status}, updated_game}
+    {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
   # Handle rolling dice for not in jail players
@@ -181,11 +184,22 @@ defmodule GameObjects.Game do
       if should_go_to_jail do
         %{updated_player | in_jail: true, position: @jail_position, turns_taken: 0}
       else
-        Player.move(updated_player, sum)
+        move_player(updated_player, sum)
       end
 
+    current_tile = get_tile(game, updated_player.position)
     updated_game = update_player(game, updated_player)
-    {{dice, sum, is_doubles}, updated_game}
+    {{dice, sum, is_doubles}, current_tile, updated_game}
+
+  end
+
+  # Move player and handle passing go
+  defp move_player(player, steps) do
+    old_position = player.position
+    new_position = rem(old_position + steps, 40)
+    passed_go = old_position + steps >= 40 && !player.in_jail
+    updated_player = %{player | position: new_position}
+    if passed_go, do: %{updated_player | money: updated_player.money + @go_bonus}, else: updated_player
   end
 
   # Update a player in the game state
@@ -199,6 +213,11 @@ defmodule GameObjects.Game do
     end)
 
     %{game | players: updated_players, current_player: updated_player}
+  end
+
+  # Get tile from properties list by position
+  defp get_tile(game, position) do
+    Enum.find(game.properties, fn property -> property.id == position end)
   end
 
   # Remove player from the game.
