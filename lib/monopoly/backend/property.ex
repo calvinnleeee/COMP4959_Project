@@ -159,9 +159,14 @@ defmodule GameObjects.Property do
         # Set upgrades based on how many railroads the player owns
         Enum.map(all_railroads, fn r -> set_upgrade(r, railroad_count) end)
 
-        Player.add_property(player, updated_property)
+        newPlayer = Player.add_property(player, updated_property)
+        Player.get_properties(newPlayer)
+
       (count == 2) -> set_owner(property, player); upgrade_set(property, player);
-      true -> set_owner(property, player)
+      true ->
+          property = set_owner(property, player)
+          player_properties = Player.add_property(player, property)
+          Player.get_properties(player)
     end
   end
 
@@ -182,8 +187,8 @@ defmodule GameObjects.Property do
   end
 
   @doc """
-  function to check if the property is owned by a player. returns true if the property is owned by the player, false otherwise
-  """
+    function to take in a player and a property and upgrade all properties of that type to the next level. returns a list of properties
+    """
   def upgrade_set(property, player) do
     player_properties = Player.get_properties(player)
     player_properties = Enum.map(player_properties, fn x ->
