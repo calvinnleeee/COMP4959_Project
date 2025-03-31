@@ -38,11 +38,8 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def handle_event("roll_dice", _params, socket) do
-    # Simulate rolling dice
-    die1 = :rand.uniform(6)
-    die2 = :rand.uniform(6)
-    sum = die1 + die2
-    is_doubles = die1 == die2
+    # Use backend's Dice module to roll the dice
+    {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
 
     # Get current doubles count or initialize to 0
     current_doubles_count = Map.get(socket.assigns, :doubles_count, 0)
@@ -50,8 +47,15 @@ defmodule MonopolyWeb.GameLive do
     # Calculate new doubles count
     new_doubles_count = if is_doubles, do: current_doubles_count + 1, else: 0
 
+    # Get previous rolls for jail check or initialize to empty list
+    previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
+
+    # Add current roll to the beginning of the list (most recent first)
+    updated_rolls = [{dice_values_to_tuple(die1, die2), sum, is_doubles} | previous_rolls]
+
     # Check if player goes to jail (3 consecutive doubles)
-    goes_to_jail = new_doubles_count >= 3
+    # Using the backend's check_for_jail function
+    goes_to_jail = GameObjects.Dice.check_for_jail(updated_rolls, {{die1, die2}, sum, is_doubles})
 
     # Get current player
     current_player = socket.assigns.current_player
@@ -73,10 +77,14 @@ defmodule MonopolyWeb.GameLive do
       dice_values: {die1, die2},
       is_doubles: is_doubles,
       doubles_count: new_doubles_count,
+      previous_rolls: updated_rolls,
       jail_notification: jail_notification,
       doubles_notification: doubles_notification
     })}
   end
+
+  # Helper function to convert dice values to tuple
+  defp dice_values_to_tuple(die1, die2), do: {die1, die2}
 
   def handle_event("end_turn", _params, socket) do
     # Reset the has_rolled status and clear dice results
