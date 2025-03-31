@@ -25,11 +25,19 @@ defmodule MonopolyWeb.GameLiveTest do
       # Roll the dice
       view |> element(".roll-dice-btn") |> render_click()
 
-      # Now the roll button should be disabled
-      assert has_element?(view, ".roll-dice-btn[disabled]")
+      # After rolling, test if we got doubles
+      if view |> has_element?(".doubles-notification") do
+        # If we got doubles, the roll button should still be enabled
+        refute has_element?(view, ".roll-dice-btn[disabled]")
+      else
+        # If we didn't get doubles, the roll button should be disabled
+        assert has_element?(view, ".roll-dice-btn[disabled]")
+      end
 
-      # And the end turn button should be enabled
-      refute has_element?(view, ".end-turn-btn[disabled]")
+      # If the roll button is disabled, the end turn button should be enabled
+      if has_element?(view, ".roll-dice-btn[disabled]") do
+        refute has_element?(view, ".end-turn-btn[disabled]")
+      end
     end
 
     test "clicking roll dice button triggers event", %{conn: conn} do
@@ -40,10 +48,10 @@ defmodule MonopolyWeb.GameLiveTest do
       view |> element(".roll-dice-btn") |> render_click()
 
       # Verify dice result appears
-      assert has_element?(view, ".dice-result")
+      assert has_element?(view, ".dice-results-dashboard")
 
-      # Roll button should now be disabled
-      assert has_element?(view, ".roll-dice-btn[disabled]")
+      # Check that one of the expected states is true
+      assert has_element?(view, ".roll-dice-btn[disabled]") || has_element?(view, ".doubles-notification")
     end
   end
 end
