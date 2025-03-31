@@ -52,11 +52,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
         <div class="dashboard-actions">
           <button
             phx-click={@on_roll_dice}
-<<<<<<< HEAD
             disabled={not @roll}
-=======
-            disabled={@player.id != @current_player_id || Map.get(@player, :has_rolled, false) || @player.in_jail}
->>>>>>> 84108d0 (added jail_roll handle_event for jail logic and added backend code for testing)
             class="roll-dice-btn">
             <.icon name="hero-cube" class="h-4 w-4" />
             Roll Dice
@@ -64,11 +60,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
 
           <button
             phx-click={@on_end_turn}
-<<<<<<< HEAD
             disabled={not @end_turn}
-=======
-            disabled={@player.id != @current_player_id || !Map.get(@player, :has_rolled, false)}
->>>>>>> 84108d0 (added jail_roll handle_event for jail logic and added backend code for testing)
             class="end-turn-btn">
             <.icon name="hero-arrow-right" class="h-4 w-4" />
             End Turn
