@@ -29,7 +29,6 @@ defmodule GameObjects.Game do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and Web socket.
   def join_game(session_id) do
@@ -59,8 +58,12 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
-  # ---- Private functions & GenServer Callbacks ----
+  # Play a card.
+  def play_card(session_id) do
+    GenServer.call(__MODULE__, {:play_card, session_id})
+  end
 
+  # ---- Private functions & GenServer Callbacks ----
 
   @impl true
   def init(_) do
@@ -78,7 +81,8 @@ defmodule GameObjects.Game do
       id: session_id,
       money: 200,
       position: 0,
-      sprite_id: 0, # TODO: Randomly assign value
+      # TODO: Randomly assign value
+      sprite_id: 0,
       cards: [],
       in_jail: false,
       jail_turns: 0,
@@ -132,7 +136,7 @@ defmodule GameObjects.Game do
 
           current_position = updated_game.current_player.position
           :ets.insert(@game_store, {:game, updated_game})
-          PubSub.broadcast(Monopoly.PubSub, "game", {:game_update, updated_game})
+          PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_update, updated_game})
           {:reply, {:ok, dice_result, current_position, current_tile, updated_game}, updated_game}
         end
 
@@ -189,8 +193,21 @@ defmodule GameObjects.Game do
 
     current_tile = get_tile(game, updated_player.position)
     updated_game = update_player(game, updated_player)
-    {{dice, sum, is_doubles}, current_tile, updated_game}
 
+    updated_game =
+      if current_tile.type in ["community", "chance"] do
+        case Deck.draw_card(updated_game.deck, current_tile.type) do
+          {:ok, card} ->
+            %{updated_game | active_card: card}
+
+          {:error, _reason} ->
+            updated_game
+        end
+      else
+        updated_game
+      end
+
+    {{dice, sum, is_doubles}, current_tile, updated_game}
   end
 
   # Move player and handle passing go
@@ -199,18 +216,22 @@ defmodule GameObjects.Game do
     new_position = rem(old_position + steps, 40)
     passed_go = old_position + steps >= 40 && !player.in_jail
     updated_player = %{player | position: new_position}
-    if passed_go, do: %{updated_player | money: updated_player.money + @go_bonus}, else: updated_player
+
+    if passed_go,
+      do: %{updated_player | money: updated_player.money + @go_bonus},
+      else: updated_player
   end
 
   # Update a player in the game state
   defp update_player(game, updated_player) do
-    updated_players = Enum.map(game.players, fn player ->
-      if player.id == updated_player.id do
-        updated_player
-      else
-        player
-      end
-    end)
+    updated_players =
+      Enum.map(game.players, fn player ->
+        if player.id == updated_player.id do
+          updated_player
+        else
+          player
+        end
+      end)
 
     %{game | players: updated_players, current_player: updated_player}
   end
@@ -265,6 +286,42 @@ defmodule GameObjects.Game do
       # If no game exists
       [] ->
         {:reply, {:err, "No active game to delete!"}, %{}}
+    end
+  end
+
+  # Play a card
+  @impl true
+  def handle_call({:play_card, session_id}, _from, state) do
+    current_player = state.current_player
+
+    if current_player.id != session_id do
+      {:reply, {:err, "Invalid session ID"}, state}
+    else
+      case state.active_card do
+        nil ->
+          {:reply, {:err, "No active card to play"}, state}
+
+        card ->
+          # Apply effect to the current player and update the players list
+          updated_player = GameObjects.Card.apply_effect(card, current_player)
+
+          updated_players =
+            Enum.map(state.players, fn player ->
+              if player.id == current_player.id, do: updated_player, else: player
+            end)
+
+          # Clear the active card
+          updated_state = %{
+            state
+            | players: updated_players,
+              current_player: updated_player,
+              active_card: nil
+          }
+
+          # Broadcast the state change
+          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_played, updated_state})
+          {:reply, {:ok, updated_state}, updated_state}
+      end
     end
   end
 
