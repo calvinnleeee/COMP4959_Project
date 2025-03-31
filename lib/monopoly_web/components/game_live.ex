@@ -2,49 +2,31 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.Components.PlayerDashboard
 
-  def mount(_params, _session, socket) do
-    # For testing purposes, create a sample player
-    # In a real app, this would come from your game state
-    sample_player = %{
-      id: "player-1",
-      name: "Player 1",
-      color: "#FF0000",
-      money: 1500,
-      total_worth: 2000,
-      properties: [
-        %{
-          name: "Boardwalk",
-          group: "dark_blue",
-          houses: 0,
-          hotel: false,
-          mortgaged: false
-        },
-        %{
-          name: "Park Place",
-          group: "dark_blue",
-          houses: 3,
-          hotel: false,
-          mortgaged: false
-        }
-      ],
-      in_jail: false,
-      get_out_of_jail_cards: 1,
-      has_rolled: false
-    }
+  def mount(_params, session, socket) do
+    # For development/testing purpose, use sample data
+    # In production this would integrate with GameObjects.Game
+    session_id = Map.get(session, "session_id", "player-1")
 
-    game = %{
-      id: "game-1",
-      current_player_id: "player-1",
-      players: [sample_player]
-    }
+    # Create sample player and game data
+    sample_player = create_sample_player(session_id)
+    sample_game = create_sample_game(sample_player)
+    sample_properties = create_sample_properties()
 
     {:ok, assign(socket,
-      game: game,
-      current_player: sample_player
+      game: sample_game,
+      current_player: sample_player,
+      player_properties: sample_properties,
+      session_id: session_id,
+      dice_result: nil,
+      dice_values: nil,
+      is_doubles: false,
+      doubles_count: 0,
+      doubles_notification: nil,
+      jail_notification: nil
     )}
   end
 
-  def handle_params(%{"id" => id}, _uri, socket) do
+  def handle_params(%{"id" => _id}, _uri, socket) do
     # In a real app, fetch the specific game by ID
     # For now just use the sample game from mount
     {:noreply, socket}
@@ -57,23 +39,59 @@ defmodule MonopolyWeb.GameLive do
 
   def handle_event("roll_dice", _params, socket) do
     # Simulate rolling dice
-    # In a real app, communicate with your game server
-    updated_player = Map.put(socket.assigns.current_player, :has_rolled, true)
+    die1 = :rand.uniform(6)
+    die2 = :rand.uniform(6)
+    sum = die1 + die2
+    is_doubles = die1 == die2
 
-    {:noreply, assign(socket,
+    # Get current doubles count or initialize to 0
+    current_doubles_count = Map.get(socket.assigns, :doubles_count, 0)
+
+    # Calculate new doubles count
+    new_doubles_count = if is_doubles, do: current_doubles_count + 1, else: 0
+
+    # Check if player goes to jail (3 consecutive doubles)
+    goes_to_jail = new_doubles_count >= 3
+
+    # Get current player
+    current_player = socket.assigns.current_player
+
+    # Update player state
+    updated_player = current_player
+      |> Map.put(:has_rolled, !is_doubles || goes_to_jail) # Only mark as rolled if not doubles or going to jail
+      |> Map.put(:in_jail, goes_to_jail || current_player.in_jail)
+      |> Map.put(:jail_turns, if(goes_to_jail, do: 1, else: current_player.jail_turns))
+
+    # Prepare notifications
+    jail_notification = if goes_to_jail, do: "You rolled doubles 3 times in a row! Go to jail!", else: nil
+    doubles_notification = if is_doubles && !goes_to_jail, do: "You rolled doubles! Roll again.", else: nil
+
+    # Create updated socket with all assigns explicitly defined
+    {:noreply, assign(socket, %{
       current_player: updated_player,
-      dice_result: :rand.uniform(6) + :rand.uniform(6)
-    )}
+      dice_result: sum,
+      dice_values: {die1, die2},
+      is_doubles: is_doubles,
+      doubles_count: new_doubles_count,
+      jail_notification: jail_notification,
+      doubles_notification: doubles_notification
+    })}
   end
 
   def handle_event("end_turn", _params, socket) do
-    # Reset the has_rolled status for demo purposes
+    # Reset the has_rolled status and clear dice results
     updated_player = Map.put(socket.assigns.current_player, :has_rolled, false)
 
-    {:noreply, assign(socket,
+    # Use explicit assign with a map to ensure all values are properly set
+    {:noreply, assign(socket, %{
       current_player: updated_player,
-      dice_result: nil
-    )}
+      dice_result: nil,
+      dice_values: nil,
+      is_doubles: false,
+      doubles_count: 0,
+      doubles_notification: nil,
+      jail_notification: nil
+    })}
   end
 
   def render(assigns) do
@@ -81,26 +99,98 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-      <!-- Dice result display -->
-      <%= if Map.get(assigns, :dice_result) do %>
-        <div class="dice-result bg-gray-100 p-4 mb-4 rounded">
-          You rolled: <%= @dice_result %>
+      <!-- Game notifications - only jail notifications here now -->
+      <%= if assigns[:jail_notification] do %>
+        <div class="notification jail-notification bg-red-100 border-l-4 border-red-500 p-4 mb-4">
+          <p class="font-bold"><%= @jail_notification %></p>
         </div>
       <% end %>
 
       <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
+        <%= if @current_player.in_jail do %>
+          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+            IN JAIL (Turn <%= @current_player.jail_turns %>)
+          </div>
+        <% end %>
       </div>
 
-      <!-- Player dashboard -->
+      <!-- Player dashboard with dice results and notifications -->
       <.player_dashboard
         player={@current_player}
-        current_player_id={@game.current_player_id}
+        current_player_id={@current_player.id}
+        properties={@player_properties}
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
+        dice_result={@dice_result}
+        dice_values={@dice_values}
+        is_doubles={@is_doubles}
+        doubles_notification={@doubles_notification}
+        doubles_count={@doubles_count}
       />
     </div>
     """
+  end
+
+  # Sample data generation for testing UI
+
+  def create_sample_player(id) do
+    %{
+      id: id,
+      name: "Player #{String.last(id)}",
+      sprite_id: 0,
+      money: 1500,
+      position: 0,
+      cards: [
+        %{
+          id: "get-out-of-jail-1",
+          name: "Get Out of Jail Free",
+          type: "chance",
+          effect: {:get_out_of_jail, true},
+          owned: true
+        }
+      ],
+      in_jail: false,
+      jail_turns: 0,
+      has_rolled: false
+    }
+  end
+
+  def create_sample_game(current_player) do
+    %{
+      players: [current_player],
+      current_player: current_player,
+      properties: [],
+      deck: nil,
+      turn: 0
+    }
+  end
+
+  def create_sample_properties do
+    [
+      %{
+        id: 1,
+        name: "Boardwalk",
+        type: "dark_blue",
+        buy_cost: 400,
+        rent_cost: [50, 200, 600, 1400, 1700, 2000],
+        upgrades: 0,
+        house_price: 200,
+        hotel_price: 200,
+        owner: "player-1"
+      },
+      %{
+        id: 2,
+        name: "Park Place",
+        type: "dark_blue",
+        buy_cost: 350,
+        rent_cost: [35, 175, 500, 1100, 1300, 1500],
+        upgrades: 3,
+        house_price: 200,
+        hotel_price: 200,
+        owner: "player-1"
+      }
+    ]
   end
 end
