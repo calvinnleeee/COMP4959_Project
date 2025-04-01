@@ -1,6 +1,7 @@
 defmodule MonopolyWeb.WelcomeLive do
   use MonopolyWeb, :live_view
-  import MonopolyWeb.Components.SetupModal
+  import MonopolyWeb.Components.LobbyModal
+  alias GameObjects.Game
 
   # Initializes socket state when the LiveView mounts
   def mount(_, _, socket) do
@@ -9,7 +10,13 @@ defmodule MonopolyWeb.WelcomeLive do
 
   # Handles event when "Join Game" is clicked
   def handle_event("open_modal", _, socket) do
-    {:noreply, assign(socket, show_modal: true)}
+    Game.join_game(socket.assigns.session_id)
+
+    # Fetch the updated game state to get the list of players
+    {:ok, state} = Game.get_state()
+     players = state.players
+
+    {:noreply, assign(socket, show_modal: true, players: players)}
   end
 
   # Handles event when "Cancel" is clicked – hides the modal
@@ -17,9 +24,16 @@ defmodule MonopolyWeb.WelcomeLive do
     {:noreply, assign(socket, show_modal: false)}
   end
 
+   # Handle session_id coming from JS hook via pushEvent
+  def handle_event("set_session_id", %{"id" => id}, socket) do
+    {:noreply, assign(socket, session_id: id)}
+  end
+
   # Renders the LiveView HTML, including the modal if show_modal is true
   def render(assigns) do
     ~H"""
+    <div id="session-id-hook" phx-hook="SessionId"></div>
+
     <main class="flex items-center justify-center pt-20 bg-white">
       <div class="text-center">
         <h1 class="text-6xl font-bold text-gray-800">Vancouver Housing Market</h1>
@@ -36,9 +50,8 @@ defmodule MonopolyWeb.WelcomeLive do
     </main>
 
     <%= if @show_modal do %>
-      <.setup_modal />
+      <.lobby_modal players={@players}/>
     <% end %>
-
 
     """
   end
