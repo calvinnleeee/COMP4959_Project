@@ -168,7 +168,7 @@ defmodule GameObjects.Player do
     @doc """
     Creates a new Player with new card added to card. Returns a Player struct.
     """
-    @spec add_card(__MODULE__.t(), integer()) :: __MODULE__.t()
+    @spec add_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t()
     def add_card(player, card) do
         %{player | cards: [card | get_cards(player)] }
     end
