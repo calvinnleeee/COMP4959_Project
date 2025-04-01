@@ -247,4 +247,10 @@ defmodule MonopolyWeb.BoardLive do
     </div>
     """
   end
+
+  # Remove user from game
+  def terminate(_reason, socket) do
+    # TODO: call backend to remove user from state
+    :ok
+  end
 end
