@@ -104,7 +104,7 @@ defmodule GameObjects.Game do
           :ets.insert(@game_store, {:game, updated_game})
           # Broadcast new game
           # TODO: Need other modules to subscribe
-          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, updated_game})
+          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
           {:reply, {:ok, updated_game}, updated_game}
         end
 
@@ -121,7 +121,7 @@ defmodule GameObjects.Game do
 
         :ets.insert(@game_store, {:game, new_game})
         # broadcast state update
-        Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, new_game})
+        MonopolyWeb.Endpoint.broadcast("game_state", "game_update", new_game)
         {:reply, {:ok, new_game}, new_game}
     end
   end
@@ -260,11 +260,11 @@ defmodule GameObjects.Game do
     if Enum.empty?(updated_state.players) do
       :ets.delete(@game_store, :game)
       # Broadcast game deletion
-      Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_deleted})
+      MonopolyWeb.Endpoint.broadcast("game_state", "game_deleted", nil)
       {:reply, {:ok, "No players, Game deleted.", %{}}, %{}}
     else
       :ets.insert(@game_store, {:game, updated_state})
-      Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_updated, updated_state})
+      MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_state)
       {:reply, {:ok, updated_state}, updated_state}
     end
 
@@ -310,7 +310,7 @@ defmodule GameObjects.Game do
             }
 
             :ets.insert(@game_store, {:game, updated_state})
-            Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:turn_ended, updated_state})
+            MonopolyWeb.Endpoint.broadcast("game_state", "turn_ended", updated_state)
             {:reply, {:ok, updated_state}, updated_state}
           else
             {:reply, {:err, "Must roll first"}, state}
@@ -432,7 +432,7 @@ defmodule GameObjects.Game do
 
         updated_state = %{state | players: updated_players}
         :ets.insert(@game_store, {:game, updated_state})
-        Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:rent_paid, updated_state})
+        MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
         {:reply, {:ok, updated_state}, updated_state}
       else
         # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
@@ -471,11 +471,7 @@ defmodule GameObjects.Game do
 
         :ets.insert(@game_store, {:game, updated_state})
 
-        Phoenix.PubSub.broadcast(
-          Monopoly.PubSub,
-          "game_state",
-          {:property_purchased, updated_state}
-        )
+        MonopolyWeb.Endpoint.broadcast("game_state", "property_purchased", updated_state)
 
         {:reply, {:ok, updated_state}, updated_state}
       else
@@ -490,7 +486,7 @@ defmodule GameObjects.Game do
       case Deck.draw_card(state.deck, tile.type) do
         {:ok, card} ->
           updated_state = %{state | active_card: card}
-          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_drawn, updated_state})
+          MonopolyWeb.Endpoint.broadcast("game_state", "card_drawn", updated_state)
           {:reply, {:ok, updated_state}, updated_state}
 
         {:error, reason} ->
