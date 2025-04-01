@@ -91,7 +91,15 @@ defmodule MonopolyWeb.BoardLive do
       properties =
         Enum.filter(
           assigns.player.properties,
-          fn property -> property.upgrades != nil && property.upgrades < 6 end
+          fn property ->
+            max_upgrades = length(property.rent_cost) - 2
+
+            property.upgrades != nil &&
+              ((property.upgrades < max_upgrades &&
+                  property.house_price <= assigns.player.money) ||
+               (property.upgrades == max_upgrades &&
+                  property.hotel_price <= assigns.player.money))
+          end
         )
 
       # TODO: allow user to select property
