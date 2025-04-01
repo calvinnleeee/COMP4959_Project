@@ -6,8 +6,6 @@ defmodule GameObjects.Game do
   """
   require Logger
   use GenServer
-  alias Phoenix.PubSub
-  alias ElixirLS.LanguageServer.Plugins.Phoenix
   alias GameObjects.{Deck, Player, Property, Dice}
 
   # CONSTANTS HERE
@@ -15,7 +13,6 @@ defmodule GameObjects.Game do
   @game_store Game.Store
   @max_player 6
   @jail_position 11
-  @go_position 0
   @go_bonus 200
   @jail_fee 50
 
@@ -136,7 +133,7 @@ defmodule GameObjects.Game do
 
           current_position = updated_game.current_player.position
           :ets.insert(@game_store, {:game, updated_game})
-          PubSub.broadcast(Monopoly.PubSub, "game_state", {:game_update, updated_game})
+          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
           {:reply, {:ok, dice_result, current_position, current_tile, updated_game}, updated_game}
         end
 
@@ -319,7 +316,7 @@ defmodule GameObjects.Game do
           }
 
           # Broadcast the state change
-          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_played, updated_state})
+          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
           {:reply, {:ok, updated_state}, updated_state}
       end
     end
