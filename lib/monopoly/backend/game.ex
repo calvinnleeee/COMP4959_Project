@@ -98,6 +98,10 @@ defmodule GameObjects.Game do
           # Add player to the existing game
           updated_game = update_in(existing_game.players, &[new_player | &1])
           :ets.insert(@game_store, {:game, updated_game})
+          MonopolyWeb.Endpoint.broadcast("game:lobby", "player_joined", %{
+            session_id: session_id,
+            game: updated_game
+          })
           {:reply, {:ok, updated_game}, updated_game}
         end
 
@@ -113,6 +117,7 @@ defmodule GameObjects.Game do
         }
 
         :ets.insert(@game_store, {:game, new_game})
+        MonopolyWeb.Endpoint.broadcast("game:lobby", "new_game", %{game: new_game})
         {:reply, {:ok, new_game}, new_game}
     end
   end
