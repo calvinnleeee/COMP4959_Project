@@ -16,13 +16,19 @@ defmodule MonopolyWeb.BoardLive do
   end
 
   # Broadcasted by Game.roll_dice()
-  # TODO: do these need to be separate functions? Are they handled the same?
   def handle_info({:game_update, game}, socket) do
     {:noreply, assign(socket, game: game)}
   end
 
   # TODO: No backend yet
   def handle_info({:turn_ended, game}, socket) do
+    # Check if player's turn and player escaped jail with card
+    if assigns.game.current_player.id == assigns.player.id &&
+       game.active_card != nil &&
+       game.active_card.effect[0] == "get_out_of_jail" do
+      # Display the card on screen
+      display_card(game.active_card)
+    end
     {:noreply, assign(socket, game: game)}
   end
 
@@ -36,7 +42,10 @@ defmodule MonopolyWeb.BoardLive do
     assigns = socket.assigns
 
     # Verify that it is the player's turn
-    if assigns.game.current_player == assigns.player && assigns.roll do
+    if assigns.game.current_player.id == assigns.player.id && assigns.roll do
+      # Check if player is currently in jail
+      was_jailed = assigns.player.in_jail
+
       # Call the backend roll_dice endpoint
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(assigns.id)
@@ -66,16 +75,16 @@ defmodule MonopolyWeb.BoardLive do
         end
       end
 
-      # If player did not roll doubles, or is in jail, disable rolling dice
-      if !double || player.in_jail, do: socket = assign(socket, roll: false)
+      # If player did not roll doubles, or is/was in jail, disable rolling dice
+      if !double || player.in_jail || was_in_jail do
+        socket = assign(socket, roll: false)
+      end
 
       # If player got an instant-play card, display it
       card = new_game.active_card
       if card != nil && card.effect[0] != "get_out_of_jail" do
         display_card(card)
       end
-
-      # TODO: special handling for if player is in jail
 
       socket = assign(socket, game: new_game)
     end
@@ -90,7 +99,6 @@ defmodule MonopolyWeb.BoardLive do
   end
 
   # TODO: display acquired card on screen
-  # Only called for instant-play cards
   defp display_card(card) do
     nil
   end
@@ -100,7 +108,7 @@ defmodule MonopolyWeb.BoardLive do
     assigns = socket.assigns
 
     # Verify that it is the player's turn
-    if assigns.game.current_player == assigns.player do
+    if assigns.game.current_player.id == assigns.player.id do
       # Get list of properties which can be built on
       properties =
         Enum.filter(
@@ -128,7 +136,7 @@ defmodule MonopolyWeb.BoardLive do
     assigns = socket.assigns
 
     # Verify that it is the player's turn
-    if assigns.game.current_player == assigns.player do
+    if assigns.game.current_player.id == assigns.player.id do
       # Get list of properties which have housing
       properties =
         Enum.filter(
@@ -156,7 +164,7 @@ defmodule MonopolyWeb.BoardLive do
     assigns = socket.assigns
 
     # Verify that it is the player's turn
-    if assigns.game.current_player == assigns.player do
+    if assigns.game.current_player.id == assigns.player.id do
       # TODO: Call the backend end turn endpoint (not yet impl)
       # TODO: Then assign updated game to socket
       # Reset roll to true in prep for next turn
@@ -172,7 +180,6 @@ defmodule MonopolyWeb.BoardLive do
     # - Buy house
     # - Sell house
     # - End turn
-    # - Pay jail fine?
     ~H"""
     <div>
       <button
