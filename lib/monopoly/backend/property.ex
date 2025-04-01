@@ -178,45 +178,44 @@ defmodule GameObjects.Property do
     count = Enum.count(player_properties, fn x -> get_type(x) == get_type(property) end)
 
     cond do
-      count == 2 and get_type(property) == "brown" ->
+      count == 1 and get_type(property) == "brown" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
-      count == 2 and get_type(property) == "blue" ->
+      count == 1 and get_type(property) == "blue" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+       	player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
       count == 1 and get_type(property) == "utility" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
       count >= 1 and get_type(property) == "railroad" ->
         updated_property = set_owner(property, player)
-        player_properties = Player.get_properties(player)
+        
         # Adding the new property
         railroad_count = count + 1
-
-        # Get all railroad properties including the new one
-        all_railroads = [
-          updated_property | Enum.filter(player_properties, fn p -> get_type(p) == "railroad" end)
-        ]
-
-        # Set upgrades based on how many railroads the player owns
-        Enum.map(all_railroads, fn r -> set_upgrade(r, railroad_count) end)
-
-        newPlayer = Player.add_property(player, updated_property)
-        Player.get_properties(newPlayer)
+		player_properties = Player.get_properties(Player.add_property(player, updated_property))
+        new_properties = Enum.map(player_properties, fn r -> 
+        	if r.type == "railroad" do 
+        		set_upgrade(r, railroad_count)
+        	else
+        		r
+        	end
+        	end
+       )
+    	new_properties
 
       (count == 2) ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
       true ->
           property = set_owner(property, player)
-          player_properties = Player.add_property(player, property)
+          player = Player.add_property(player, property)
           Player.get_properties(player)
     end
   end
@@ -246,7 +245,7 @@ defmodule GameObjects.Property do
     player_properties =
       Enum.map(player_properties, fn x ->
         if get_type(x) == get_type(property) do
-          x.inc_upgrade()
+          inc_upgrade(x)
         else
           x
         end

@@ -169,11 +169,92 @@ defmodule GameObjects.PropertyTest do
 			properties: [], cards: [], in_jail: true, jail_turns: 0}
 			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
 			result = Property.buy_property(property, player)
-			assert Property.get_owner(result) == "test"
+			assert result = [property]
 		end
 		
+		test "one owned unrelated property"do 
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "blue", 100, [100, 200, 300], 3, 50, 51)
+			[old_property, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player}
+		end
 		
-		#Player.get_properties not defined yet, omitting for now
+		test "two owned only one related color"do 
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
+			property2 = Property.new(0, "test", "green", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "green", 100, [100, 200, 300], 0, 50, 51)
+			[old_property1, old_property2, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player}
+			assert old_property2.upgrades == 0
+			assert added_property.upgrades == 0
+		end
+		
+		test "one brown already owned"do 
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 0, 50, 51)
+			property2 = Property.new(0, "test", "green", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "brown", 100, [100, 200, 300], 0, 50, 51)
+			[old_property1, old_property2, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player, upgrades: 1}
+			assert old_property1.upgrades == 1
+			assert old_property2.upgrades == 0
+		end
+		
+		test "one blue already owned"do 
+			property = Property.new(0, "test", "blue", 100, [100, 200, 300], 1, 50, 51)
+			property2 = Property.new(0, "test", "green", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			[old_property1, old_property2, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player, upgrades: 1}
+			assert old_property1.upgrades == 2
+			assert old_property2.upgrades == 0
+		end
+		
+		test "two owned both related color not brown/blue"do 
+			property = Property.new(0, "test", "green", 100, [100, 200, 300], 1, 50, 51)
+			property2 = Property.new(0, "test", "green", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "green", 100, [100, 200, 300], 1, 50, 51)
+			[old_property1, old_property2, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player, upgrades: 2}
+			assert old_property1.upgrades == 2
+			assert old_property2.upgrades == 1
+		end
+		
+		test "one utility owned already"do 
+			property = Property.new(0, "test", "utility", 100, [100, 200, 300], 0, 50, 51)
+			property2 = Property.new(0, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(1, "test", "utility", 100, [100, 200, 300], 0, 50, 51)
+			[old_property1, old_property2, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player, upgrades: 1}
+			assert old_property1.upgrades == 1
+			assert old_property2.upgrades == 0
+		end
+		
+		test "two railroads owned already"do 
+			property = Property.new(0, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			property2 = Property.new(1, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			property3 = Property.new(2, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property, property2, property3], cards: [], in_jail: true, jail_turns: 0}
+			new_property = Property.new(3, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			[old_property1, old_property2, old_property3, added_property] = Property.buy_property(new_property, player)
+			assert added_property == %{new_property | owner: player, upgrades: 3}
+			assert old_property1.upgrades == 3
+			assert old_property2.upgrades == 0
+			assert old_property3.upgrades == 3
+		end
+		
 	end
 	
 	test "buy_property_simple(property, player)"  do
@@ -199,9 +280,64 @@ defmodule GameObjects.PropertyTest do
 		end
 	end
 	
-	#describe "upgrade_set(property, player)" do
-		#Player.get_properties not defined yet, omitting for now
-	#end
+	describe "upgrade_set(property, player)" do
+		test "empty properties list" do
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
+			assert Property.upgrade_set(property, player) == []
+		end
+		
+		test "single unrelated property" do
+			property2 = Property.new(0, "test", "blue", 100, [100, 200, 300], 3, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property2], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
+			assert Property.upgrade_set(property, player) == [property2]
+		end
+		
+		test "single related property" do
+			property2 = Property.new(0, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property2], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			[updated_property] = Property.upgrade_set(property, player)
+			assert updated_property.upgrades == 1
+		end
+		
+		test "one related one unrelated property" do
+			property2 = Property.new(0, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			property3 = Property.new(0, "test2", "brown", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property2, property3], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "blue", 100, [100, 200, 300], 0, 50, 51)
+			[updated_property1, updated_property2] = Property.upgrade_set(property, player)
+			assert updated_property1.upgrades == 1
+			assert updated_property2.upgrades == 0
+		end
+		
+		test "multiple all related property" do
+			property2 = Property.new(0, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			property3 = Property.new(0, "test2", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property2, property3], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			[updated_property1, updated_property2] = Property.upgrade_set(property, player)
+			assert updated_property1.upgrades == 1
+			assert updated_property2.upgrades == 1
+		end
+		
+		test "multiple all unrelated property" do
+			property2 = Property.new(0, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			property3 = Property.new(0, "test2", "railroad", 100, [100, 200, 300], 0, 50, 51)
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [property2, property3], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "red", 100, [100, 200, 300], 0, 50, 51)
+			[updated_property1, updated_property2] = Property.upgrade_set(property, player)
+			assert updated_property1.upgrades == 0
+			assert updated_property2.upgrades == 0
+		end
+	end
 	
 	describe "upgrade_set_list(property, list)" do
 		test "All same type as given property" do
