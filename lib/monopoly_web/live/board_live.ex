@@ -42,9 +42,8 @@ defmodule MonopolyWeb.BoardLive do
       socket = assign(socket, roll: true)
 
       # If player escaped jail with card, display card on screen
-      if game.active_card != nil && game.active_card.effect[0] == "get_out_of_jail" do
-        display_card(game.active_card)
-      end
+      if game.active_card != nil && game.active_card.effect[0] == "get_out_of_jail",
+        do: display_card(game.active_card)
     end
 
     {:noreply, assign(socket, game: game)}
@@ -67,15 +66,13 @@ defmodule MonopolyWeb.BoardLive do
 
       # Call the backend roll_dice endpoint
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
-        Game.roll_dice(assigns.player.id)
+        Game.roll_dice(player.id)
 
       player = new_game.current_player
       socket = assign(socket, player: player)
 
       # If player did not roll doubles, or is/was in jail, disable rolling dice
-      if !double || player.in_jail || was_jailed do
-        socket = assign(socket, roll: false)
-      end
+      if !double || player.in_jail || was_jailed, do: socket = assign(socket, roll: false)
 
       # If property is buyable enable buy_prop button
       if Enum.member?(
@@ -100,24 +97,21 @@ defmodule MonopolyWeb.BoardLive do
       # If property is owned and can be upgraded enable upgrade_prop button
       if new_loc.owner == player.id &&
            new_loc.upgrades != nil &&
-           ((new_loc.upgrades < length(new_loc.rent_cost) - 2 && new_loc.house_price <= player.money) ||
-            (new_loc.upgrades == length(new_loc.rent_cost) - 2 && new_loc.hotel_price <= player.money)) do
-        socket = assign(socket, upgrade_prop: true)
-      end
+           ((new_loc.upgrades < length(new_loc.rent_cost) - 2 &&
+               new_loc.house_price <= player.money) ||
+              (new_loc.upgrades == length(new_loc.rent_cost) - 2 &&
+                 new_loc.hotel_price <= player.money)),
+         do: socket = assign(socket, upgrade_prop: true)
 
       # If property is owned and can be downgraded enable downgrade_prop button
       if new_loc.owner == player.id &&
            new_loc.upgrades != nil &&
-           new_loc.upgrades > 0 do
-        socket = assign(socket, downgrade_prop: true)
-      end
+           new_loc.upgrades > 0,
+         do: socket = assign(socket, downgrade_prop: true)
 
       # If player got an instant-play card, display it
       card = new_game.active_card
-
-      if card != nil && card.effect[0] != "get_out_of_jail" do
-        display_card(card)
-      end
+      if card != nil && card.effect[0] != "get_out_of_jail", do: display_card(card)
 
       socket = assign(socket, game: new_game)
     end
@@ -137,9 +131,8 @@ defmodule MonopolyWeb.BoardLive do
       # If property can be upgraded enable upgrade_prop button
       if new_loc.upgrades != nil &&
            (new_loc.upgrades < length(new_loc.rent_cost) - 2 &&
-              new_loc.house_price <= player.money) do
-        socket = assign(socket, upgrade_prop: true)
-      end
+              new_loc.house_price <= player.money),
+         do: socket = assign(socket, upgrade_prop: true)
     end
 
     {:noreply, socket}
@@ -161,9 +154,8 @@ defmodule MonopolyWeb.BoardLive do
       # TODO: call backend for property (not yet impl)
 
       # If all upgrades bought disable upgrade_prop button
-      if property.upgrades == length(property.rent_cost) - 1 do
-        socket = assign(socket, upgrade_prop: false)
-      end
+      if property.upgrades == length(property.rent_cost) - 1,
+        do: socket = assign(socket, upgrade_prop: false)
 
       # Enable downgrade_prop button
       socket = assign(socket, downgrade_prop: true)
@@ -186,9 +178,7 @@ defmodule MonopolyWeb.BoardLive do
       socket = assign(socket, upgrade_prop: true)
 
       # If all housing is sold, disable downgrade_prop button
-      if property.upgrades == 0 do
-        socket = assign(socket, downgrade_prop: false)
-      end
+      if property.upgrades == 0, do: socket = assign(socket, downgrade_prop: false)
     end
 
     {:noreply, socket}
