@@ -60,8 +60,11 @@ defmodule MonopolyWeb.BoardLive do
            ],
            new_loc.type
          ) &&
-           new_loc.owner == nil,
-         do: new_game = offer_property(new_loc)
+           new_loc.owner == nil do
+        if offer_property(new_loc) do
+          # If player accepts property, call backend to buy it (not yet impl)
+        end
+      end
 
       # If player did not roll doubles, or is in jail, disable rolling dice
       if !double || player.in_jail, do: socket = assign(socket, roll: false)
@@ -76,9 +79,9 @@ defmodule MonopolyWeb.BoardLive do
   end
 
   # TODO: Let player choose whether to buy property they landed on
-  # If player says yes and has funds, call backend (not yet impl)
-  defp offer_property(tile, game) do
-    game
+  # Return true if user chooses to buy
+  defp offer_property(tile) do
+    false
   end
 
   # Let player buy a house/hotel
@@ -97,13 +100,14 @@ defmodule MonopolyWeb.BoardLive do
             property.upgrades != nil &&
               ((property.upgrades < max_upgrades &&
                   property.house_price <= assigns.player.money) ||
-               (property.upgrades == max_upgrades &&
-                  property.hotel_price <= assigns.player.money))
+                 (property.upgrades == max_upgrades &&
+                    property.hotel_price <= assigns.player.money))
           end
         )
 
-      # TODO: allow user to select property
-      # TODO: call backend for selected property (not yet impl)
+      if select_property(properties, true) != nil do
+        # TODO: call backend for selected property (not yet impl)
+      end
     end
 
     {:noreply, socket}
@@ -121,11 +125,19 @@ defmodule MonopolyWeb.BoardLive do
           fn property -> property.upgrades != nil && property.upgrades > 0 end
         )
 
-      # TODO: allow user to select property
-      # TODO: call backend for selected property (not yet impl)
+      if select_property(properties, false) != nil do
+        # TODO: call backend for selected property (not yet impl)
+      end
     end
 
     {:noreply, socket}
+  end
+
+  # TODO: allow user to select property
+  # Buy is true for buying and false for selling
+  # Return selected property
+  defp select_property(properties, buy) do
+    nil
   end
 
   # End the turn
