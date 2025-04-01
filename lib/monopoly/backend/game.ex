@@ -55,11 +55,6 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
-  # Play a card.
-  def play_card(session_id, card_id) do
-    GenServer.call(__MODULE__, {:play_card, session_id, card_id})
-  end
-
   # ---- Private functions & GenServer Callbacks ----
 
   @impl true
@@ -300,40 +295,6 @@ defmodule GameObjects.Game do
       # If no game exists
       [] ->
         {:reply, {:err, "No active game to delete!"}, %{}}
-    end
-  end
-
-  # Play a card
-  @impl true
-  def handle_call({:play_card, session_id, card_id}, _from, state) do
-    current_player = state.current_player
-
-    if current_player.id != session_id do
-      {:reply, {:err, "Invalid session ID"}, state}
-    else
-      case Enum.find(Player.get_cards(current_player), fn card -> card.id == card_id end) do
-        nil ->
-          {:reply, {:err, "Card not found in player's hand"}, state}
-
-        card ->
-          player_after_effect = GameObjects.Card.apply_effect(card, current_player)
-          player_after_effect = Player.remove_card(player_after_effect, card)
-
-          updated_players =
-            Enum.map(state.players, fn player ->
-              if player.id == current_player.id, do: player_after_effect, else: player
-            end)
-
-          updated_game = %{
-            state
-            | players: updated_players,
-              current_player: player_after_effect,
-              active_card: nil
-          }
-
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_game)
-          {:reply, {:ok, updated_game}, updated_game}
-      end
     end
   end
 
