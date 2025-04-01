@@ -458,7 +458,7 @@
       "rent_cost": null,
       "house_price": null,
       "hotel_price": null,
-      "upgrades": null,
+      "upgrades": 0,
       "owner": null
     },
     {
