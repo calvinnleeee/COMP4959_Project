@@ -20,9 +20,11 @@ defmodule MonopolyWeb.BoardLive do
     {:noreply, assign(socket, game: game)}
   end
 
-  # TODO: No backend yet
+  # TODO: No backend yet, check what their atom is called
   def handle_info({:turn_ended, game}, socket) do
     # Check if player's turn and player escaped jail with card
+    # (If so, active_card will be set)
+    assigns = socket.assigns
     if assigns.game.current_player.id == assigns.player.id &&
        game.active_card != nil &&
        game.active_card.effect[0] == "get_out_of_jail" do
@@ -76,7 +78,7 @@ defmodule MonopolyWeb.BoardLive do
       end
 
       # If player did not roll doubles, or is/was in jail, disable rolling dice
-      if !double || player.in_jail || was_in_jail do
+      if !double || player.in_jail || was_jailed do
         socket = assign(socket, roll: false)
       end
 
