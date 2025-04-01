@@ -50,12 +50,13 @@ defmodule MonopolyWeb.GameLive do
     # Get previous rolls for jail check or initialize to empty list
     previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
 
-    # Add current roll to the beginning of the list (most recent first)
-    updated_rolls = [{dice_values_to_tuple(die1, die2), sum, is_doubles} | previous_rolls]
 
     # Check if player goes to jail (3 consecutive doubles)
     # Using the backend's check_for_jail function
-    goes_to_jail = GameObjects.Dice.check_for_jail(updated_rolls, {{die1, die2}, sum, is_doubles})
+    goes_to_jail = GameObjects.Dice.check_for_jail(previous_rolls, {{die1, die2}, sum, is_doubles})
+
+    # Add current roll to the beginning of the list (most recent first)
+    updated_rolls = [{{die1, die2}, sum, is_doubles} | previous_rolls]
 
     # Get current player
     current_player = socket.assigns.current_player
@@ -83,8 +84,6 @@ defmodule MonopolyWeb.GameLive do
     })}
   end
 
-  # Helper function to convert dice values to tuple
-  defp dice_values_to_tuple(die1, die2), do: {die1, die2}
 
   def handle_event("end_turn", _params, socket) do
     # Reset the has_rolled status and clear dice results
@@ -107,13 +106,6 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-      <!-- Game notifications - only jail notifications here now -->
-      <%= if assigns[:jail_notification] do %>
-        <div class="notification jail-notification bg-red-100 border-l-4 border-red-500 p-4 mb-4">
-          <p class="font-bold"><%= @jail_notification %></p>
-        </div>
-      <% end %>
-
       <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
@@ -124,7 +116,7 @@ defmodule MonopolyWeb.GameLive do
         <% end %>
       </div>
 
-      <!-- Player dashboard with dice results and notifications -->
+      <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
         player={@current_player}
         current_player_id={@current_player.id}
@@ -136,6 +128,7 @@ defmodule MonopolyWeb.GameLive do
         is_doubles={@is_doubles}
         doubles_notification={@doubles_notification}
         doubles_count={@doubles_count}
+        jail_notification={@jail_notification}
       />
     </div>
     """

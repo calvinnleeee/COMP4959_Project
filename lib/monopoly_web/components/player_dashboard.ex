@@ -14,6 +14,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   attr :is_doubles, :boolean, default: false, doc: "Whether the roll was doubles"
   attr :doubles_notification, :string, default: nil, doc: "Notification for doubles"
   attr :doubles_count, :integer, default: 0, doc: "Count of consecutive doubles"
+  attr :jail_notification, :string, default: nil, doc: "Notification for jail"
 
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
@@ -24,18 +25,21 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
       <div class="dashboard-header">
         <div class="player-name" style={"color: #{@color};"}>
           <%= @player.name %>
-          <span :if={@player.id == @current_player_id} class="turn-indicator">
-            <.icon name="hero-play" class="h-4 w-4" />
-            Current Turn
-          </span>
         </div>
 
-        <div class="dashboard-status">
-          <span :if={@player.in_jail} class="jail-status">
-            <.icon name="hero-lock-closed" class="h-4 w-4" />
-            In Jail
-            <span class="jail-turns">(<%= @player.jail_turns %> turns)</span>
-          </span>
+        <!-- Status indicators container with fixed height -->
+        <div class="status-indicators">
+          <!-- Current turn indicator on its own row -->
+          <div :if={@player.id == @current_player_id} class="turn-indicator mb-1 flex items-center justify-end">
+            <span>Current Turn</span>
+            <.icon name="hero-play" class="h-4 w-4 ml-1" />
+          </div>
+
+          <!-- Jail status on its own row -->
+          <div :if={@player.in_jail} class="jail-status flex items-center justify-end">
+            <span>In Jail (<%= @player.jail_turns %> turns)</span>
+            <.icon name="hero-lock-closed" class="h-4 w-4 ml-1" />
+          </div>
         </div>
       </div>
 
@@ -87,7 +91,14 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
               <% end %>
             </div>
 
-            <!-- Doubles notification -->
+            <!-- Jail notification (in red) -->
+            <%= if assigns[:jail_notification] do %>
+              <div class="jail-notification mt-2 text-red-600 font-semibold p-1 bg-red-50 rounded">
+                <%= @jail_notification %>
+              </div>
+            <% end %>
+
+            <!-- Doubles notification (in green) -->
             <%= if assigns[:doubles_notification] do %>
               <div class="doubles-notification mt-2 text-green-600 font-semibold">
                 <%= @doubles_notification %>
