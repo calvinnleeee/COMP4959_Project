@@ -3,8 +3,12 @@ defmodule GameObjects.PropertyTest do
   alias GameObjects.Property
 
   defmodule Player do
-  	defstruct [:id, :name, :money, :sprite_id, :position, :cards, :in_jail, :jail_turns]
+  	defstruct [:id, :name, :money, :sprite_id, :position, :properties, :cards, :in_jail, :jail_turns]
+	def get_properties(player) do
+        player.properties
+    end
   end
+  
   
   describe "new/8" do
   	test "create new property with correct types" do
@@ -159,9 +163,18 @@ defmodule GameObjects.PropertyTest do
 		assert Property.get_hotel_price(property) == 53988
 	end
 	
-	#describe "buy_property(property, player)" do
+	describe "buy_property(property, player)" do
+		test "no owned properties"do 
+			player = %Player{id: 1, name: "test", money: 1000, sprite_id: "sprite-1",position: 0, 
+			properties: [], cards: [], in_jail: true, jail_turns: 0}
+			property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
+			result = Property.buy_property(property, player)
+			assert Property.get_owner(result) == "test"
+		end
+		
+		
 		#Player.get_properties not defined yet, omitting for now
-	#end
+	end
 	
 	test "buy_property_simple(property, player)"  do
 		player = %Player{id: 1, name: "DONKEY", money: 1000, sprite_id: "sprite-1",position: 0, 
