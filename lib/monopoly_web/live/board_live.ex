@@ -16,11 +16,12 @@ defmodule MonopolyWeb.BoardLive do
   end
 
   # Broadcasted by Game.roll_dice()
+  # TODO: do these need to be separate functions? Are they handled the same?
   def handle_info({:game_update, game}, socket) do
     {:noreply, assign(socket, game: game)}
   end
 
-  # No backend yet
+  # TODO: No backend yet
   def handle_info({:turn_ended, game}, socket) do
     {:noreply, assign(socket, game: game)}
   end
@@ -64,11 +65,35 @@ defmodule MonopolyWeb.BoardLive do
     {:noreply, socket}
   end
 
-  # Let player choose whether to buy property they landed on
+  # TODO: Let player choose whether to buy property they landed on
   # If player says yes and has funds, call backend (not yet impl)
-  # TODO
   defp offer_property(tile, game) do
     game
+  end
+
+  # Let player buy a house/hotel
+  def handle_event("buy_housing", _params, socket) do
+    assigns = socket.assigns
+
+    # Verify that it is the player's turn
+    if assigns.game.current_player == assigns.player do
+      # TODO: display list of properties which can be built on
+      # TODO: call backend for selected property (not yet impl)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("sell_housing", _params, socket) do
+    assigns = socket.assigns
+
+    # Verify that it is the player's turn
+    if assigns.game.current_player == assigns.player do
+      # TODO: display list of properties with built housing
+      # TODO: call backend for selected property (not yet impl)
+    end
+
+    {:noreply, socket}
   end
 
   # End the turn
@@ -87,6 +112,12 @@ defmodule MonopolyWeb.BoardLive do
   end
 
   def render(assigns) do
+    # TODO: buttons
+    # - Roll dice
+    # - Buy house
+    # - Sell house
+    # - End turn
+    # - Pay jail fine?
     ~H"""
     <div>
       <button
