@@ -40,18 +40,28 @@ defmodule MonopolyWeb.BoardLive do
       # Call the backend roll_dice endpoint
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(assigns.id)
+
       player = new_game.current_player
       socket = assign(socket, player: player)
 
       # Offer player option to buy property they landed on
       if Enum.member?(
-          [
-            "brown", "red", "light blue", "pink", "orange",
-            "yellow", "green", "blue", "railroad", "utility"
-          ],
-          new_loc.type
-        ),
-        do: new_game = offer_property(new_loc)
+           [
+             "brown",
+             "red",
+             "light blue",
+             "pink",
+             "orange",
+             "yellow",
+             "green",
+             "blue",
+             "railroad",
+             "utility"
+           ],
+           new_loc.type
+         ) &&
+           new_loc.owner == nil,
+         do: new_game = offer_property(new_loc)
 
       # If player did not roll doubles, or is in jail, disable rolling dice
       if !double || player.in_jail, do: socket = assign(socket, roll: false)
@@ -77,7 +87,14 @@ defmodule MonopolyWeb.BoardLive do
 
     # Verify that it is the player's turn
     if assigns.game.current_player == assigns.player do
-      # TODO: display list of properties which can be built on
+      # Get list of properties which can be built on
+      properties =
+        Enum.filter(
+          assigns.player.properties,
+          fn property -> property.upgrades != nil && property.upgrades < 6 end
+        )
+
+      # TODO: allow user to select property
       # TODO: call backend for selected property (not yet impl)
     end
 
@@ -89,7 +106,14 @@ defmodule MonopolyWeb.BoardLive do
 
     # Verify that it is the player's turn
     if assigns.game.current_player == assigns.player do
-      # TODO: display list of properties with built housing
+      # Get list of properties which have housing
+      properties =
+        Enum.filter(
+          assigns.player.properties,
+          fn property -> property.upgrades != nil && property.upgrades > 0 end
+        )
+
+      # TODO: allow user to select property
       # TODO: call backend for selected property (not yet impl)
     end
 
@@ -124,14 +148,14 @@ defmodule MonopolyWeb.BoardLive do
         phx-click="roll_dice"
         disabled={
           @game.current_player != @player &&
-          @step == "roll_dice"
+            @step == "roll_dice"
         }
       >
         Roll Dice
       </button>
-      <br><br>
-      <p><%= inspect(@player) %></p>
-      <p><%= inspect(@game) %></p>
+      <br /><br />
+      <p>{inspect(@player)}</p>
+      <p>{inspect(@game)}</p>
     </div>
     """
   end
