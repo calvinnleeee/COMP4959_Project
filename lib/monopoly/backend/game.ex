@@ -7,13 +7,15 @@ defmodule GameObjects.Game do
   require Logger
   use GenServer
   alias GameObjects.Game
-  alias ElixirLS.LanguageServer.Plugins.Phoenix
-  alias GameObjects.{Deck, Player, Property}
+  alias GameObjects.{Deck, Player, Property, Dice}
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
   @game_store Game.Store
   @max_player 6
+  @jail_position 11
+  @go_bonus 200
+  @jail_fee 50
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -63,7 +65,11 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:end_turn, session_id})
   end
 
-  # ---- Private functions & GenServer Callbacks ---- #
+  def roll_dice(session_id) do
+    GenServer.call(__MODULE__, {:roll_dice, session_id})
+  end
+
+  # ---- Private functions & GenServer Callbacks ----
 
   @impl true
   def init(_) do
@@ -76,15 +82,13 @@ defmodule GameObjects.Game do
 
   # ---- PLayer related handles ---- #
 
-  @doc """
-    Add a new player to the game , update game state in ETS and broadcast change.
-    If game doesn't exist in ETS, create a new game and add player to it.
 
-    session_id:  unique identifier for a player (their socket).
-    name: string, the player's chosen gamertag/nickname
-    sprite_id: a unique number to identify the the sprite they've selected.
-  """
+  # Add a new player to the game , update game state in ETS and broadcast change.
+  # If game doesn't exist in ETS, create a new game and add player to it.
 
+  # session_id:  unique identifier for a player (their socket).
+  # name: string, the player's chosen gamertag/nickname
+  # sprite_id: a unique number to identify the the sprite they've selected.
   @impl true
   def handle_call({:join_game, session_id, name, sprite_id}, _from, state) do
     new_player = GameObjects.Player.new(session_id, name, sprite_id)
@@ -122,10 +126,130 @@ defmodule GameObjects.Game do
     end
   end
 
-  @doc """
-    Remove the player from the game, update game state in ETS and broadcast change.
-    session_id:  unique identifier for a player (their socket).
-  """
+  # Handle dice rolling
+  @impl true
+  def handle_call({:roll_dice, session_id}, _from, state) do
+    case :ets.lookup(@game_store, :game) do
+      [{:game, game}] ->
+        current_player = game.current_player
+
+        if current_player.id != session_id do
+          {:reply, {:err, "Not your turn"}, state}
+        else
+          {dice_result, current_tile, updated_game} =
+            if current_player.in_jail do
+              handle_jail_roll(game)
+            else
+              handle_normal_roll(game)
+            end
+
+          current_position = updated_game.current_player.position
+          :ets.insert(@game_store, {:game, updated_game})
+          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
+          {:reply, {:ok, dice_result, current_position, current_tile, updated_game}, updated_game}
+        end
+
+      [] ->
+        {:reply, {:err, "No active game"}, state}
+    end
+  end
+
+  # Handle rolling dice when player is in jail
+  defp handle_jail_roll(game) do
+    player = game.current_player
+    {jail_status, dice, sum} = Dice.jail_roll(player.jail_turns)
+
+    updated_player =
+      case jail_status do
+        :out_of_jail ->
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          move_player(player, sum)
+
+        :failed_to_escape ->
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          player = Player.lose_money(player, @jail_fee)
+          move_player(player, sum)
+
+        :stay_in_jail ->
+          %{player | jail_turns: player.jail_turns + 1}
+      end
+
+    current_tile = get_tile(game, updated_player.position)
+    updated_game = update_player(game, updated_player)
+    {{dice, sum, jail_status}, current_tile, updated_game}
+  end
+
+  # Handle rolling dice for not in jail players
+  defp handle_normal_roll(game) do
+    player = game.current_player
+    {dice, sum, is_doubles} = Dice.roll()
+
+    updated_player =
+      if is_doubles do
+        %{player | turns_taken: player.turns_taken + 1}
+      else
+        %{player | turns_taken: 0}
+      end
+
+    should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
+
+    updated_player =
+      if should_go_to_jail do
+        %{updated_player | in_jail: true, position: @jail_position, turns_taken: 0}
+      else
+        move_player(updated_player, sum)
+      end
+
+    current_tile = get_tile(game, updated_player.position)
+    updated_game = update_player(game, updated_player)
+
+    updated_game =
+      if current_tile.type in ["community", "chance"] do
+        case Deck.draw_card(updated_game.deck, current_tile.type) do
+          {:ok, card} ->
+            %{updated_game | active_card: card}
+
+          {:error, _reason} ->
+            updated_game
+        end
+      else
+        updated_game
+      end
+
+    {{dice, sum, is_doubles}, current_tile, updated_game}
+  end
+
+  # Move player and handle passing go
+  defp move_player(player, steps) do
+    old_position = player.position
+    updated_player = Player.move(player, steps)
+    passed_go = old_position + steps >= 40 && !player.in_jail
+
+    if passed_go,
+      do: %{updated_player | money: updated_player.money + @go_bonus},
+      else: updated_player
+  end
+
+  # Update a player in the game state
+  defp update_player(game, updated_player) do
+    updated_players =
+      Enum.map(game.players, fn player ->
+        if player.id == updated_player.id do
+          updated_player
+        else
+          player
+        end
+      end)
+
+    %{game | players: updated_players, current_player: updated_player}
+  end
+
+  # Get tile from properties list by position
+  defp get_tile(game, position) do
+    Enum.find(game.properties, fn property -> property.id == position end)
+  end
+
+
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     updated_state =
@@ -152,6 +276,7 @@ defmodule GameObjects.Game do
     End the current player's turn, but check if the rolled first, if not make them roll.
     Set next player as new current, reste the current player's turn count, and update state.
   """
+  @impl true
   def handle_call({:end_turn, session_id}, _from, state) do
     case :ets.lookup(@game_store, {:game, state.current_player}) do
       [] ->
@@ -263,7 +388,7 @@ defmodule GameObjects.Game do
           }
 
           # Broadcast the state change
-          Phoenix.PubSub.broadcast(Monopoly.PubSub, "game_state", {:card_played, updated_state})
+          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
           {:reply, {:ok, updated_state}, updated_state}
       end
     end

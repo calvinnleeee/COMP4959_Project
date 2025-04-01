@@ -1,4 +1,5 @@
 defmodule GameObjects.Property do
+  alias GameObjects.Player 
   @moduledoc """
   This modules represents Properties. this module contains what a property can do and have
 
@@ -177,43 +178,45 @@ defmodule GameObjects.Property do
     count = Enum.count(player_properties, fn x -> get_type(x) == get_type(property) end)
 
     cond do
-      count == 2 and get_type(property) == "brown" ->
+      count == 1 and get_type(property) == "brown" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
-      count == 2 and get_type(property) == "blue" ->
+      count == 1 and get_type(property) == "blue" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+       	player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
       count == 1 and get_type(property) == "utility" ->
         property = set_owner(property, player)
-        player_properties = Player.add_property(player, property)
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
       count >= 1 and get_type(property) == "railroad" ->
         updated_property = set_owner(property, player)
-        player_properties = Player.get_properties(player)
+        
         # Adding the new property
         railroad_count = count + 1
+		player_properties = Player.get_properties(Player.add_property(player, updated_property))
+        new_properties = Enum.map(player_properties, fn r -> 
+        	if r.type == "railroad" do 
+        		set_upgrade(r, railroad_count)
+        	else
+        		r
+        	end
+        	end
+       )
+    	new_properties
 
-        # Get all railroad properties including the new one
-        all_railroads = [
-          updated_property | Enum.filter(player_properties, fn p -> get_type(p) == "railroad" end)
-        ]
-
-        # Set upgrades based on how many railroads the player owns
-        Enum.map(all_railroads, fn r -> set_upgrade(r, railroad_count) end)
-
-        Player.add_property(player, updated_property)
-
-      count == 2 ->
-        set_owner(property, player)
-        upgrade_set(property, player)
-
+      (count == 2) ->
+        property = set_owner(property, player)
+        player_properties = Player.get_properties(Player.add_property(player, property))
+        upgrade_set_list(property, player_properties)
       true ->
-        set_owner(property, player)
+          property = set_owner(property, player)
+          player = Player.add_property(player, property)
+          Player.get_properties(player)
     end
   end
 
@@ -234,15 +237,15 @@ defmodule GameObjects.Property do
   end
 
   @doc """
-  function to check if the property is owned by a player. returns true if the property is owned by the player, false otherwise
-  """
+    function to take in a player and a property and upgrade all properties of that type to the next level. returns a list of properties
+    """
   def upgrade_set(property, player) do
     player_properties = Player.get_properties(player)
 
     player_properties =
       Enum.map(player_properties, fn x ->
         if get_type(x) == get_type(property) do
-          x.inc_upgrade()
+          inc_upgrade(x)
         else
           x
         end
@@ -258,7 +261,7 @@ defmodule GameObjects.Property do
   def upgrade_set_list(property, list) do
     Enum.map(list, fn x ->
       if get_type(x) == get_type(property) do
-        x.inc_upgrade()
+        __MODULE__.inc_upgrade(x)
       else
         x
       end
@@ -273,7 +276,7 @@ defmodule GameObjects.Property do
   def sell_upgrade(property) do
     cond do
       property.upgrades == 0 || property.upgrades == 1 -> {property, 0}
-      6 -> {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
+      property.upgrades == 6 -> {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
       true -> {set_upgrade(property, property.upgrades - 1), get_house_price(property)}
     end
   end
