@@ -162,7 +162,7 @@ defmodule GameObjects.Player do
     """
     @spec add_property(__MODULE__.t(), %GameObjects.Property{}) :: __MODULE__.t()
     def add_property(player, tile) do
-        %{player | properties: [get_properties(player) | tile]}
+        %{player | properties: Enum.concat(get_properties(player), [tile])}
     end
 
     @doc """
