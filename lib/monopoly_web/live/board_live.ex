@@ -6,14 +6,13 @@ defmodule MonopolyWeb.BoardLive do
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
-  # State includes the game state, player's id, and player's struct
-  # Step starts at roll_dice each turn with other steps after e.g. buy property
+  # State includes the game state, player's id and struct, and whether player can roll
   def mount(params, _session, socket) do
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     {:ok, game} = Game.get_state()
     id = Map.get(params, "id")
     player = Enum.find(game.players, fn player -> player.id == id end)
-    {:ok, assign(socket, game: game, id: id, player: player, step: "roll_dice")}
+    {:ok, assign(socket, game: game, id: id, player: player, roll: true)}
   end
 
   # Broadcasted by Game.roll_dice()
@@ -36,7 +35,7 @@ defmodule MonopolyWeb.BoardLive do
     assigns = socket.assigns
 
     # Verify that it is the player's turn
-    if assigns.game.current_player == assigns.player do
+    if assigns.game.current_player == assigns.player && assigns.roll do
       # Call the backend roll_dice endpoint
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(assigns.id)
@@ -54,7 +53,7 @@ defmodule MonopolyWeb.BoardLive do
         do: new_game = offer_property(new_loc)
 
       # If player did not roll doubles, or is in jail, disable rolling dice
-      if !double || player.in_jail, do: socket = assign(socket, step: "options")
+      if !double || player.in_jail, do: socket = assign(socket, roll: false)
 
       # TODO: the player might have gotten a card? Figure out if anything needs to be handled
       # TODO: special handling for if player is in jail
@@ -67,8 +66,24 @@ defmodule MonopolyWeb.BoardLive do
 
   # Let player choose whether to buy property they landed on
   # If player says yes and has funds, call backend (not yet impl)
+  # TODO
   defp offer_property(tile, game) do
     game
+  end
+
+  # End the turn
+  def handle_event("end_turn", _params, socket) do
+    assigns = socket.assigns
+
+    # Verify that it is the player's turn
+    if assigns.game.current_player == assigns.player do
+      # TODO: Call the backend end turn endpoint (not yet impl)
+      # TODO: Then assign updated game to socket
+      # Reset roll to true in prep for next turn
+      socket = assign(socket, roll: true)
+    end
+
+    {:noreply, socket}
   end
 
   def render(assigns) do
