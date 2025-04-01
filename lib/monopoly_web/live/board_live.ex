@@ -6,13 +6,25 @@ defmodule MonopolyWeb.BoardLive do
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
-  # State includes the game state, player's id and struct, and whether player can roll
+  # State includes the game state, player's struct, and which buttons are enabled
   def mount(params, _session, socket) do
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     {:ok, game} = Game.get_state()
     id = Map.get(params, "id")
     player = Enum.find(game.players, fn player -> player.id == id end)
-    {:ok, assign(socket, game: game, id: id, player: player, roll: true)}
+
+    {
+      :ok,
+      assign(
+        socket,
+        game: game,
+        player: player,
+        roll: false,
+        buy_prop: false,
+        upgrade_prop: false,
+        downgrade_prop: false
+      )
+    }
   end
 
   # Broadcasted by Game.roll_dice()
@@ -22,15 +34,19 @@ defmodule MonopolyWeb.BoardLive do
 
   # TODO: No backend yet, check what their atom is called
   def handle_info({:turn_ended, game}, socket) do
-    # Check if player's turn and player escaped jail with card
-    # (If so, active_card will be set)
+    # Check if it is now the player's turn
     assigns = socket.assigns
-    if assigns.game.current_player.id == assigns.player.id &&
-       game.active_card != nil &&
-       game.active_card.effect[0] == "get_out_of_jail" do
-      # Display the card on screen
-      display_card(game.active_card)
+
+    if assigns.game.current_player.id == assigns.player.id do
+      # Enable die rolling
+      socket = assign(socket, roll: true)
+
+      # If player escaped jail with card, display card on screen
+      if game.active_card != nil && game.active_card.effect[0] == "get_out_of_jail" do
+        display_card(game.active_card)
+      end
     end
+
     {:noreply, assign(socket, game: game)}
   end
 
@@ -42,20 +58,26 @@ defmodule MonopolyWeb.BoardLive do
   # When starting turn, player first clicks roll dice button
   def handle_event("roll_dice", _params, socket) do
     assigns = socket.assigns
+    player = assigns.player
 
-    # Verify that it is the player's turn
-    if assigns.game.current_player.id == assigns.player.id && assigns.roll do
+    # Verify that it is the player's turn and they can roll
+    if assigns.game.current_player.id == player.id && assigns.roll do
       # Check if player is currently in jail
-      was_jailed = assigns.player.in_jail
+      was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
-        Game.roll_dice(assigns.id)
+        Game.roll_dice(assigns.player.id)
 
       player = new_game.current_player
       socket = assign(socket, player: player)
 
-      # Offer player option to buy property they landed on
+      # If player did not roll doubles, or is/was in jail, disable rolling dice
+      if !double || player.in_jail || was_jailed do
+        socket = assign(socket, roll: false)
+      end
+
+      # If property is buyable enable buy_prop button
       if Enum.member?(
            [
              "brown",
@@ -71,19 +93,28 @@ defmodule MonopolyWeb.BoardLive do
            ],
            new_loc.type
          ) &&
-           new_loc.owner == nil do
-        if offer_property(new_loc) do
-          # If player accepts property, call backend to buy it (not yet impl)
-        end
+           new_loc.owner == nil &&
+           new_loc.buy_cost <= player.money,
+         do: socket = assign(socket, buy_prop: true)
+
+      # If property is owned and can be upgraded enable upgrade_prop button
+      if new_loc.owner == player.id &&
+           new_loc.upgrades != nil &&
+           ((new_loc.upgrades < length(new_loc.rent_cost) - 2 && new_loc.house_price <= player.money) ||
+            (new_loc.upgrades == length(new_loc.rent_cost) - 2 && new_loc.hotel_price <= player.money)) do
+        socket = assign(socket, upgrade_prop: true)
       end
 
-      # If player did not roll doubles, or is/was in jail, disable rolling dice
-      if !double || player.in_jail || was_jailed do
-        socket = assign(socket, roll: false)
+      # If property is owned and can be downgraded enable downgrade_prop button
+      if new_loc.owner == player.id &&
+           new_loc.upgrades != nil &&
+           new_loc.upgrades > 0 do
+        socket = assign(socket, downgrade_prop: true)
       end
 
       # If player got an instant-play card, display it
       card = new_game.active_card
+
       if card != nil && card.effect[0] != "get_out_of_jail" do
         display_card(card)
       end
@@ -94,10 +125,24 @@ defmodule MonopolyWeb.BoardLive do
     {:noreply, socket}
   end
 
-  # TODO: Let player choose whether to buy property they landed on
-  # Return true if user chooses to buy
-  defp offer_property(tile) do
-    false
+  # Player buys property they are on
+  def handle_event("buy_prop", _params, socket) do
+    assigns = socket.assigns
+    player = assigns.player
+
+    # Verify that it is the player's turn and they can buy
+    if assigns.game.current_player.id == player.id && assigns.buy_prop do
+      # TODO: Call backend for selected property (not yet impl)
+
+      # If property can be upgraded enable upgrade_prop button
+      if new_loc.upgrades != nil &&
+           (new_loc.upgrades < length(new_loc.rent_cost) - 2 &&
+              new_loc.house_price <= player.money) do
+        socket = assign(socket, upgrade_prop: true)
+      end
+    end
+
+    {:noreply, socket}
   end
 
   # TODO: display acquired card on screen
@@ -105,60 +150,48 @@ defmodule MonopolyWeb.BoardLive do
     nil
   end
 
-  # Let player buy a house/hotel
-  def handle_event("buy_housing", _params, socket) do
+  # Player buys a house/hotel on property they are on
+  def handle_event("upgrade_prop", _params, socket) do
     assigns = socket.assigns
+    player = assigns.player
 
-    # Verify that it is the player's turn
-    if assigns.game.current_player.id == assigns.player.id do
-      # Get list of properties which can be built on
-      properties =
-        Enum.filter(
-          assigns.player.properties,
-          fn property ->
-            max_upgrades = length(property.rent_cost) - 2
+    # Verify that it is the player's turn and they can upgrade the prop
+    if assigns.game.current_player.id == player.id && assigns.upgrade_prop do
+      property = assigns.game.properties[player.position]
+      # TODO: call backend for property (not yet impl)
 
-            property.upgrades != nil &&
-              ((property.upgrades < max_upgrades &&
-                  property.house_price <= assigns.player.money) ||
-                 (property.upgrades == max_upgrades &&
-                    property.hotel_price <= assigns.player.money))
-          end
-        )
-
-      if select_property(properties, true) != nil do
-        # TODO: call backend for selected property (not yet impl)
+      # If all upgrades bought disable upgrade_prop button
+      if property.upgrades == length(property.rent_cost) - 1 do
+        socket = assign(socket, upgrade_prop: false)
       end
+
+      # Enable downgrade_prop button
+      socket = assign(socket, downgrade_prop: true)
     end
 
     {:noreply, socket}
   end
 
-  def handle_event("sell_housing", _params, socket) do
+  # Player sells a house/hotel on property they are on
+  def handle_event("downgrade_prop", _params, socket) do
     assigns = socket.assigns
+    player = assigns.player
 
-    # Verify that it is the player's turn
-    if assigns.game.current_player.id == assigns.player.id do
-      # Get list of properties which have housing
-      properties =
-        Enum.filter(
-          assigns.player.properties,
-          fn property -> property.upgrades != nil && property.upgrades > 0 end
-        )
+    # Verify that it is the player's turn and they can downgrade the prop
+    if assigns.game.current_player.id == player.id && assigns.downgrade_prop do
+      property = assigns.game.properties[player.position]
+      # TODO: call backend for property (not yet impl)
 
-      if select_property(properties, false) != nil do
-        # TODO: call backend for selected property (not yet impl)
+      # Enable upgrade_prop button
+      socket = assign(socket, upgrade_prop: true)
+
+      # If all housing is sold, disable downgrade_prop button
+      if property.upgrades == 0 do
+        socket = assign(socket, downgrade_prop: false)
       end
     end
 
     {:noreply, socket}
-  end
-
-  # TODO: allow user to select property
-  # Buy is true for buying and false for selling
-  # Return selected property
-  defp select_property(properties, buy) do
-    nil
   end
 
   # End the turn
@@ -168,9 +201,16 @@ defmodule MonopolyWeb.BoardLive do
     # Verify that it is the player's turn
     if assigns.game.current_player.id == assigns.player.id do
       # TODO: Call the backend end turn endpoint (not yet impl)
-      # TODO: Then assign updated game to socket
-      # Reset roll to true in prep for next turn
-      socket = assign(socket, roll: true)
+
+      # Disable all buttons
+      socket =
+        assign(
+          socket,
+          roll: false,
+          buy_prop: false,
+          upgrade_prop: false,
+          downgrade_prop: false
+        )
     end
 
     {:noreply, socket}
@@ -179,6 +219,7 @@ defmodule MonopolyWeb.BoardLive do
   def render(assigns) do
     # TODO: buttons
     # - Roll dice
+    # - Buy property (enabled if landed on)?
     # - Buy house
     # - Sell house
     # - End turn
