@@ -210,9 +210,8 @@ defmodule GameObjects.Game do
   # Move player and handle passing go
   defp move_player(player, steps) do
     old_position = player.position
-    new_position = rem(old_position + steps, 40)
+    updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
-    updated_player = %{player | position: new_position}
 
     if passed_go,
       do: %{updated_player | money: updated_player.money + @go_bonus},
