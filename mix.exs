@@ -19,7 +19,7 @@ defmodule Monopoly.MixProject do
   def application do
     [
       mod: {Monopoly.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :phoenix_ecto]
     ]
   end
 
@@ -54,7 +54,8 @@ defmodule Monopoly.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:phoenix_ecto, "~> 4.4"},
     ]
   end
 
