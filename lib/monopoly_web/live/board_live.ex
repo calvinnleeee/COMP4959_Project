@@ -69,7 +69,12 @@ defmodule MonopolyWeb.BoardLive do
       # If player did not roll doubles, or is in jail, disable rolling dice
       if !double || player.in_jail, do: socket = assign(socket, roll: false)
 
-      # TODO: the player might have gotten a card? Figure out if anything needs to be handled
+      # If player got an instant-play card, display it
+      card = new_game.active_card
+      if card != nil && card.effect[0] != "get_out_of_jail" do
+        display_card(card)
+      end
+
       # TODO: special handling for if player is in jail
 
       socket = assign(socket, game: new_game)
@@ -82,6 +87,12 @@ defmodule MonopolyWeb.BoardLive do
   # Return true if user chooses to buy
   defp offer_property(tile) do
     false
+  end
+
+  # TODO: display acquired card on screen
+  # Only called for instant-play cards
+  defp display_card(card) do
+    nil
   end
 
   # Let player buy a house/hotel
