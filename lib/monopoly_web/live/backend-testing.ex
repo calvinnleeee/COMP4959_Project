@@ -4,13 +4,34 @@ defmodule MonopolyWeb.BackendTestingLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    session_id = :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
     if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game:lobby")
-    {:ok, assign(socket, message: nil, game: nil, session_id: session_id)}
+    {:ok, assign(socket, message: nil, game: nil, session_id: nil)}
   end
 
+
+  def handle_event("set_session_id", %{"id" => id}, socket) do
+    {:noreply, assign(socket, session_id: id)}
+  end
+
+  # Join Game Handle Event
   @impl true
   def handle_event("join_game", _params, socket) do
+    session_id = socket.assigns.session_id
+
+    case GameObjects.Game.join_game(session_id) do
+      {:ok, game} ->
+        # Update the LiveView assigns with the new game state
+        {:noreply, assign(socket, message: "Joined", game: game)}
+
+      {:err, message} ->
+        {:noreply, assign(socket, message: message)}
+    end
+  end
+
+
+  # Leave Game Handle Event
+  @impl true
+  def handle_event("leave_game", _params, socket) do
     session_id = socket.assigns.session_id
 
     case GameObjects.Game.join_game(session_id) do
@@ -45,11 +66,13 @@ defmodule MonopolyWeb.BackendTestingLive do
       ) do
     {:noreply, assign(socket, message: "New Game Created", game: updated_game)}
   end
+
   @impl true
   def render(assigns) do
     ~H"""
     <h1 style="font-size:50px">Backend Integration</h1>
 
+    <div id="session-id-hook" phx-hook="SessionId"></div>
     <h2>Player: {@session_id}</h2>
      <hr \ />
     <h2>Action available</h2>
@@ -57,6 +80,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
       <button
         phx-click="join_game"
+        disabled={is_nil(@session_id)}
         style="padding: 10px 20px; background-color: #43A047; color: white; border: none; border-radius: 5px; cursor: pointer;"
       >
         Join Game

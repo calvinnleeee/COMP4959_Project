@@ -73,51 +73,60 @@ defmodule GameObjects.Game do
 
   # Create game if it does not exist. Join if it already exists
   @impl true
-  def handle_call({:join_game, session_id}, _from, state) do
-    new_player = %Player{
-      id: session_id,
-      money: 200,
-      position: 0,
-      # TODO: Randomly assign value
-      sprite_id: 0,
-      cards: [],
-      in_jail: false,
-      jail_turns: 0,
-      turns_taken: 0
-    }
+def handle_call({:join_game, session_id}, _from, state) do
+  new_player = %Player{
+    id: session_id,
+    money: 200,
+    position: 0,
+    sprite_id: 0, # TODO: Randomly assign value
+    cards: [],
+    in_jail: false,
+    jail_turns: 0,
+    turns_taken: 0
+  }
 
-    case :ets.lookup(@game_store, :game) do
-      # If the game already exists
-      [{:game, existing_game}] ->
-        if length(existing_game.players) >= @max_player do
+  case :ets.lookup(@game_store, :game) do
+    # If the game already exists
+    [{:game, existing_game}] ->
+      cond do
+        # Check if player already exists
+        Enum.any?(existing_game.players, fn p -> p.id == session_id end) ->
+          {:reply, {:err, "You have already joined the game"}, state}
+
+        length(existing_game.players) >= @max_player ->
           {:reply, {:err, "Maximum 6 Players"}, state}
-        else
+
+        true ->
           # Add player to the existing game
           updated_game = update_in(existing_game.players, &[new_player | &1])
           :ets.insert(@game_store, {:game, updated_game})
+
           MonopolyWeb.Endpoint.broadcast("game:lobby", "player_joined", %{
             session_id: session_id,
             game: updated_game
           })
+
           {:reply, {:ok, updated_game}, updated_game}
-        end
+      end
 
-      # If the game doesn't exist
-      [] ->
-        new_game = %__MODULE__{
-          players: [new_player],
-          properties: [],
-          deck: nil,
-          current_player: nil,
-          active_card: nil,
-          turn: 0
-        }
+    # If the game doesn't exist
+    [] ->
+      new_game = %__MODULE__{
+        players: [new_player],
+        properties: [],
+        deck: nil,
+        current_player: nil,
+        active_card: nil,
+        turn: 0
+      }
 
-        :ets.insert(@game_store, {:game, new_game})
-        MonopolyWeb.Endpoint.broadcast("game:lobby", "new_game", %{game: new_game})
-        {:reply, {:ok, new_game}, new_game}
-    end
+      :ets.insert(@game_store, {:game, new_game})
+
+      MonopolyWeb.Endpoint.broadcast("game:lobby", "new_game", %{game: new_game})
+      {:reply, {:ok, new_game}, new_game}
   end
+end
+
 
   # Handle dice rolling
   @impl true
