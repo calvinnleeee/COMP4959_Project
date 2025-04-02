@@ -78,10 +78,12 @@ defmodule MonopolyWeb.BackendTestingLive do
 
     case GameObjects.Game.roll_dice(session_id) do
       {:ok, dice_result, current_position, current_tile, updated_game} ->
+        message = "Landed on #{current_tile.name}"
+
         {:noreply,
          socket
          |> assign(:game, updated_game)
-         |> put_flash(:info, "Rolled a #{dice_result}, landed on #{current_tile.name}")}
+         |> put_flash(:info, message)}
 
       {:err, reason} ->
         {:noreply, put_flash(socket, :error, reason)}

@@ -280,6 +280,7 @@ defmodule GameObjects.Game do
 
   # Get tile from properties list by position
   defp get_tile(game, position) do
+    IO.inspect(position)
     Enum.find(game.properties, fn property -> property.id == position end)
   end
 
