@@ -349,7 +349,7 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Update game state with property upgrade and reduced player money
+  # Update game state with property downgrade and increased player money
   @impl true
   defp handle_call(:downgrade_property, session_id, property, state) do
     case :ets.lookup(@game_store, :game) do
@@ -366,17 +366,14 @@ defmodule GameObjects.Game do
           #check with abdu if we assign owners with id
           if property.owner == current_player.id do
 
-            {updated_property, cost} = property.build_upgrade(property)
+            {updated_property, cost} = property.sell_upgrade(property)
 
             #money and player update
             #cost = property.house_price
             if cost == 0 do
-              {:reply, {:err, "Cannot upgrade"}, state}
+              {:reply, {:err, "Cannot downgrade"}, state}
             end
-            if current_player.money < cost do
-              {:reply, {:err, "Not enough money"}, state}
-            end
-            updated_player = Player.lose_money(current_player, cost)
+            updated_player = Player.add_money(current_player, cost)
             player_updated_game = update_player(game, updated_player)
 
             #updated_property = Property.inc_upgrade(property)
