@@ -81,6 +81,16 @@ defmodule GameObjects.PlayerTest do
     assert updated.position == 10
   end
 
+  # move(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # Integer.mod/2 to wrap around the board, limit is set by the @board_size (40) constant
+  test "move/2 wraps around board size", %{player: player} do
+    # When the number is over 40
+    moved = Player.move(player, 42)
+    assert moved.position == 2
+  end
+
+
+
 
 
 end
