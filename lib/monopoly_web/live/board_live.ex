@@ -6,7 +6,8 @@ defmodule MonopolyWeb.BoardLive do
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
-  # State includes the game state, player's struct, and which buttons are enabled
+  # State includes the game state, player's struct,
+  # which buttons are enabled, and dice results
   def mount(params, _session, socket) do
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     {:ok, game} = Game.get_state()
@@ -21,7 +22,10 @@ defmodule MonopolyWeb.BoardLive do
         roll: game.current_player.id == id,
         buy_prop: false,
         upgrade_prop: false,
-        downgrade_prop: false
+        downgrade_prop: false,
+        dice_result: 0,
+        dice_values: {0, 0},
+        is_doubles: false
       )
     }
   end
@@ -97,8 +101,7 @@ defmodule MonopolyWeb.BoardLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      # TODO: pass roll results to dashboard
-      {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
+      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(player.id)
 
       # If player got an instant-play card, display it
@@ -135,7 +138,12 @@ defmodule MonopolyWeb.BoardLive do
               new_loc.buy_cost <= player.money,
 
           upgrade_prop: upgradeable(new_loc, player),
-          downgrade_prop: downgradeable(new_loc, player)
+          downgrade_prop: downgradeable(new_loc, player),
+
+          # Dice results for dashboard
+          dice_result: sum,
+          dice_values: dice,
+          is_doubles: double
         )
       }
     else
@@ -234,7 +242,10 @@ defmodule MonopolyWeb.BoardLive do
           roll: false,
           buy_prop: false,
           upgrade_prop: false,
-          downgrade_prop: false
+          downgrade_prop: false,
+          dice_result: 0,
+          dice_values: {0, 0},
+          is_doubles: false
         )
       }
     else
