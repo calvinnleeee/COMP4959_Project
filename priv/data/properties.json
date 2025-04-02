@@ -1,6 +1,6 @@
 [
   {
-      "id": 1,
+      "id": 0,
       "name": "GO",
       "type": "go",
       "buy_cost": null,
@@ -11,7 +11,7 @@
       "owner": null
     },
     {
-      "id": 2,
+      "id": 1,
       "name": "East Hastings",
       "type": "brown",
       "buy_cost": 60,
@@ -30,7 +30,7 @@
       "owner": null
     },
     {
-      "id": 3,
+      "id": 2,
       "name": "Community Chest",
       "type": "community",
       "buy_cost": null,
@@ -41,7 +41,7 @@
       "owner": null
     },
     {
-      "id": 4,
+      "id": 3,
       "name": "Chinatown",
       "type": "brown",
       "buy_cost": 60,
@@ -60,7 +60,7 @@
       "owner": null
     },
     {
-      "id": 5,
+      "id": 4,
       "name": "Income Tax",
       "type": "tax",
       "buy_cost": null,
@@ -71,7 +71,7 @@
       "owner": null
     },
     {
-      "id": 6,
+      "id": 5,
       "name": "Expo Line",
       "type": "railroad",
       "buy_cost": 200,
@@ -87,7 +87,7 @@
       "owner": null
     },
     {
-      "id": 7,
+      "id": 6,
       "name": "Renfrew-Collingwood",
       "type": "light blue",
       "buy_cost": 100,
@@ -106,7 +106,7 @@
       "owner": null
     },
     {
-      "id": 8,
+      "id": 7,
       "name": "Chance",
       "type": "chance",
       "buy_cost": null,
@@ -117,7 +117,7 @@
       "owner": null
     },
     {
-      "id": 9,
+      "id": 8,
       "name": "Hastings–Sunrise",
       "type": "light blue",
       "buy_cost": 100,
@@ -136,7 +136,7 @@
       "owner": null
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "Kensington–Cedar Cottage",
       "type": "light blue",
       "buy_cost": 120,
@@ -155,7 +155,7 @@
       "owner": null
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "Jail",
       "type": "jail",
       "buy_cost": null,
@@ -166,7 +166,7 @@
       "owner": null
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "Fairview",
       "type": "pink",
       "buy_cost": 140,
@@ -185,7 +185,7 @@
       "owner": null
     },
     {
-      "id": 13,
+      "id": 12,
       "name": "Fortis BC",
       "type": "utility",
       "buy_cost": 150,
@@ -196,7 +196,7 @@
       "owner": null
     },
     {
-      "id": 14,
+      "id": 13,
       "name": "Oakridge",
       "type": "pink",
       "buy_cost": 140,
@@ -215,7 +215,7 @@
       "owner": null
     },
     {
-      "id": 15,
+      "id": 14,
       "name": "Marpole",
       "type": "pink",
       "buy_cost": 160,
@@ -234,7 +234,7 @@
       "owner": null
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "Millenium Line",
       "type": "railroad",
       "buy_cost": 200,
@@ -250,7 +250,7 @@
       "owner": null
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "Mount Pleasant",
       "type": "orange",
       "buy_cost": 180,
@@ -269,7 +269,7 @@
       "owner": null
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "Community Chest",
       "type": "community",
       "buy_cost": null,
@@ -280,7 +280,7 @@
       "owner": null
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "Coal Harbour",
       "type": "orange",
       "buy_cost": 180,
@@ -299,7 +299,7 @@
       "owner": null
     },
     {
-      "id": 20,
+      "id": 19,
       "name": "Killarney",
       "type": "orange",
       "buy_cost": 200,
@@ -318,7 +318,7 @@
       "owner": null
     },
     {
-      "id": 21,
+      "id": 20,
       "name": "Not-so-free Parking",
       "type": "parking",
       "buy_cost": null,
@@ -329,7 +329,7 @@
       "owner": null
     },
     {
-      "id": 22,
+      "id": 21,
       "name": "Kitsilano",
       "type": "red",
       "buy_cost": 220,
@@ -348,7 +348,7 @@
       "owner": null
     },
     {
-      "id": 23,
+      "id": 22,
       "name": "Chance",
       "type": "chance",
       "buy_cost": null,
@@ -359,7 +359,7 @@
       "owner": null
     },
     {
-      "id": 24,
+      "id": 23,
       "name": "Quilchena",
       "type": "red",
       "buy_cost": 220,
@@ -378,7 +378,7 @@
       "owner": null
     },
     {
-      "id": 25,
+      "id": 24,
       "name": "Cambie",
       "type": "red",
       "buy_cost": 240,
@@ -397,7 +397,7 @@
       "owner": null
     },
     {
-      "id": 26,
+      "id": 25,
       "name": "Canada Line",
       "type": "railroad",
       "buy_cost": 200,
@@ -413,7 +413,7 @@
       "owner": null
     },
     {
-      "id": 27,
+      "id": 26,
       "name": "Kerrisdale",
       "type": "yellow",
       "buy_cost": 260,
@@ -432,7 +432,7 @@
       "owner": null
     },
     {
-      "id": 28,
+      "id": 27,
       "name": "Victoria–Fraserview",
       "type": "yellow",
       "buy_cost": 260,
@@ -451,7 +451,7 @@
       "owner": null
     },
     {
-      "id": 29,
+      "id": 28,
       "name": "BC Hydro",
       "type": "utility",
       "buy_cost": 150,
@@ -462,7 +462,7 @@
       "owner": null
     },
     {
-      "id": 30,
+      "id": 29,
       "name": "Dunbar",
       "type": "yellow",
       "buy_cost": 280,
@@ -481,7 +481,7 @@
       "owner": null
     },
     {
-      "id": 31,
+      "id": 30,
       "name": "Go to Jail",
       "type": "go_to_jail",
       "buy_cost": null,
@@ -492,7 +492,7 @@
       "owner": null
     },
     {
-      "id": 32,
+      "id": 31,
       "name": "Arbutus Ridge",
       "type": "green",
       "buy_cost": 300,
@@ -511,7 +511,7 @@
       "owner": null
     },
     {
-      "id": 33,
+      "id": 32,
       "name": "South Granville",
       "type": "green",
       "buy_cost": 300,
@@ -530,7 +530,7 @@
       "owner": null
     },
     {
-      "id": 34,
+      "id": 33,
       "name": "Community Chest",
       "type": "community",
       "buy_cost": null,
@@ -541,7 +541,7 @@
       "owner": null
     },
     {
-      "id": 35,
+      "id": 34,
       "name": "Point Grey",
       "type": "green",
       "buy_cost": 320,
@@ -560,7 +560,7 @@
       "owner": null
     },
     {
-      "id": 36,
+      "id": 35,
       "name": "West Coast Express",
       "type": "railroad",
       "buy_cost": 200,
@@ -576,7 +576,7 @@
       "owner": null
     },
     {
-      "id": 37,
+      "id": 36,
       "name": "Chance",
       "type": "chance",
       "buy_cost": null,
@@ -587,7 +587,7 @@
       "owner": null
     },
     {
-      "id": 38,
+      "id": 37,
       "name": "Shaughnessy Heights",
       "type": "blue",
       "buy_cost": 350,
@@ -606,7 +606,7 @@
       "owner": null
     },
     {
-      "id": 39,
+      "id": 38,
       "name": "Luxury Tax",
       "type": "tax",
       "buy_cost": null,
@@ -617,7 +617,7 @@
       "owner": null
     },
     {
-      "id": 40,
+      "id": 39,
       "name": "Southlands",
       "type": "blue",
       "buy_cost": 400,
