@@ -24,7 +24,7 @@ defmodule MonopolyWeb.Components.BuyModal do
           <button phx-click="buy_property" class="btn btn-primary">
             Buy
           </button>
-          <button phx-click="cancel_purchase" class="btn btn-secondary">
+          <button phx-click="cancel_buying" class="btn btn-secondary">
             Leave
           </button>
         </div>
