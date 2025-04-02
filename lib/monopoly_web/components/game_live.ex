@@ -27,7 +27,7 @@ defmodule MonopolyWeb.GameLive do
       assign(socket,
         game: game,
         player: Enum.find(game.players, fn player -> player.id == session_id end),
-        roll: game.current_player.id == session_id && game.current_player.turns_taken == 0,
+        roll: game.current_player.id == session_id && game.current_player.can_roll,
         buy_prop: buyable(property, player),
         upgrade_prop: upgradeable(property, player),
         downgrade_prop: downgradeable(property, player),
