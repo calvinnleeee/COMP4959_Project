@@ -329,13 +329,14 @@ defmodule GameObjects.Game do
   """
   @impl true
   def handle_call({:end_turn, session_id}, _from, state) do
-    case :ets.lookup(@game_store, {:game, state.current_player}) do
+    case :ets.lookup(@game_store, :game) do
       [] ->
         {:reply, {:err, "No active game found."}, state}
 
-      [{_key, current_player}] ->
+      [{_key, game}] ->
+        current_player = game.current_player
         if GameObjects.Player.get_id(current_player) == session_id do
-          if current_player.turns_taken > 0 do
+          if current_player.rolled do
             current_player_index =
               Enum.find_index(state.players, fn player ->
                 player.id == state.current_player.id
@@ -357,7 +358,7 @@ defmodule GameObjects.Game do
             updated_players =
               List.replace_at(state.players, current_player_index, %{
                 current_player
-                | turns_taken: 0
+                | rolled: false
               })
 
             # Update statu
