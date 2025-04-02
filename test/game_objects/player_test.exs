@@ -102,8 +102,13 @@ defmodule GameObjects.PlayerTest do
     assert updated.jail_turns == 2
   end
 
-
-
+  # P R O P E R T Y
+  # add_property(__MODULE__.t(), %GameObjects.Property{}) :: __MODULE__.t(): OK
+  test "add_property/2 adds a property", %{player: player} do
+    property = %GameObjects.Property{name: "West End"}
+    updated = Player.add_property(player, property)
+    assert updated.properties == [property]
+  end
 
 
 end
