@@ -73,6 +73,22 @@ defmodule MonopolyWeb.BackendTestingLive do
   end
 
   @impl true
+  def handle_event("roll_dice", _params, socket) do
+    session_id = socket.assigns.session_id
+
+    case GameObjects.Game.roll_dice(session_id) do
+      {:ok, dice_result, current_position, current_tile, updated_game} ->
+        {:noreply,
+         socket
+         |> assign(:game, updated_game)
+         |> put_flash(:info, "Rolled a #{dice_result}, landed on #{current_tile.name}")}
+
+      {:err, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
+  end
+
+  @impl true
   def handle_info(
         %Phoenix.Socket.Broadcast{event: "game_update", payload: updated_game},
         socket
@@ -183,20 +199,6 @@ defmodule MonopolyWeb.BackendTestingLive do
             Buy Properties
           </button>
 
-    <!-- Play Cards -->
-          <button
-            phx-click="play_cards"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
-            style={
-        "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#8E24AA"}; " <>
-        "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
-        }
-          >
-            Play Cards
-          </button>
-
     <!-- Upgrade -->
           <button
             phx-click="upgrade"
@@ -209,6 +211,21 @@ defmodule MonopolyWeb.BackendTestingLive do
         }
           >
             Upgrade
+          </button>
+
+
+    <!-- Downgrade -->
+          <button
+            phx-click="downgrade"
+            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#8E24AA"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            Downgrade
           </button>
 
     <!-- End Turn -->
