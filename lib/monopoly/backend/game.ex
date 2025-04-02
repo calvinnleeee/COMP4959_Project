@@ -22,10 +22,10 @@ defmodule GameObjects.Game do
   @go_bonus 200
   @jail_fee 50
   @luxury_tax_fee 75
-  @income_tax_fee 200 #we will keep income tax as a static 200 because it is easy.
-  @parking_tax_fee 200 #we will keep parking tax as a static 100 because it is easy.
-
-
+  # we will keep income tax as a static 200 because it is easy.
+  @income_tax_fee 200
+  # we will keep parking tax as a static 100 because it is easy.
+  @parking_tax_fee 200
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -62,11 +62,6 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  # Play a card.
-  def play_card(session_id) do
-    GenServer.call(__MODULE__, {:play_card, session_id})
-  end
-
   def take_turn(session_id, tile) do
     GenServer.call(__MODULE__, {:take_turn, session_id, tile})
   end
@@ -92,7 +87,6 @@ defmodule GameObjects.Game do
 
   # ---- PLayer related handles ---- #
 
-
   # Add a new player to the game , update game state in ETS and broadcast change.
   # If game doesn't exist in ETS, create a new game and add player to it.
 
@@ -112,7 +106,7 @@ defmodule GameObjects.Game do
           else
             player_count = length(existing_game.players)
             name = "Player #{player_count + 1}"
-            sprite_id = player_count
+            sprite_id = Integer.to_string(player_count)
             new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
             updated_game = update_in(existing_game.players, &[new_player | &1])
@@ -125,7 +119,7 @@ defmodule GameObjects.Game do
       # If the game doesn't exist
       [] ->
         name = "Player 1"
-        sprite_id = 0
+        sprite_id = "0"
         new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
         new_game = %__MODULE__{
@@ -142,7 +136,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, new_game}, new_game}
     end
   end
-
 
   # Handle dice rolling
   @impl true
@@ -260,25 +253,34 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
-    cond do
-      updated_player.position == @income_tax_position ->
-        updated_player = Player.lose_money(updated_player, @income_tax_fee)
-      updated_player.position == @luxury_tax_position ->
-        updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
-      update_player.position == @go_to_jail_position ->
-        update_player = Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
-      updated_player.position == @parking_tax_position ->
-        updated_player = Player.lose_money(updated_player, @parking_tax_fee)
-      passed_go ->
-        updated_player = Player.add_money(updated_player, @go_bonus)
-      true ->updated_player
-    end
+    updated_player =
+      cond do
+        updated_player.position == @income_tax_position ->
+          Player.lose_money(updated_player, @income_tax_fee)
+
+        updated_player.position == @luxury_tax_position ->
+          Player.lose_money(updated_player, @luxury_tax_fee)
+
+        updated_player.position == @go_to_jail_position ->
+          updated_player
+          |> Player.set_in_jail(true)
+          |> Player.set_position(@jail_position)
+
+        updated_player.position == @parking_tax_position ->
+          Player.lose_money(updated_player, @parking_tax_fee)
+
+        true ->
+          updated_player
+      end
+
+    updated_player =
+      if passed_go do
+        Player.add_money(updated_player, @go_bonus)
+      else
+        updated_player
+      end
 
     updated_player
-
-    if passed_go,
-      do: %{updated_player | money: updated_player.money + @go_bonus},
-      else: updated_player
   end
 
   # Update a player in the game state
@@ -299,7 +301,6 @@ defmodule GameObjects.Game do
   defp get_tile(game, position) do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
-
 
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
@@ -325,7 +326,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, updated_state}, updated_state}
     end
   end
-
 
   @doc """
     End the current player's turn, but check if the rolled first, if not make them roll.
@@ -414,42 +414,6 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Play a card
-  @impl true
-  def handle_call({:play_card, session_id}, _from, state) do
-    current_player = state.current_player
-
-    if current_player.id != session_id do
-      {:reply, {:err, "Invalid session ID"}, state}
-    else
-      case state.active_card do
-        nil ->
-          {:reply, {:err, "No active card to play"}, state}
-
-        card ->
-          # Apply effect to the current player and update the players list
-          updated_player = GameObjects.Card.apply_effect(card, current_player)
-
-          updated_players =
-            Enum.map(state.players, fn player ->
-              if player.id == current_player.id, do: updated_player, else: player
-            end)
-
-          # Clear the active card
-          updated_state = %{
-            state
-            | players: updated_players,
-              current_player: updated_player,
-              active_card: nil
-          }
-
-          # Broadcast the state change
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-      end
-    end
-  end
-
   @doc """
     Handle the possible scenarios when a player lands on a tile, either a property (owned or not) or a card (chance or community).
     session_id: is the unique player id (socket)
@@ -534,22 +498,6 @@ defmodule GameObjects.Game do
         # TODO: end turn, that it?
         end_turn(session_id)
       end
-    end
-
-    # When a player lands on the card tile
-    # TBU
-    if tile.type in ["community", "chance"] do
-      case Deck.draw_card(state.deck, tile.type) do
-        {:ok, card} ->
-          updated_state = %{state | active_card: card}
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_drawn", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-
-        {:error, reason} ->
-          {:reply, {:error, reason}, state}
-      end
-    else
-      {:reply, {:ok, state}, state}
     end
   end
 
