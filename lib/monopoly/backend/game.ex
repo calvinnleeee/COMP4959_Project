@@ -67,10 +67,6 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:play_card, session_id})
   end
 
-  def take_turn(session_id, tile) do
-    GenServer.call(__MODULE__, {:take_turn, session_id, tile})
-  end
-
   def end_turn(session_id) do
     GenServer.call(__MODULE__, {:end_turn, session_id})
   end
