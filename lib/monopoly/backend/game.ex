@@ -11,11 +11,21 @@ defmodule GameObjects.Game do
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
+
   @game_store Game.Store
   @max_player 6
   @jail_position 11
+  @go_to_jail_position 31
+  @income_tax_position 5
+  @parking_tax_position 21
+  @luxury_tax_position 39
   @go_bonus 200
   @jail_fee 50
+  @luxury_tax_fee 75
+  @income_tax_fee 200 #we will keep income tax as a static 200 because it is easy.
+  @parking_tax_fee 200 #we will keep parking tax as a static 100 because it is easy.
+
+
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -29,8 +39,8 @@ defmodule GameObjects.Game do
 
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and Web socket.
-  def join_game(session_id, name, sprite_id) do
-    GenServer.call(__MODULE__, {:join_game, session_id, name, sprite_id})
+  def join_game(session_id) do
+    GenServer.call(__MODULE__, {:join_game, session_id})
   end
 
   # Remove the player from the game.
@@ -90,26 +100,34 @@ defmodule GameObjects.Game do
   # name: string, the player's chosen gamertag/nickname
   # sprite_id: a unique number to identify the the sprite they've selected.
   @impl true
-  def handle_call({:join_game, session_id, name, sprite_id}, _from, state) do
-    new_player = GameObjects.Player.new(session_id, name, sprite_id)
-
+  def handle_call({:join_game, session_id}, _from, _state) do
     case :ets.lookup(@game_store, :game) do
       # If the game already exists
       [{:game, existing_game}] ->
-        if length(existing_game.players) >= @max_player do
-          {:reply, {:err, "Maximum 6 Players"}, state}
+        if Enum.any?(existing_game.players, fn player -> player.id == session_id end) do
+          {:reply, {:ok, existing_game}, existing_game}
         else
-          # Add player to the existing game
-          updated_game = update_in(existing_game.players, &[new_player | &1])
-          :ets.insert(@game_store, {:game, updated_game})
-          # Broadcast new game
-          # TODO: Need other modules to subscribe
-          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
-          {:reply, {:ok, updated_game}, updated_game}
+          if length(existing_game.players) >= @max_player do
+            {:reply, {:err, "Maximum 6 Players"}, existing_game}
+          else
+            player_count = length(existing_game.players)
+            name = "Player #{player_count + 1}"
+            sprite_id = player_count
+            new_player = GameObjects.Player.new(session_id, name, sprite_id)
+
+            updated_game = update_in(existing_game.players, &[new_player | &1])
+            :ets.insert(@game_store, {:game, updated_game})
+            MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
+            {:reply, {:ok, updated_game}, updated_game}
+          end
         end
 
       # If the game doesn't exist
       [] ->
+        name = "Player 1"
+        sprite_id = 0
+        new_player = GameObjects.Player.new(session_id, name, sprite_id)
+
         new_game = %__MODULE__{
           players: [new_player],
           properties: [],
@@ -120,11 +138,11 @@ defmodule GameObjects.Game do
         }
 
         :ets.insert(@game_store, {:game, new_game})
-        # broadcast state update
         MonopolyWeb.Endpoint.broadcast("game_state", "game_update", new_game)
         {:reply, {:ok, new_game}, new_game}
     end
   end
+
 
   # Handle dice rolling
   @impl true
@@ -225,6 +243,22 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
+    cond do
+      updated_player.position == @income_tax_position ->
+        updated_player = Player.lose_money(updated_player, @income_tax_fee)
+      updated_player.position == @luxury_tax_position ->
+        updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
+      update_player.position == @go_to_jail_position ->
+        update_player = Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+      updated_player.position == @parking_tax_position ->
+        updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+      passed_go ->
+        updated_player = Player.add_money(updated_player, @go_bonus)
+      true ->updated_player
+    end
+
+    updated_player
+
     if passed_go,
       do: %{updated_player | money: updated_player.money + @go_bonus},
       else: updated_player
@@ -252,25 +286,29 @@ defmodule GameObjects.Game do
 
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
-    updated_state =
-      update_in(state.players, fn players ->
-        Enum.reject(players, fn player -> player.id == session_id end)
+    filtered_players =
+      state.players
+      |> Enum.reject(fn player -> player.id == session_id end)
+      |> Enum.with_index()
+      |> Enum.map(fn {player, idx} ->
+        %GameObjects.Player{player | name: "Player #{idx + 1}", sprite_id: idx}
       end)
 
-    if Enum.empty?(updated_state.players) do
-      :ets.delete(@game_store, :game)
-      # Broadcast game deletion
-      MonopolyWeb.Endpoint.broadcast("game_state", "game_deleted", nil)
-      {:reply, {:ok, "No players, Game deleted.", %{}}, %{}}
-    else
-      :ets.insert(@game_store, {:game, updated_state})
-      MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_state)
-      {:reply, {:ok, updated_state}, updated_state}
-    end
+    updated_state = %{state | players: filtered_players}
 
-    :ets.insert(@game_store, {:game, updated_state})
-    {:reply, {:ok, updated_state}, updated_state}
+    cond do
+      Enum.empty?(filtered_players) ->
+        :ets.delete(@game_store, :game)
+        MonopolyWeb.Endpoint.broadcast("game_state", "game_deleted", nil)
+        {:reply, {:ok, "No players, Game deleted.", %{}}, %{}}
+
+      true ->
+        :ets.insert(@game_store, {:game, updated_state})
+        MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_state)
+        {:reply, {:ok, updated_state}, updated_state}
+    end
   end
+
 
   @doc """
     End the current player's turn, but check if the rolled first, if not make them roll.
@@ -337,6 +375,7 @@ defmodule GameObjects.Game do
       updated_cards = put_in(updated_players.deck, Deck.init_deck())
       updated_state = put_in(updated_cards.properties, Property.init_property_list())
       :ets.insert(@game_store, {:game, updated_state})
+      MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_state)
       {:reply, {:ok, updated_state}, updated_state}
     else
       {:reply, {:err, "Need at least 2 players"}, state}

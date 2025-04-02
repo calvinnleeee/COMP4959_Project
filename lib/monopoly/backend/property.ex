@@ -1,5 +1,5 @@
 defmodule GameObjects.Property do
-  alias GameObjects.Player 
+  alias GameObjects.Player
   @moduledoc """
   This modules represents Properties. this module contains what a property can do and have
 
@@ -195,12 +195,12 @@ defmodule GameObjects.Property do
 
       count >= 1 and get_type(property) == "railroad" ->
         updated_property = set_owner(property, player)
-        
+
         # Adding the new property
         railroad_count = count + 1
 		player_properties = Player.get_properties(Player.add_property(player, updated_property))
-        new_properties = Enum.map(player_properties, fn r -> 
-        	if r.type == "railroad" do 
+        new_properties = Enum.map(player_properties, fn r ->
+        	if r.type == "railroad" do
         		set_upgrade(r, railroad_count)
         	else
         		r
