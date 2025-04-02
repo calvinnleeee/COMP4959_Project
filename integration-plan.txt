@@ -1,0 +1,25 @@
+integration plan:
+
+piece-by-piece starting in order from what the player interacts with from entering website to game completion
+
+handle testing with at least 2 players, ideally 4
+open up 2~4 browsers to load up the players
+
+- each player can join the game
+	- when a new player joins, all views update to show new players in lobby
+- each player's piece is handled
+- game start (whether automatically, start from first player, or ready up from all players)
+
+- turn start for first player
+	- other players cannot act
+	- other players' dashboards don't update (only current player's)
+- first player rolls
+	- all players see updated position of first player
+	- don't handle logic for landing on specific locations yet
+- first player ends turn, game successfully updates to start the next player (loop back to turn start)
+
+once looping through player list is complete:
+- add handling of landing on a property
+	- test player buy
+	- test auction (if there's auctioning)
+- 
