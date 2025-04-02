@@ -12,16 +12,18 @@ defmodule MonopolyWeb.GameLive do
     # AKA do not default to player-1 in prod?
     session_id = Map.get(session, "session_id", "player-1")
 
-    # Test sample data with backend functions once implemented
-    game = Game.join_game(session_id)
-    game = Game.start_game()
+    # Sample game for use until lobby is complete
+    {:ok, game} = Game.join_game(session_id)
+    {:ok, game} = Game.join_game("player-2")
+    {:ok, game} = Game.start_game()
+    player = Enum.find(game.players, fn player -> player.id == session_id end)
     property = Enum.at(game.properties, player.position)
 
     {
       :ok,
       assign(socket,
         game: game,
-        player: Enum.find(game.players, fn player -> player.id == session_id end),
+        player: player,
         roll: game.current_player.id == session_id && game.current_player.rolled,
         buy_prop: buyable(property, player),
         upgrade_prop: upgradeable(property, player),
@@ -59,7 +61,8 @@ defmodule MonopolyWeb.GameLive do
   # Check if property is owned by player, has upgrades remaining,
   # and player can afford upgrades
   defp upgradeable(property, player) do
-    property.owner.id == player.id &&
+    property.owner != nil &&
+      property.owner.id == player.id &&
       property.upgrades != nil &&
       property.upgrades > 0 &&
       property.type != "railroad" &&
@@ -72,11 +75,12 @@ defmodule MonopolyWeb.GameLive do
 
   # Check if property is owned by player and has been upgraded
   defp downgradeable(property, player) do
-    property.owner.id == player.id &&
-    property.upgrades != nil &&
-    property.upgrades > 1 &&
-    property.type != "railroad" &&
-    property.type != "utility"
+    property.owner != nil &&
+      property.owner.id == player.id &&
+      property.upgrades != nil &&
+      property.upgrades > 1 &&
+      property.type != "railroad" &&
+      property.type != "utility"
   end
 
   # Broadcasted by Game.roll_dice()
