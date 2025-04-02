@@ -255,26 +255,28 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
-    cond do
-      updated_player.position == @income_tax_position ->
-        updated_player = Player.lose_money(updated_player, @income_tax_fee)
+    updated_player =
+      cond do
+        updated_player.position == @income_tax_position ->
+          Player.lose_money(updated_player, @income_tax_fee)
 
-      updated_player.position == @luxury_tax_position ->
-        updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
+        updated_player.position == @luxury_tax_position ->
+          Player.lose_money(updated_player, @luxury_tax_fee)
 
-      updated_player.position == @go_to_jail_position ->
-        updated_player =
-          Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+        updated_player.position == @go_to_jail_position ->
+          updated_player
+          |> Player.set_in_jail(true)
+          |> Player.set_position(@jail_position)
 
-      updated_player.position == @parking_tax_position ->
-        updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+        updated_player.position == @parking_tax_position ->
+          Player.lose_money(updated_player, @parking_tax_fee)
 
-      passed_go ->
-        updated_player = Player.add_money(updated_player, @go_bonus)
+        passed_go ->
+          Player.add_money(updated_player, @go_bonus)
 
-      true ->
-        updated_player
-    end
+        true ->
+          updated_player
+      end
 
     updated_player
   end
