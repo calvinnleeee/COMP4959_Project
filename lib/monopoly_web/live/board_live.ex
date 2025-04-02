@@ -26,11 +26,6 @@ defmodule MonopolyWeb.BoardLive do
     }
   end
 
-  # Broadcasted by Game.roll_dice()
-  def handle_info({:game_update, game}, socket) do
-    {:noreply, assign(socket, game: game)}
-  end
-
   # Check if property is owned by player, has upgrades remaining,
   # and player can afford upgrades
   defp upgradeable(property, player) do
@@ -45,6 +40,11 @@ defmodule MonopolyWeb.BoardLive do
   # Check if property is owned by player and has been upgraded
   defp downgradeable(property, player) do
     property.owner == player.id && property.upgrades != nil && property.upgrades > 0
+  end
+
+  # Broadcasted by Game.roll_dice()
+  def handle_info({:game_update, game}, socket) do
+    {:noreply, assign(socket, game: game)}
   end
 
   # TODO: No backend yet, check what their atom is called
@@ -79,6 +79,11 @@ defmodule MonopolyWeb.BoardLive do
   # Broadcasted by Game.play_card()
   def handle_info({:card_played, game}, socket) do
     {:noreply, assign(socket, game: game)}
+  end
+
+  # TODO: display acquired card on screen
+  defp display_card(card) do
+    nil
   end
 
   # When starting turn, player first clicks roll dice button
@@ -162,11 +167,6 @@ defmodule MonopolyWeb.BoardLive do
     else
       {:noreply, socket}
     end
-  end
-
-  # TODO: display acquired card on screen
-  defp display_card(card) do
-    nil
   end
 
   # Player buys a house/hotel on property they are on
