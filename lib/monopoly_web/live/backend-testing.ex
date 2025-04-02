@@ -5,7 +5,24 @@ defmodule MonopolyWeb.BackendTestingLive do
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
-    {:ok, assign(socket, message: nil, game: nil, session_id: nil)}
+
+    button_states = %{
+      roll_dice: true,
+      buy_property: true,
+      upgrade: true,
+      downgrade: true,
+      end_turn: true,
+      leave_game: true
+    }
+
+    {:ok,
+     assign(socket,
+       message: nil,
+       game: nil,
+       session_id: nil,
+       button_states: button_states,
+       dice_roll: 0
+     )}
   end
 
   def handle_event("set_session_id", %{"id" => id}, socket) do
@@ -95,7 +112,26 @@ defmodule MonopolyWeb.BackendTestingLive do
         %Phoenix.Socket.Broadcast{event: "game_update", payload: updated_game},
         socket
       ) do
-    {:noreply, assign(socket, message: "New Game Created", game: updated_game)}
+
+    if updated_game.current_player do
+      roll_condition =
+        !(updated_game.current_player.id === socket.assigns.session_id) ||
+          updated_game.current_player.rolled
+
+      button_states =
+        socket.assigns.button_states
+        |> Map.put(:roll_dice, roll_condition)
+        |> Map.put(:buy_property, !(updated_game.current_player.id === socket.assigns.session_id))
+        |> Map.put(:upgrade, !(updated_game.current_player.id === socket.assigns.session_id))
+        |> Map.put(:downgrade, !(updated_game.current_player.id === socket.assigns.session_id))
+        |> Map.put(:end_turn, !(updated_game.current_player.id === socket.assigns.session_id))
+        |> Map.put(:leave_game, false)
+      {:noreply,
+      assign(socket, message: "New Game Created", game: updated_game, button_states: button_states)}
+    else
+      {:noreply,
+      assign(socket, message: "New Game Created", game: updated_game)}
+    end
   end
 
   @impl true
@@ -120,8 +156,13 @@ defmodule MonopolyWeb.BackendTestingLive do
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
       <button
         phx-click="join_game"
-        disabled={is_nil(@session_id)}
-        style="padding: 10px 20px; background-color: #43A047; color: white; border: none; border-radius: 5px; cursor: pointer;"
+        disabled={is_nil(@session_id) || !is_nil(@game)}
+        style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if is_nil(@session_id) || not is_nil(@game), do: "#aaa", else: "#43A047"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if is_nil(@session_id) || not is_nil(@game), do: "not-allowed", else: "pointer"};"
+        }
       >
         Join Game
       </button>
@@ -166,7 +207,16 @@ defmodule MonopolyWeb.BackendTestingLive do
               <% end %>
             </strong>
           </li>
-          (Session ID: {player.id})
+          Session ID: {player.id} <br /> <hr />
+          <div style="margin-bottom: 20px; display: flex; gap:100px">
+            <div>
+              Position: {player.position} <br /> Money: {player.money} <br />
+            </div>
+
+            <div>
+              Double Count: {player.turns_taken} <br /> In Jail: {player.in_jail}
+            </div>
+          </div>
         <% end %>
       </ul>
 
@@ -176,12 +226,12 @@ defmodule MonopolyWeb.BackendTestingLive do
           <!-- Roll Dice -->
           <button
             phx-click="roll_dice"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.roll_dice}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#1E88E5"}; " <>
+        "background-color: #{if @button_states.roll_dice, do: "#aaa", else: "#1E88E5"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.roll_dice, do: "not-allowed", else: "pointer"};"
         }
           >
             Roll Dice
@@ -190,12 +240,12 @@ defmodule MonopolyWeb.BackendTestingLive do
     <!-- Buy Properties -->
           <button
             phx-click="buy_property"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.buy_property}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#F4511E"}; " <>
+        "background-color: #{if @button_states.buy_property, do: "#aaa", else: "#F4511E"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.buy_property, do: "not-allowed", else: "pointer"};"
         }
           >
             Buy Properties
@@ -204,27 +254,26 @@ defmodule MonopolyWeb.BackendTestingLive do
     <!-- Upgrade -->
           <button
             phx-click="upgrade"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.upgrade}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#6D4C41"}; " <>
+        "background-color: #{if @button_states.upgrade, do: "#aaa", else: "#6D4C41"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.upgrade, do: "not-allowed", else: "pointer"};"
         }
           >
             Upgrade
           </button>
 
-
     <!-- Downgrade -->
           <button
             phx-click="downgrade"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.downgrade}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#8E24AA"}; " <>
+        "background-color: #{if @button_states.downgrade, do: "#aaa", else: "#8E24AA"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.downgrade, do: "not-allowed", else: "pointer"};"
         }
           >
             Downgrade
@@ -233,12 +282,12 @@ defmodule MonopolyWeb.BackendTestingLive do
     <!-- End Turn -->
           <button
             phx-click="end_turn"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.end_turn}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#546E7A"}; " <>
+        "background-color: #{if @button_states.end_turn, do: "#aaa", else: "#546E7A"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.end_turn, do: "not-allowed", else: "pointer"};"
         }
           >
             End Turn
@@ -247,12 +296,12 @@ defmodule MonopolyWeb.BackendTestingLive do
     <!-- Leave Game -->
           <button
             phx-click="leave_game"
-            disabled={is_nil(@game) || @game.current_player.id !== @session_id}
+            disabled={@button_states.leave_game}
             style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "#aaa", else: "#871C1C"}; " <>
+        "background-color: #{if @button_states.leave_game, do: "#aaa", else: "#871C1C"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game) || @game.current_player.id !== @session_id, do: "not-allowed", else: "pointer"};"
+        "cursor: #{if @button_states.leave_game, do: "not-allowed", else: "pointer"};"
         }
           >
             Leave Game
