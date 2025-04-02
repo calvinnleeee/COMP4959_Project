@@ -108,11 +108,40 @@ defmodule MonopolyWeb.BackendTestingLive do
   end
 
   @impl true
+  def handle_event("end_turn", %{"session_id" => session_id}, socket) do
+    case GameObjects.Game.end_turn(session_id) do
+      {:ok, new_state} ->
+        {:noreply, assign(socket, :game_state, new_state)}
+
+      {:err, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "turn_ended", payload: updated_state}, socket) do
+    roll_condition =
+      !(updated_state.current_player.id === socket.assigns.session_id) ||
+      updated_state.current_player.rolled
+
+    button_states =
+      socket.assigns.button_states
+      |> Map.put(:roll_dice, roll_condition)
+      |> Map.put(:end_turn, !(updated_state.current_player.id === socket.assigns.session_id))
+      |> Map.put(:leave_game, false)
+
+    {:noreply,
+     assign(socket,
+       game: updated_state,
+       button_states: button_states
+     )}
+  end
+
+  @impl true
   def handle_info(
         %Phoenix.Socket.Broadcast{event: "game_update", payload: updated_game},
         socket
       ) do
-
     if updated_game.current_player do
       roll_condition =
         !(updated_game.current_player.id === socket.assigns.session_id) ||
@@ -121,16 +150,17 @@ defmodule MonopolyWeb.BackendTestingLive do
       button_states =
         socket.assigns.button_states
         |> Map.put(:roll_dice, roll_condition)
-        |> Map.put(:buy_property, !(updated_game.current_player.id === socket.assigns.session_id))
-        |> Map.put(:upgrade, !(updated_game.current_player.id === socket.assigns.session_id))
-        |> Map.put(:downgrade, !(updated_game.current_player.id === socket.assigns.session_id))
         |> Map.put(:end_turn, !(updated_game.current_player.id === socket.assigns.session_id))
         |> Map.put(:leave_game, false)
+
       {:noreply,
-      assign(socket, message: "New Game Created", game: updated_game, button_states: button_states)}
+       assign(socket,
+         message: "New Game Created",
+         game: updated_game,
+         button_states: button_states
+       )}
     else
-      {:noreply,
-      assign(socket, message: "New Game Created", game: updated_game)}
+      {:noreply, assign(socket, message: "New Game Created", game: updated_game)}
     end
   end
 
@@ -282,6 +312,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     <!-- End Turn -->
           <button
             phx-click="end_turn"
+            phx-value-session_id={@session_id}
             disabled={@button_states.end_turn}
             style={
         "padding: 10px 20px; " <>
