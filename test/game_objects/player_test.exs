@@ -52,9 +52,26 @@ defmodule GameObjects.PlayerTest do
     updated = Player.set_money(player, 100)
     assert updated.money == 100
   end
-  # add_money(__MODULE__.t(), integer()) :: __MODULE__.t()
-  # @spec lose_money(__MODULE__.t(), integer()) :: __MODULE__.t()
-  # @spec lose_money(__MODULE__.t(), __MODULE__.t(), integer()) :: {__MODULE__.t(), __MODULE__.t()}
 
+  # add_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  test "add_money/2 increases player's money", %{player: player} do
+    updated = Player.add_money(player, 200)
+    assert updated.money == 1700
+  end
+
+  # lose_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  test "lose_money/2 reduces player's money", %{player: player} do
+    updated = Player.lose_money(player, 300)
+    assert updated.money == 1200
+  end
+
+  # @spec lose_money(__MODULE__.t(), __MODULE__.t(), integer()) :: {__MODULE__.t(), __MODULE__.t()}
+  test "lose_money/3 transfers money between players", %{player: player1} do
+    player2 = Player.new("player2", "Inez", 2)
+    {p1_after, p2_after} = Player.lose_money(player1, player2, 500)
+
+    assert p1_after.money == 1000
+    assert p2_after.money == 2000
+  end
 
 end
