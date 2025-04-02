@@ -251,6 +251,7 @@ defmodule GameObjects.Game do
       updated_player.position == @go_to_jail_position ->
         updated_player =
           Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+          
       updated_player.position == @parking_tax_position ->
         updated_player = Player.lose_money(updated_player, @parking_tax_fee)
       passed_go ->
