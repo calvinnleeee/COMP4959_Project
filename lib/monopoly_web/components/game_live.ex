@@ -309,7 +309,7 @@ defmodule MonopolyWeb.GameLive do
       name: "Player #{String.last(id)}",
       sprite_id: 0,
       money: 1500,
-      position: 0,
+      position: 1,
       properties: [],
       cards: [
         %{
@@ -322,7 +322,8 @@ defmodule MonopolyWeb.GameLive do
       ],
       in_jail: false,
       jail_turns: 0,
-      has_rolled: false
+      has_rolled: false,
+      turns_taken: 0
     }
   end
 
@@ -330,7 +331,7 @@ defmodule MonopolyWeb.GameLive do
     %{
       players: [current_player],
       current_player: current_player,
-      properties: [],
+      properties: create_sample_properties(),
       deck: nil,
       turn: 0
     }
