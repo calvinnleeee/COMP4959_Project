@@ -22,10 +22,10 @@ defmodule GameObjects.Game do
   @go_bonus 200
   @jail_fee 50
   @luxury_tax_fee 75
-  @income_tax_fee 200 #we will keep income tax as a static 200 because it is easy.
-  @parking_tax_fee 200 #we will keep parking tax as a static 100 because it is easy.
-
-
+  # we will keep income tax as a static 200 because it is easy.
+  @income_tax_fee 200
+  # we will keep parking tax as a static 100 because it is easy.
+  @parking_tax_fee 200
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -92,7 +92,6 @@ defmodule GameObjects.Game do
 
   # ---- PLayer related handles ---- #
 
-
   # Add a new player to the game , update game state in ETS and broadcast change.
   # If game doesn't exist in ETS, create a new game and add player to it.
 
@@ -142,7 +141,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, new_game}, new_game}
     end
   end
-
 
   # Handle dice rolling
   @impl true
@@ -222,16 +220,59 @@ defmodule GameObjects.Game do
     updated_game = update_player(game, updated_player)
 
     updated_game =
-      if current_tile.type in ["community", "chance"] do
-        case Deck.draw_card(updated_game.deck, current_tile.type) do
-          {:ok, card} ->
-            %{updated_game | active_card: card}
+      cond do
+        current_tile.type in ["community", "chance"] ->
+          case Deck.draw_card(updated_game.deck, current_tile.type) do
+            {:ok, card} ->
+              %{updated_game | active_card: card}
 
-          {:error, _reason} ->
-            updated_game
-        end
-      else
-        updated_game
+            {:error, _reason} ->
+              updated_game
+          end
+
+        current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
+          # if player lands on a property
+          if GameObjects.Property.is_owned(current_tile) do
+
+            # check who owns it
+            case GameObjects.Property.get_owner(current_tile) do
+              owner.id != player.id ->
+                prop_rent = GameObjects.Property.get_current_rent(current_tile)
+                # pay rent
+                if GameObjects.Player.get_money(player) >= prop_rent do
+                  {player_minus_rent, owner_plus_rent} =
+                    GameObjects.Player.lose_money(player, owner, prop_rent)
+
+                  # update player and owner
+                  updated_players =
+                    Enum.map(state.players, fn p ->
+                      cond do
+                        p.id == player.id -> player_minus_rent
+                        p.id == owner.id -> owner_plus_rent
+                        true -> p
+                      end
+                    end)
+
+                  updated_state = %{state | players: updated_players}
+                  :ets.insert(@game_store, {:game, updated_state})
+                  MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
+                  {:reply, {:ok, updated_state}, updated_state}
+                else
+                  # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
+                  leave_game(session_id)
+                end
+
+              owner.id == player.id ->
+                MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
+
+              _ ->
+                Logger.error("Huhhhh? Who's the owner?")
+            end
+          else
+            # Property is Not owned, announce that via broadcast
+            # Frontend will invoke the purchase flow
+            MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
+          end
       end
 
     {{dice, sum, is_doubles}, current_tile, updated_game}
@@ -246,15 +287,22 @@ defmodule GameObjects.Game do
     cond do
       updated_player.position == @income_tax_position ->
         updated_player = Player.lose_money(updated_player, @income_tax_fee)
+
       updated_player.position == @luxury_tax_position ->
         updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
+
       updated_player.position == @go_to_jail_position ->
-        updated_player = Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+        updated_player =
+          Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+
       updated_player.position == @parking_tax_position ->
         updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+
       passed_go ->
         updated_player = Player.add_money(updated_player, @go_bonus)
-      true ->updated_player
+
+      true ->
+        updated_player
     end
 
     updated_player
@@ -283,7 +331,6 @@ defmodule GameObjects.Game do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
 
-
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     filtered_players =
@@ -308,7 +355,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, updated_state}, updated_state}
     end
   end
-
 
   @doc """
     End the current player's turn, but check if the rolled first, if not make them roll.
