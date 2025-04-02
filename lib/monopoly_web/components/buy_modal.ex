@@ -32,7 +32,4 @@ defmodule MonopolyWeb.Components.BuyModal do
     </.modal>
     """
   end
-
-  # need color apply
-
 end
