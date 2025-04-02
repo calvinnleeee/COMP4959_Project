@@ -1,5 +1,4 @@
 defmodule MonopolyWeb.Router do
-  alias MonopolyWeb.TmLive
   use MonopolyWeb, :router
 
   pipeline :browser do
