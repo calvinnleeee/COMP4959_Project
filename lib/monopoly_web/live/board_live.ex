@@ -18,7 +18,7 @@ defmodule MonopolyWeb.BoardLive do
         socket,
         game: game,
         player: Enum.find(game.players, fn player -> player.id == id end),
-        roll: false,
+        roll: game.current_player.id == id,
         buy_prop: false,
         upgrade_prop: false,
         downgrade_prop: false
@@ -35,14 +35,37 @@ defmodule MonopolyWeb.BoardLive do
   def handle_info({:turn_ended, game}, socket) do
     # Check if it is now the player's turn
     assigns = socket.assigns
+    player = assigns.player
 
-    if assigns.game.current_player.id == assigns.player.id do
+    if assigns.game.current_player.id == player.id do
       # If player escaped jail with card, display card on screen
       if game.active_card != nil && game.active_card.effect[0] == "get_out_of_jail",
         do: display_card(game.active_card)
 
-      # Update game state and enable die rolling
-      {:noreply, assign(socket, game: game, roll: true)}
+      property = assigns.game.properties[player.position]
+
+      # Update game state and enable necessary buttons
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          roll: true,
+
+          # If property is owned and can be upgraded enable upgrade_prop button
+          upgrade_prop:
+            property.owner == player.id &&
+              property.upgrades != nil &&
+              ((property.upgrades < length(property.rent_cost) - 2 &&
+                  property.house_price <= player.money) ||
+                 (property.upgrades == length(property.rent_cost) - 2 &&
+                    property.hotel_price <= player.money)),
+
+          # If property is owned and can be downgraded enable downgrade_prop button
+          downgrade_prop:
+            property.owner == player.id && property.upgrades != nil && property.upgrades > 0
+        )
+      }
     else
       {:noreply, assign(socket, game: game)}
     end
