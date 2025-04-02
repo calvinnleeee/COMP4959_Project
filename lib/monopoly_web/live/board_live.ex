@@ -97,6 +97,7 @@ defmodule MonopolyWeb.BoardLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
+      # TODO: pass roll results to dashboard
       {:ok, {dice, _sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(player.id)
 
@@ -268,7 +269,7 @@ defmodule MonopolyWeb.BoardLive do
 
   # Remove user from game
   def terminate(_reason, socket) do
-    # TODO: call backend to remove user from state
+    Game.leave_game(socket.assigns.player.id)
     :ok
   end
 end
