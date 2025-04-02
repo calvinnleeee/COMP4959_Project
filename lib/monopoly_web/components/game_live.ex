@@ -30,17 +30,6 @@ defmodule MonopolyWeb.GameLive do
     )}
   end
 
-  def handle_params(%{"id" => _id}, _uri, socket) do
-    # In a real app, fetch the specific game by ID
-    # For now just use the sample game from mount
-    {:noreply, socket}
-  end
-
-  def handle_params(_params, _uri, socket) do
-    # Index route with no ID
-    {:noreply, socket}
-  end
-
   def handle_event("roll_dice", _params, socket) do
     # Use backend's Dice module to roll the dice
     {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()

@@ -18,10 +18,8 @@ defmodule MonopolyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    live "/board", BoardLive
 
-    live "/game", GameLive, :index
-    live "/game/:id", GameLive, :show
+    live "/game", GameLive
 
   end
 
