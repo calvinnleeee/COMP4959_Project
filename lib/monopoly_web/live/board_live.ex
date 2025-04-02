@@ -31,6 +31,22 @@ defmodule MonopolyWeb.BoardLive do
     {:noreply, assign(socket, game: game)}
   end
 
+  # Check if property is owned by player, has upgrades remaining,
+  # and player can afford upgrades
+  defp upgradeable(property, player) do
+    property.owner == player.id &&
+      property.upgrades != nil &&
+      ((property.upgrades < length(property.rent_cost) - 2 &&
+          property.house_price <= player.money) ||
+          (property.upgrades == length(property.rent_cost) - 2 &&
+            property.hotel_price <= player.money))
+  end
+
+  # Check if property is owned by player and has been upgraded
+  defp downgradeable(property, player) do
+    property.owner == player.id && property.upgrades != nil && property.upgrades > 0
+  end
+
   # TODO: No backend yet, check what their atom is called
   def handle_info({:turn_ended, game}, socket) do
     # Check if it is now the player's turn
@@ -51,19 +67,8 @@ defmodule MonopolyWeb.BoardLive do
           socket,
           game: game,
           roll: true,
-
-          # If property is owned and can be upgraded enable upgrade_prop button
-          upgrade_prop:
-            property.owner == player.id &&
-              property.upgrades != nil &&
-              ((property.upgrades < length(property.rent_cost) - 2 &&
-                  property.house_price <= player.money) ||
-                 (property.upgrades == length(property.rent_cost) - 2 &&
-                    property.hotel_price <= player.money)),
-
-          # If property is owned and can be downgraded enable downgrade_prop button
-          downgrade_prop:
-            property.owner == player.id && property.upgrades != nil && property.upgrades > 0
+          upgrade_prop: upgradeable(property, player),
+          downgrade_prop: downgradeable(property, player)
         )
       }
     else
@@ -123,18 +128,8 @@ defmodule MonopolyWeb.BoardLive do
               new_loc.owner == nil &&
               new_loc.buy_cost <= player.money,
 
-          # If property is owned and can be upgraded enable upgrade_prop button
-          upgrade_prop:
-            new_loc.owner == player.id &&
-              new_loc.upgrades != nil &&
-              ((new_loc.upgrades < length(new_loc.rent_cost) - 2 &&
-                  new_loc.house_price <= player.money) ||
-                 (new_loc.upgrades == length(new_loc.rent_cost) - 2 &&
-                    new_loc.hotel_price <= player.money)),
-
-          # If property is owned and can be downgraded enable downgrade_prop button
-          downgrade_prop:
-            new_loc.owner == player.id && new_loc.upgrades != nil && new_loc.upgrades > 0
+          upgrade_prop: upgradeable(new_loc, player),
+          downgrade_prop: downgradeable(new_loc, player)
         )
       }
     else
