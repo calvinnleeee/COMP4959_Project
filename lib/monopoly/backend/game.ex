@@ -191,7 +191,11 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
-  # Handle rolling dice for not in jail players
+  @doc """
+    Handle rollilng the dice for players NOT in Jail.
+    Check if the tile the player lands on is a Card (Community or Chance) or a Property.
+    Pays rent if property owned by another player, otherwise inform of chance to buy.
+  """
   defp handle_normal_roll(game) do
     player = game.current_player
     {dice, sum, is_doubles} = Dice.roll()
@@ -229,7 +233,6 @@ defmodule GameObjects.Game do
         current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
           # if player lands on a property
           if GameObjects.Property.is_owned(current_tile) do
-
             # check who owns it
             case GameObjects.Property.get_owner(current_tile) do
               owner.id != player.id ->
@@ -251,7 +254,7 @@ defmodule GameObjects.Game do
 
                   updated_state = %{state | players: updated_players}
                   :ets.insert(@game_store, {:game, updated_state})
-                  MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
+                  # MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
                   {:reply, {:ok, updated_state}, updated_state}
                 else
                   # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
@@ -259,15 +262,14 @@ defmodule GameObjects.Game do
                 end
 
               owner.id == player.id ->
-                MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
-
+                # TODO: now what? upgrade?
               _ ->
                 Logger.error("Huhhhh? Who's the owner?")
             end
           else
             # Property is Not owned, announce that via broadcast
             # Frontend will invoke the purchase flow
-            MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
+            # MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
           end
       end
 
