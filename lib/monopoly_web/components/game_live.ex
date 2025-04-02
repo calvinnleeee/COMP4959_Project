@@ -1,6 +1,8 @@
 defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
+  import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
+  import MonopolyWeb.Components.BuyModal
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
@@ -22,7 +24,9 @@ defmodule MonopolyWeb.GameLive do
       is_doubles: false,
       doubles_count: 0,
       doubles_notification: nil,
-      jail_notification: nil
+      jail_notification: nil,
+      show_buy_modal: false,
+      current_property: nil
     )}
   end
 
@@ -130,6 +134,13 @@ defmodule MonopolyWeb.GameLive do
         doubles_count={@doubles_count}
         jail_notification={@jail_notification}
       />
+
+      <!-- Modal for buying property : @id or "buy-modal"-->
+      <%= if @show_buy_modal && @current_property do %>
+        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
+          on_cancel={hide_modal("buy-modal")}/>
+      <% end %>
+
     </div>
     """
   end
