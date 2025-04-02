@@ -106,7 +106,7 @@ defmodule GameObjects.Game do
           else
             player_count = length(existing_game.players)
             name = "Player #{player_count + 1}"
-            sprite_id = Integer.to_string(player_count)
+            sprite_id = player_count
             new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
             updated_game = update_in(existing_game.players, &[new_player | &1])
@@ -119,7 +119,7 @@ defmodule GameObjects.Game do
       # If the game doesn't exist
       [] ->
         name = "Player 1"
-        sprite_id = "0"
+        sprite_id = 0
         new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
         new_game = %__MODULE__{
@@ -349,6 +349,14 @@ defmodule GameObjects.Game do
             next_player_index = rem(current_player_index + 1, length(state.players))
             next_player = Enum.at(state.players, next_player_index)
 
+            # If the next player is in jail, check for and apply the get_out_of_jail card
+            {next_player, state} =
+              if next_player.in_jail do
+                check_and_apply_get_out_of_jail_card(next_player, state)
+              else
+                {next_player, state}
+              end
+
             # Reset turns_taken for the current player
             updated_players =
               List.replace_at(state.players, current_player_index, %{
@@ -373,6 +381,34 @@ defmodule GameObjects.Game do
         else
           {:reply, {:err, "Invalid session ID"}, state}
         end
+    end
+  end
+
+  defp check_and_apply_get_out_of_jail_card(next_player, state) do
+    get_out_cards =
+      Enum.filter(Player.get_cards(next_player), fn card ->
+        case card.effect do
+          {:get_out_of_jail, true} -> true
+          _ -> false
+        end
+      end)
+
+    if get_out_cards != [] do
+      get_out_card = hd(get_out_cards)
+      updated_next_player = GameObjects.Card.apply_effect(get_out_card, next_player)
+      updated_next_player = Player.remove_card(updated_next_player, get_out_card)
+
+      updated_players =
+        Enum.map(state.players, fn player ->
+          if player.id == next_player.id, do: updated_next_player, else: player
+        end)
+
+      updated_state = %{state | players: updated_players, active_card: nil}
+      MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
+
+      {updated_next_player, updated_state}
+    else
+      {next_player, state}
     end
   end
 
