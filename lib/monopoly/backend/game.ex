@@ -14,18 +14,18 @@ defmodule GameObjects.Game do
 
   @game_store Game.Store
   @max_player 6
-  @jail_position 11
-  @go_to_jail_position 31
-  @income_tax_position 5
-  @parking_tax_position 21
-  @luxury_tax_position 39
+  @jail_position 10
+  @go_to_jail_position 30
+  @income_tax_position 4
+  @parking_tax_position 20
+  @luxury_tax_position 38
   @go_bonus 200
   @jail_fee 50
   @luxury_tax_fee 75
-  @income_tax_fee 200 #we will keep income tax as a static 200 because it is easy.
-  @parking_tax_fee 200 #we will keep parking tax as a static 100 because it is easy.
-
-
+  # we will keep income tax as a static 200 because it is easy.
+  @income_tax_fee 200
+  # we will keep parking tax as a static 100 because it is easy.
+  @parking_tax_fee 200
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -92,7 +92,6 @@ defmodule GameObjects.Game do
 
   # ---- PLayer related handles ---- #
 
-
   # Add a new player to the game , update game state in ETS and broadcast change.
   # If game doesn't exist in ETS, create a new game and add player to it.
 
@@ -142,7 +141,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, new_game}, new_game}
     end
   end
-
 
   # Handle dice rolling
   @impl true
@@ -246,17 +244,21 @@ defmodule GameObjects.Game do
     cond do
       updated_player.position == @income_tax_position ->
         updated_player = Player.lose_money(updated_player, @income_tax_fee)
+
       updated_player.position == @luxury_tax_position ->
         updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
       updated_player.position == @go_to_jail_position ->
-        updated_player = 
+        updated_player =
           Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
 
       updated_player.position == @parking_tax_position ->
         updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+
       passed_go ->
         updated_player = Player.add_money(updated_player, @go_bonus)
-      true ->updated_player
+
+      true ->
+        updated_player
     end
 
     updated_player
@@ -286,7 +288,6 @@ defmodule GameObjects.Game do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
 
-
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     filtered_players =
@@ -311,7 +312,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, updated_state}, updated_state}
     end
   end
-
 
   @doc """
     End the current player's turn, but check if the rolled first, if not make them roll.
