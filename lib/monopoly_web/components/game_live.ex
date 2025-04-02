@@ -20,7 +20,7 @@ defmodule MonopolyWeb.GameLive do
     player = create_sample_player(session_id)
     game = create_sample_game(player)
 
-    property = game.properties[player.position]
+    property = Enum.at(game.properties, player.position)
 
     {
       :ok,
@@ -139,7 +139,6 @@ defmodule MonopolyWeb.GameLive do
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: double && !player.in_jail && !was_jailed,
-
           buy_prop: buyable(new_loc, player),
           upgrade_prop: upgradeable(new_loc, player),
           downgrade_prop: downgradeable(new_loc, player),
@@ -166,7 +165,7 @@ defmodule MonopolyWeb.GameLive do
 
     # Verify that it is the player's turn and they can buy
     if assigns.game.current_player.id == player.id && assigns.buy_prop do
-      property = assigns.game.properties[player.position]
+      property = Enum.at(assigns.game.properties, player.position)
       # TODO: Call backend for property (not yet impl)
 
       {
@@ -193,7 +192,7 @@ defmodule MonopolyWeb.GameLive do
 
     # Verify that it is the player's turn and they can upgrade the prop
     if assigns.game.current_player.id == player.id && assigns.upgrade_prop do
-      property = assigns.game.properties[player.position]
+      property = Enum.at(assigns.game.properties, player.position)
       # TODO: call backend for property (not yet impl)
 
       {
@@ -217,7 +216,7 @@ defmodule MonopolyWeb.GameLive do
 
     # Verify that it is the player's turn and they can downgrade the prop
     if assigns.game.current_player.id == player.id && assigns.downgrade_prop do
-      property = assigns.game.properties[player.position]
+      property = Enum.at(assigns.game.properties, player.position)
       # TODO: call backend for property (not yet impl)
 
       {
