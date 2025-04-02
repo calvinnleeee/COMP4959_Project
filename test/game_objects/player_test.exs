@@ -74,4 +74,13 @@ defmodule GameObjects.PlayerTest do
     assert p2_after.money == 2000
   end
 
+  # M O V E  L O G I C
+  # set_position(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  test "set_position/2 sets the position", %{player: player} do
+    updated = Player.set_position(player, 10)
+    assert updated.position == 10
+  end
+
+
+
 end
