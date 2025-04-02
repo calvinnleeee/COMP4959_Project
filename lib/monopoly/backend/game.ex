@@ -136,7 +136,7 @@ defmodule GameObjects.Game do
         MonopolyWeb.Endpoint.broadcast("game_state", "game_update", new_game)
         {:reply, {:ok, new_game}, new_game}
     end
-  end
+  endq
 
   # Handle dice rolling
   @impl true
@@ -219,6 +219,7 @@ defmodule GameObjects.Game do
     current_tile = get_tile(game, updated_player.position)
     updated_game = update_player(game, updated_player)
 
+    # Checking what the user has landed on.
     updated_game =
       cond do
         current_tile.type in ["community", "chance"] ->
@@ -263,13 +264,14 @@ defmodule GameObjects.Game do
 
               owner.id == player.id ->
                 # TODO: now what? upgrade?
+
               _ ->
                 Logger.error("Huhhhh? Who's the owner?")
             end
           else
             # Property is Not owned, announce that via broadcast
             # Frontend will invoke the purchase flow
-            # MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
+            MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
           end
       end
 
