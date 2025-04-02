@@ -27,6 +27,7 @@ defmodule GameObjects.Game do
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
 
+
   # Game struct definition
   # properties and players are both lists of their respective structs
   defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
@@ -60,11 +61,6 @@ defmodule GameObjects.Game do
   # Return the Game's current state.
   def get_state() do
     GenServer.call(__MODULE__, :get_state)
-  end
-
-  # Play a card.
-  def play_card(session_id) do
-    GenServer.call(__MODULE__, {:play_card, session_id})
   end
 
   def take_turn(session_id, tile) do
@@ -224,7 +220,24 @@ defmodule GameObjects.Game do
       if current_tile.type in ["community", "chance"] do
         case Deck.draw_card(updated_game.deck, current_tile.type) do
           {:ok, card} ->
-            %{updated_game | active_card: card}
+            case card.effect do
+              {effect, _value} when effect in [:pay, :earn] ->
+                player_after_effect =
+                  GameObjects.Card.apply_effect(card, updated_game.current_player)
+
+                updated_game = update_player(updated_game, player_after_effect)
+                %{updated_game | active_card: card}
+
+              {effect, _value} when effect == :get_out_of_jail ->
+                owned_card = GameObjects.Card.mark_as_owned(card)
+                updated_deck = Deck.update_deck(updated_game.deck, owned_card)
+                new_player_state = Player.add_card(updated_game.current_player, owned_card)
+                updated_game = update_player(updated_game, new_player_state)
+                %{updated_game | deck: updated_deck, active_card: owned_card}
+
+              _ ->
+                %{updated_game | active_card: card}
+            end
 
           {:error, _reason} ->
             updated_game
@@ -263,10 +276,6 @@ defmodule GameObjects.Game do
     end
 
     updated_player
-
-    if passed_go,
-      do: %{updated_player | money: updated_player.money + @go_bonus},
-      else: updated_player
   end
 
   # Update a player in the game state
@@ -336,6 +345,14 @@ defmodule GameObjects.Game do
             next_player_index = rem(current_player_index + 1, length(state.players))
             next_player = Enum.at(state.players, next_player_index)
 
+            # If the next player is in jail, check for and apply the get_out_of_jail card
+            {next_player, state} =
+              if next_player.in_jail do
+                check_and_apply_get_out_of_jail_card(next_player, state)
+              else
+                {next_player, state}
+              end
+
             # Reset turns_taken for the current player
             updated_players =
               List.replace_at(state.players, current_player_index, %{
@@ -360,6 +377,34 @@ defmodule GameObjects.Game do
         else
           {:reply, {:err, "Invalid session ID"}, state}
         end
+    end
+  end
+
+  defp check_and_apply_get_out_of_jail_card(next_player, state) do
+    get_out_cards =
+      Enum.filter(Player.get_cards(next_player), fn card ->
+        case card.effect do
+          {:get_out_of_jail, true} -> true
+          _ -> false
+        end
+      end)
+
+    if get_out_cards != [] do
+      get_out_card = hd(get_out_cards)
+      updated_next_player = GameObjects.Card.apply_effect(get_out_card, next_player)
+      updated_next_player = Player.remove_card(updated_next_player, get_out_card)
+
+      updated_players =
+        Enum.map(state.players, fn player ->
+          if player.id == next_player.id, do: updated_next_player, else: player
+        end)
+
+      updated_state = %{state | players: updated_players, active_card: nil}
+      MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
+
+      {updated_next_player, updated_state}
+    else
+      {next_player, state}
     end
   end
 
@@ -398,42 +443,6 @@ defmodule GameObjects.Game do
       # If no game exists
       [] ->
         {:reply, {:err, "No active game to delete!"}, %{}}
-    end
-  end
-
-  # Play a card
-  @impl true
-  def handle_call({:play_card, session_id}, _from, state) do
-    current_player = state.current_player
-
-    if current_player.id != session_id do
-      {:reply, {:err, "Invalid session ID"}, state}
-    else
-      case state.active_card do
-        nil ->
-          {:reply, {:err, "No active card to play"}, state}
-
-        card ->
-          # Apply effect to the current player and update the players list
-          updated_player = GameObjects.Card.apply_effect(card, current_player)
-
-          updated_players =
-            Enum.map(state.players, fn player ->
-              if player.id == current_player.id, do: updated_player, else: player
-            end)
-
-          # Clear the active card
-          updated_state = %{
-            state
-            | players: updated_players,
-              current_player: updated_player,
-              active_card: nil
-          }
-
-          # Broadcast the state change
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-      end
     end
   end
 
@@ -521,22 +530,6 @@ defmodule GameObjects.Game do
         # TODO: end turn, that it?
         end_turn(session_id)
       end
-    end
-
-    # When a player lands on the card tile
-    # TBU
-    if tile.type in ["community", "chance"] do
-      case Deck.draw_card(state.deck, tile.type) do
-        {:ok, card} ->
-          updated_state = %{state | active_card: card}
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_drawn", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-
-        {:error, reason} ->
-          {:reply, {:error, reason}, state}
-      end
-    else
-      {:reply, {:ok, state}, state}
     end
   end
 
