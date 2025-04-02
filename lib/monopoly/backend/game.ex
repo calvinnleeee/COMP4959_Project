@@ -100,6 +100,7 @@ defmodule GameObjects.Game do
       # If the game already exists
       [{:game, existing_game}] ->
         if Enum.any?(existing_game.players, fn player -> player.id == session_id end) do
+          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", existing_game)
           {:reply, {:ok, existing_game}, existing_game}
         else
           if length(existing_game.players) >= @max_player do
@@ -200,7 +201,7 @@ defmodule GameObjects.Game do
       if is_doubles do
         %{player | turns_taken: player.turns_taken + 1}
       else
-        %{player | turns_taken: 0}
+        %{player | turns_taken: 0, rolled: true}
       end
 
     should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
