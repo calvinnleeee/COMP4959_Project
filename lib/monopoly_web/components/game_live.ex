@@ -6,7 +6,11 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.Components.PlayerDashboard
   alias GameObjects.Game
 
+  # Connect the player, sub to necessary PubSubs
+  # State includes the game state, player's struct, which buttons are enabled,
+  # and dice-related values
   def mount(_params, session, socket) do
+    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     # For development/testing purpose, use sample data
     # In production this would integrate with GameObjects.Game
     # AKA do not default to player-1 in prod?
