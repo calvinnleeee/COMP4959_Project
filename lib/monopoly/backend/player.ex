@@ -22,7 +22,7 @@ defmodule GameObjects.Player do
         id: any(),
         name: String.t(),
         money: integer(),
-        sprite_id: String.t(),
+        sprite_id: integer(),
         position: integer(),
         properties: [] | [%GameObjects.Property{}],
         cards: [] | [%GameObjects.Card{}],
@@ -35,7 +35,7 @@ defmodule GameObjects.Player do
     Creates a new player with the given id, name, and sprite_id.
     Default player money is set by the @initial_money constant, everything not passed in is set to 0 or it's type equivalent.
     """
-    @spec new(any(), String.t(), Integer.t()) :: __MODULE__.t()
+    @spec new(any(), String.t(),integer()) :: __MODULE__.t()
     def new(id, name, sprite_id) do
         %__MODULE__{
             id: id,
@@ -168,7 +168,7 @@ defmodule GameObjects.Player do
     @doc """
     Creates a new Player with new card added to card. Returns a Player struct.
     """
-    @spec add_card(__MODULE__.t(), integer()) :: __MODULE__.t()
+    @spec add_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t()
     def add_card(player, card) do
         %{player | cards: [card | get_cards(player)] }
     end
