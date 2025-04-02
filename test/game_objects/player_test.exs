@@ -81,12 +81,25 @@ defmodule GameObjects.PlayerTest do
     assert updated.position == 10
   end
 
-  # move(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # move(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
   # Integer.mod/2 to wrap around the board, limit is set by the @board_size (40) constant
   test "move/2 wraps around board size", %{player: player} do
     # When the number is over 40
     moved = Player.move(player, 42)
     assert moved.position == 2
+  end
+
+  # J A I L  L O G I C
+  # set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t(): OK
+  test "set_in_jail/2 sets jail status", %{player: player} do
+    updated = Player.set_in_jail(player, true)
+    assert updated.in_jail
+  end
+
+  # set_jail_turn(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  test "set_jail_turn/2 sets jail turns", %{player: player} do
+    updated = Player.set_jail_turn(player, 2)
+    assert updated.jail_turns == 2
   end
 
 
