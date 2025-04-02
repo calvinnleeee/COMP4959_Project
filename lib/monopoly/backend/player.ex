@@ -35,7 +35,7 @@ defmodule GameObjects.Player do
     Creates a new player with the given id, name, and sprite_id.
     Default player money is set by the @initial_money constant, everything not passed in is set to 0 or it's type equivalent.
     """
-    @spec new(any(), String.t(), String.t()) :: __MODULE__.t()
+    @spec new(any(), String.t(), Integer.t()) :: __MODULE__.t()
     def new(id, name, sprite_id) do
         %__MODULE__{
             id: id,
