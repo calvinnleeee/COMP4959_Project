@@ -110,5 +110,20 @@ defmodule GameObjects.PlayerTest do
     assert updated.properties == [property]
   end
 
+  # C A R D
+  # add_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t(): OK
+  test "add_card/2 adds a card", %{player: player} do
+    card = %GameObjects.Card{type: :get_out_of_jail}
+    updated = Player.add_card(player, card)
+    assert updated.cards == [card]
+  end
+
+  # remove_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t(): OK
+  test "remove_card/2 removes a card", %{player: player} do
+    card = %GameObjects.Card{type: :get_out_of_jail}
+    player_with_card = Player.add_card(player, card)
+    updated = Player.remove_card(player_with_card, card)
+    assert updated.cards == []
+  end
 
 end
