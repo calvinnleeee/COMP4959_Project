@@ -138,7 +138,7 @@ defmodule MonopolyWeb.GameLive do
           player: player,
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
-          roll: double && !player.in_jail && !was_jailed,
+          roll: player.can_roll,
           buy_prop: buyable(new_loc, player),
           upgrade_prop: upgradeable(new_loc, player),
           downgrade_prop: downgradeable(new_loc, player),
