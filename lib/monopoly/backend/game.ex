@@ -58,8 +58,13 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
-  #upgrade a property
+  # Upgrade a property
   def upgrade_property(session_id, property_id) do
+    GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
+  end
+
+  # Downgrade a property
+  def downgrade_property(session_id, property_id) do
     GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
   end
 
@@ -149,8 +154,6 @@ defmodule GameObjects.Game do
         {:reply, {:err, "No active game"}, state}
     end
   end
-
-  defp
 
   # Handle rolling dice when player is in jail
   defp handle_jail_roll(game) do
@@ -298,9 +301,9 @@ defmodule GameObjects.Game do
 
 
 
-########
+  # Update game state with property upgrade and reduced player money
   @impl true
-  def handle_call(:upgrade_property, session_id, property) do
+  defp handle_call(:upgrade_property, session_id, property, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
@@ -346,7 +349,55 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Get tile from properties list by position
+  # Update game state with property upgrade and reduced player money
+  @impl true
+  defp handle_call(:downgrade_property, session_id, property, state) do
+    case :ets.lookup(@game_store, :game) do
+      [{:game, game}] ->
+        current_player = game.current_player
+
+        if current_player.id != session_id do
+          {:reply, {:err, "Not your turn"}, state}
+        else
+          property = get_property(game, property)
+
+
+
+          #check with abdu if we assign owners with id
+          if property.owner == current_player.id do
+
+            {updated_property, cost} = property.build_upgrade(property)
+
+            #money and player update
+            #cost = property.house_price
+            if cost == 0 do
+              {:reply, {:err, "Cannot upgrade"}, state}
+            end
+            if current_player.money < cost do
+              {:reply, {:err, "Not enough money"}, state}
+            end
+            updated_player = Player.lose_money(current_player, cost)
+            player_updated_game = update_player(game, updated_player)
+
+            #updated_property = Property.inc_upgrade(property)
+            prop_updated_game = update_property(player_updated_game, updated_property)
+
+
+            #store the updated game state in ETS
+            :ets.insert(@game_store, {:game, prop_updated_game})
+            {:reply, {:ok, prop_updated_game}, prop_updated_game}
+          else
+            {:reply, {:err, "You don't own this property"}, state}
+          end
+        end
+
+      [] ->
+        {:reply, {:err, "No active game"}, state}
+
+    end
+  end
+
+  # Get property from game list by property id
   defp get_property(game, property) do
     Enum.find(game.properties, fn prop -> prop.id == property.id end)
   end
@@ -365,13 +416,6 @@ defmodule GameObjects.Game do
     %{game | properties: updated_properties}
   end
 
-
-
-
-
-
-
-  #####
   # Play a card
   @impl true
   def handle_call({:play_card, session_id}, _from, state) do
