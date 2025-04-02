@@ -1,6 +1,10 @@
 defmodule MonopolyWeb.GameLive do
+  @moduledoc """
+  The VHM board which communicates with the backend Game server.
+  """
   use MonopolyWeb, :live_view
   import MonopolyWeb.Components.PlayerDashboard
+  alias GameObjects.Game
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
