@@ -20,23 +20,45 @@ defmodule MonopolyWeb.GameLive do
     player = create_sample_player(session_id)
     game = create_sample_game(player)
 
+    property = game.properties[player.position]
+
     {
       :ok,
       assign(socket,
         game: game,
         player: Enum.find(game.players, fn player -> player.id == session_id end),
-        roll: game.current_player.id == session_id,
-        buy_prop: false,
-        upgrade_prop: false,
-        downgrade_prop: false,
+        roll: game.current_player.id == session_id && game.current_player.turns_taken == 0,
+        buy_prop: buyable(property, player),
+        upgrade_prop: upgradeable(property, player),
+        downgrade_prop: downgradeable(property, player),
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
-        doubles_count: 0,
         doubles_notification: nil,
         jail_notification: nil
       )
     }
+  end
+
+  # Check if property is buyable
+  defp buyable(property, player) do
+    Enum.member?(
+      [
+        "brown",
+        "red",
+        "light blue",
+        "pink",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "railroad",
+        "utility"
+      ],
+      property.type
+    ) &&
+      property.owner == nil &&
+      property.buy_cost <= player.money
   end
 
   # Check if property is owned by player, has upgrades remaining,
@@ -118,25 +140,7 @@ defmodule MonopolyWeb.GameLive do
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: double && !player.in_jail && !was_jailed,
 
-          # If property is buyable enable buy_prop button
-          buy_prop:
-            Enum.member?(
-              [
-                "brown",
-                "red",
-                "light blue",
-                "pink",
-                "orange",
-                "yellow",
-                "green",
-                "blue",
-                "railroad",
-                "utility"
-              ],
-              new_loc.type
-            ) &&
-              new_loc.owner == nil &&
-              new_loc.buy_cost <= player.money,
+          buy_prop: buyable(new_loc, player),
           upgrade_prop: upgradeable(new_loc, player),
           downgrade_prop: downgradeable(new_loc, player),
 
@@ -144,7 +148,6 @@ defmodule MonopolyWeb.GameLive do
           dice_result: sum,
           dice_values: dice,
           is_doubles: double,
-          doubles_count: assigns.doubles_count + if(double, do: 1, else: 0),
 
           # Notifications for dashboard
           jail_notification: jail_notification,
@@ -251,7 +254,6 @@ defmodule MonopolyWeb.GameLive do
           dice_result: nil,
           dice_values: nil,
           is_doubles: false,
-          doubles_count: 0,
           doubles_notification: nil,
           jail_notification: nil
         )
@@ -293,7 +295,7 @@ defmodule MonopolyWeb.GameLive do
         dice_values={@dice_values}
         is_doubles={@is_doubles}
         doubles_notification={@doubles_notification}
-        doubles_count={@doubles_count}
+        doubles_count={@player.turns_taken}
         jail_notification={@jail_notification}
       />
     </div>
