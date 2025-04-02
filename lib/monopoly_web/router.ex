@@ -18,6 +18,10 @@ defmodule MonopolyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/game", GameLive, :index
+    live "/game/:id", GameLive, :show
+
   end
 
   # Other scopes may use custom stacks.
