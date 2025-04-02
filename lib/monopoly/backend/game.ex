@@ -11,11 +11,21 @@ defmodule GameObjects.Game do
 
   # CONSTANTS HERE
   # ETS table defined in application.ex
+
   @game_store Game.Store
   @max_player 6
   @jail_position 11
+  @go_to_jail_position 31
+  @income_tax_position 5
+  @parking_tax_position 21
+  @luxury_tax_position 39
   @go_bonus 200
   @jail_fee 50
+  @luxury_tax_fee 75
+  @income_tax_fee 200 #we will keep income tax as a static 200 because it is easy.
+  @parking_tax_fee 200 #we will keep parking tax as a static 100 because it is easy.
+
+
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -224,6 +234,22 @@ defmodule GameObjects.Game do
     old_position = player.position
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
+
+    cond do
+      updated_player.position == @income_tax_position ->
+        updated_player = Player.lose_money(updated_player, @income_tax_fee)
+      updated_player.position == @luxury_tax_position ->
+        updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
+      update_player.position == @go_to_jail_position ->
+        update_player = Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+      updated_player.position == @parking_tax_position ->
+        updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+      passed_go ->
+        updated_player = Player.add_money(updated_player, @go_bonus)
+      true ->updated_player
+    end
+
+    updated_player
 
     if passed_go,
       do: %{updated_player | money: updated_player.money + @go_bonus},
