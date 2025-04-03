@@ -1,8 +1,10 @@
 defmodule GameObjects.PlayerTest do
-  # Unit tests for player.ex
+  # Unit tests for player.ex (almost done)
   #
   # TODO(?)
-  #   - Save logic after a players' status change (Setters doesn't work)
+  #   - Save logic after a players' status change (Setters doesn't work) -> Check my test logic
+  #   - Change test names into meaningful ones
+  #   - Double check if the way raising error is correct
 
   use ExUnit.Case
   alias GameObjects.Player
@@ -350,15 +352,52 @@ defmodule GameObjects.PlayerTest do
     assert updated.properties == [property]
   end
 
-  # C A R D
-  # add_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t(): OK
+  # 🃏 C A R D 🃏
+  # add_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t()
+  # :OK
   test "add_card/2 adds a card", %{player: player} do
     card = %GameObjects.Card{type: :get_out_of_jail}
     updated = Player.add_card(player, card)
     assert updated.cards == [card]
   end
 
-  # remove_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t(): OK
+  # :OK
+  test "add_card/2 stacks multiple cards", %{player: player} do
+    card1 = %GameObjects.Card{type: :get_out_of_jail}
+    card2 = %GameObjects.Card{type: :advance_to_go}
+
+    updated = player
+              |> Player.add_card(card1)
+              |> Player.add_card(card2)
+
+    assert updated.cards == [card2, card1]
+  end
+
+  # :OK
+  test "add_card/2 allows duplicate cards", %{player: player} do
+    card = %GameObjects.Card{type: :get_out_of_jail}
+    updated = player
+              |> Player.add_card(card)
+              |> Player.add_card(card)
+
+    assert updated.cards == [card, card]
+  end
+
+  # :OK
+  test "add_card/2 with nil adds nil to cards", %{player: player} do
+    updated = Player.add_card(player, nil)
+    assert updated.cards == [nil]
+  end
+
+  # :ERROR nothing was raised
+  test "add_card/2 with invalid card type (string) raises error", %{player: player} do
+    assert_raise FunctionClauseError, fn ->
+      Player.add_card(player, "not a card")
+    end
+  end
+
+  # remove_card(__MODULE__.t(), %GameObjects.Card{}) :: __MODULE__.t()
+  # :OK
   test "remove_card/2 removes a card", %{player: player} do
     card = %GameObjects.Card{type: :get_out_of_jail}
     player_with_card = Player.add_card(player, card)
@@ -366,4 +405,28 @@ defmodule GameObjects.PlayerTest do
     assert updated.cards == []
   end
 
+  # :OK
+  test "remove_card/2 does nothing if card is not found", %{player: player} do
+    card = %GameObjects.Card{type: :get_out_of_jail}
+    not_owned_card = %GameObjects.Card{type: :advance_to_go}
+
+    player_with_card = Player.add_card(player, card)
+    updated = Player.remove_card(player_with_card, not_owned_card)
+
+    assert updated.cards == [card]
+  end
+
+  # :OK
+  test "remove_card/2 only removes one instance if duplicates exist", %{player: player} do
+    card = %GameObjects.Card{type: :get_out_of_jail}
+
+    player_with_cards =
+      player
+      |> Player.add_card(card)
+      |> Player.add_card(card)
+
+    updated = Player.remove_card(player_with_cards, card)
+
+    assert updated.cards == [card]  # One left(???)
+  end
 end
