@@ -95,5 +95,90 @@ defmodule GameObjects.GameTest do
     end
   end
 
-  
+
+  describe "start_game/0" do
+    test "does not start with fewer than 2 players" do
+      game = create_test_game(1)
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      assert {:err, "Need at least 2 players"} = Game.start_game()
+    end
+
+    test "starts game and initializes properties and deck" do
+      game = create_test_game(2)
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      {:ok, new_game} = Game.start_game()
+      assert new_game.current_player != nil
+      assert length(new_game.deck) > 0
+      assert length(new_game.properties) > 0
+    end
+  end
+
+
+
+  describe "leave_game/1" do
+    test "removes player from game" do
+      game = create_test_game(2)
+      :ets.insert(Game.Store, {:game, game})
+      # Tell the GenServer to hold the same game state
+      :sys.replace_state(Game, fn _ -> game end)
+
+      {:ok, updated_game} = Game.leave_game("player_1")
+      refute Enum.any?(updated_game.players, fn p -> p.id == "player_1" end)
+      assert length(updated_game.players) == 1
+    end
+
+    test "deletes game if last player leaves" do
+      game = create_test_game(1)
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      {:ok, "No players, Game deleted.", state} = Game.leave_game("player_1")
+      assert state == %{}
+      assert :ets.lookup(Game.Store, :game) == []
+    end
+  end
+
+  describe "take_turn/2" do
+    setup do
+      # Clean ETS and reset state only
+      :ets.delete(Game.Store, :game)
+
+      :ok
+    end
+
+    test "player pays rent on owned property" do
+      player = create_test_player("renter", "Renter", 1)
+      owner = create_test_player("owner", "Owner", 0)
+
+      property = create_test_property(5, "Rent Tile", "brown", 60)
+      property = %{property | owner: owner}
+
+      game = %Game{
+        players: [player, owner],
+        properties: [property],
+        current_player: player,
+        deck: [],
+        turn: 0
+      }
+
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      {:ok, updated_game} = Game.take_turn("renter", property)
+
+      updated_player = Enum.find(updated_game.players, &(&1.id == "renter"))
+      updated_owner = Enum.find(updated_game.players, &(&1.id == "owner"))
+
+      assert updated_player.money < 1500
+      assert updated_owner.money > 1500
+    end
+
+
+  end
+
+
 end
