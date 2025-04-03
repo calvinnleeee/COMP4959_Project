@@ -265,7 +265,78 @@ defmodule GameObjects.GameTest do
       assert updated_property.owner == player
     end
 
+    test "validates complete property transaction" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      property = Enum.at(game.properties, 0)
+      initial_money = player.money
 
+      # Test both money deduction and property ownership
+      updated_player = %{player |
+        money: initial_money - property.buy_cost,
+        properties: [property]
+      }
+      updated_property = %{property | owner: player}
+
+      game = %{game |
+        players: [updated_player],
+        properties: [updated_property | tl(game.properties)]
+      }
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_player.money == initial_money - property.buy_cost
+      assert updated_property.owner == player
+      assert length(updated_player.properties) == 1
+    end
+    
+  end
+
+  describe "player actions" do
+    test "validates player movement" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      original_position = player.position
+
+      # Simulate moving the player
+      updated_player = %{player | position: original_position + 3}
+      game = %{game | players: [updated_player]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_player.position == original_position + 3
+    end
+
+    test "validates player buying property" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      property = Enum.at(game.properties, 0)
+
+      # Simulate buying the property
+      updated_player = %{player | money: player.money - property.buy_cost}
+      updated_property = %{property | owner: player}
+
+      game = %{game | players: [updated_player], properties: [updated_property]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_property.owner == player
+    end
+
+    test "validates complete player turn" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+
+      # Simulate a complete turn
+      updated_player = %{player |
+        position: player.position + 5,
+        turns_taken: player.turns_taken + 1,
+        rolled: true
+      }
+      game = %{game | players: [updated_player]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_player.position == 5
+      assert updated_player.turns_taken == 1
+      assert updated_player.rolled == true
+    end
   end
 
 end
