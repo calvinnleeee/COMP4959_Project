@@ -26,6 +26,10 @@ defmodule MonopolyWeb.BackendTestingLive do
   end
 
   def handle_event("set_session_id", %{"id" => id}, socket) do
+    {:ok, state} = GameObjects.Game.get_state()
+    if state != %{} do
+      IO.puts("Ongoing game")
+    end
     {:noreply, assign(socket, session_id: id)}
   end
 
@@ -96,10 +100,14 @@ defmodule MonopolyWeb.BackendTestingLive do
     case GameObjects.Game.roll_dice(session_id) do
       {:ok, dice_result, current_position, current_tile, updated_game} ->
         message = "Landed on #{current_tile.name}"
+        button_states =
+          socket.assigns.button_states
+          |> Map.put(:buy_property, current_tile.owner !== nil)
 
         {:noreply,
          socket
          |> assign(:game, updated_game)
+         |> assign(:button_states, button_states)
          |> put_flash(:info, message)}
 
       {:err, reason} ->
