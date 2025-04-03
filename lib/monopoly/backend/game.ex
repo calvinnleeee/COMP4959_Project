@@ -136,7 +136,7 @@ defmodule GameObjects.Game do
         MonopolyWeb.Endpoint.broadcast("game_state", "game_update", new_game)
         {:reply, {:ok, new_game}, new_game}
     end
-  endq
+  end
 
   # Handle dice rolling
   @impl true
