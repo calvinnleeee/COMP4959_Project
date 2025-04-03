@@ -275,13 +275,13 @@ defmodule GameObjects.Game do
                   {:reply, {:ok, updated_state}, updated_state}
                 else
                   # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
-                  # leave_game(session_id)
-                  # !!!!!!!!! FIX THIS.
+                  leave_game(session_id)
                 end
 
               true ->
                 # TODO: now what? upgrade?
                 Logger.info("#{owner.name} owns #{current_tile.name}. Upgrade?")
+                # FIX THIS PART TO RETURN A STATE
 
               # _ ->
               #   Logger.error("Huhhhh? Who's the owner?")
