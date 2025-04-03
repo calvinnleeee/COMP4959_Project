@@ -28,10 +28,12 @@ defmodule MonopolyWeb.GameLive do
       assign(socket,
         game: game,
         player: player,
+        # TODO: Check implementation of player.rolled
         roll: game.current_player.id == session_id && game.current_player.rolled,
         buy_prop: buyable(property, player),
         upgrade_prop: upgradeable(property, player),
         downgrade_prop: downgradeable(property, player),
+        end_turn: game.current_player.id == session.id,
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
@@ -148,10 +150,11 @@ defmodule MonopolyWeb.GameLive do
           player: player,
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
-          roll: player.rolled,
+          roll: player.rolled && !player.in_jail,
           buy_prop: buyable(new_loc, player),
           upgrade_prop: upgradeable(new_loc, player),
           downgrade_prop: downgradeable(new_loc, player),
+          end_turn: !player.rolled || player.in_jail,
 
           # Dice results for dashboard
           dice_result: sum,
@@ -256,6 +259,7 @@ defmodule MonopolyWeb.GameLive do
           buy_prop: false,
           upgrade_prop: false,
           downgrade_prop: false,
+          end_turn: false,
           dice_result: nil,
           dice_values: nil,
           is_doubles: false,
@@ -271,7 +275,7 @@ defmodule MonopolyWeb.GameLive do
   def render(assigns) do
     # TODO: buttons
     # - Roll dice
-    # - Buy property (enabled if landed on)?
+    # - Buy property
     # - Buy house
     # - Sell house
     # - End turn
