@@ -196,32 +196,32 @@ defmodule GameObjects.Game do
   end
 
   @doc """
-    Handle rollilng the dice for players NOT in Jail.
+    Handle rolling the dice for players NOT in Jail.
     Check if the tile the player lands on is a Card (Community or Chance) or a Property.
     Pays rent if property owned by another player, otherwise inform of chance to buy.
   """
   defp handle_normal_roll(game) do
-    player = game.current_player
+    current_player = game.current_player
+
+    # Update player after dice roll
     {dice, sum, is_doubles} = Dice.roll()
+    current_player = %{current_player |
+      turns_taken: if(is_doubles, do: current_player.turns_taken + 1, else: 0),
+      rolled: !is_doubles
+    }
 
-    updated_player =
-      if is_doubles do
-        %{player | turns_taken: player.turns_taken + 1}
-      else
-        %{player | turns_taken: 0, rolled: true}
-      end
+    should_go_to_jail = Dice.check_for_jail(current_player.turns_taken, is_doubles)
 
-    should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
-
-    updated_player =
+    current_player =
       if should_go_to_jail do
-        %{updated_player | in_jail: true, position: @jail_position, turns_taken: 0}
+        %{current_player | in_jail: true, position: @jail_position, turns_taken: 0}
       else
-        move_player(updated_player, sum)
+        move_player(current_player, sum)
       end
 
-    current_tile = get_tile(game, updated_player.position)
-    updated_game = update_player(game, updated_player)
+    current_tile = get_tile(game, current_player.position)
+    updated_game = update_player(game, current_player)
+    current_state = updated_game.state
 
     # Checking what the user has landed on.
     updated_game =
@@ -250,39 +250,41 @@ defmodule GameObjects.Game do
         current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
           if GameObjects.Property.is_owned(current_tile) do
             # check who owns it
-            case GameObjects.Property.get_owner(current_tile) do
-              owner.id != player.id ->
+            owner = GameObjects.Property.get_owner(current_tile)
+            case owner.id == current_player.id do
+              false ->
                 prop_rent = GameObjects.Property.get_current_rent(current_tile)
                 # pay rent
-                if GameObjects.Player.get_money(player) >= prop_rent do
+                if GameObjects.Player.get_money(current_player) >= prop_rent do
                   {player_minus_rent, owner_plus_rent} =
-                    GameObjects.Player.lose_money(player, owner, prop_rent)
+                    GameObjects.Player.lose_money(current_player, owner, prop_rent)
 
                   # update player and owner
                   updated_players =
-                    Enum.map(state.players, fn p ->
+                    Enum.map(current_state.players, fn p ->
                       cond do
-                        p.id == player.id -> player_minus_rent
+                        p.id == current_player.id -> player_minus_rent
                         p.id == owner.id -> owner_plus_rent
                         true -> p
                       end
                     end)
 
-                  updated_state = %{state | players: updated_players}
+                  updated_state = %{current_state | players: updated_players}
                   :ets.insert(@game_store, {:game, updated_state})
                   # MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
                   {:reply, {:ok, updated_state}, updated_state}
                 else
                   # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
-                  leave_game(session_id)
+                  # leave_game(session_id)
+                  # !!!!!!!!! FIX THIS.
                 end
 
-              owner.id == player.id ->
+              true ->
                 # TODO: now what? upgrade?
-                Logger.info("#{player} owns #{current_tile.name}. Upgrade?")
+                Logger.info("#{owner.name} owns #{current_tile.name}. Upgrade?")
 
-              _ ->
-                Logger.error("Huhhhh? Who's the owner?")
+              # _ ->
+              #   Logger.error("Huhhhh? Who's the owner?")
             end
           else
             # Property is Not owned, announce that via broadcast
@@ -538,7 +540,8 @@ defmodule GameObjects.Game do
     Buy the given property for the current player, update owner of property and charge money, and update state.
     tile is assumed to be a Property but checks regardless.
   """
-  defp handle_call({:buy_property, session_id, tile}, _from, state) do
+  @impl true
+  def handle_call({:buy_property, session_id, tile}, _from, state) do
     player = state.current_player
 
     cond do
