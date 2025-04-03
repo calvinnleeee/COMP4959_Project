@@ -14,11 +14,11 @@ defmodule GameObjects.Game do
 
   @game_store Game.Store
   @max_player 6
-  @jail_position 11
-  @go_to_jail_position 31
-  @income_tax_position 5
-  @parking_tax_position 21
-  @luxury_tax_position 39
+  @jail_position 10
+  @go_to_jail_position 30
+  @income_tax_position 4
+  @parking_tax_position 20
+  @luxury_tax_position 38
   @go_bonus 200
   @jail_fee 50
   @luxury_tax_fee 75
@@ -26,6 +26,7 @@ defmodule GameObjects.Game do
   @income_tax_fee 200
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
+
 
   # Game struct definition
   # properties and players are both lists of their respective structs
@@ -62,9 +63,8 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  # Play a card.
-  def play_card(session_id) do
-    GenServer.call(__MODULE__, {:play_card, session_id})
+  def take_turn(session_id, tile) do
+    GenServer.call(__MODULE__, {:take_turn, session_id, tile})
   end
 
   def end_turn(session_id) do
@@ -100,6 +100,7 @@ defmodule GameObjects.Game do
       # If the game already exists
       [{:game, existing_game}] ->
         if Enum.any?(existing_game.players, fn player -> player.id == session_id end) do
+          MonopolyWeb.Endpoint.broadcast("game_state", "game_update", existing_game)
           {:reply, {:ok, existing_game}, existing_game}
         else
           if length(existing_game.players) >= @max_player do
@@ -204,7 +205,7 @@ defmodule GameObjects.Game do
       if is_doubles do
         %{player | turns_taken: player.turns_taken + 1}
       else
-        %{player | turns_taken: 0}
+        %{player | turns_taken: 0, rolled: true}
       end
 
     should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
@@ -227,6 +228,22 @@ defmodule GameObjects.Game do
             {:ok, card} ->
               %{updated_game | active_card: card}
 
+              {effect, _value} when effect == :get_out_of_jail ->
+                owned_card = GameObjects.Card.mark_as_owned(card)
+                updated_deck = Deck.update_deck(updated_game.deck, owned_card)
+                new_player_state = Player.add_card(updated_game.current_player, owned_card)
+                updated_game = update_player(updated_game, new_player_state)
+                %{updated_game | deck: updated_deck, active_card: owned_card}
+
+              _ ->
+                %{updated_game | active_card: card}
+            end
+
+          {:error, _reason} ->
+            updated_game
+        end
+      else
+        updated_game
             {:error, _reason} ->
               updated_game
           end
@@ -284,32 +301,30 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
-    cond do
-      updated_player.position == @income_tax_position ->
-        updated_player = Player.lose_money(updated_player, @income_tax_fee)
+    updated_player =
+      cond do
+        updated_player.position == @income_tax_position ->
+          Player.lose_money(updated_player, @income_tax_fee)
 
-      updated_player.position == @luxury_tax_position ->
-        updated_player = Player.lose_money(updated_player, @luxury_tax_fee)
+        updated_player.position == @luxury_tax_position ->
+          Player.lose_money(updated_player, @luxury_tax_fee)
 
-      updated_player.position == @go_to_jail_position ->
-        updated_player =
-          Player.set_in_jail(updated_player, true) |> Player.set_position(@jail_position)
+        updated_player.position == @go_to_jail_position ->
+          updated_player
+          |> Player.set_in_jail(true)
+          |> Player.set_position(@jail_position)
 
-      updated_player.position == @parking_tax_position ->
-        updated_player = Player.lose_money(updated_player, @parking_tax_fee)
+        updated_player.position == @parking_tax_position ->
+          Player.lose_money(updated_player, @parking_tax_fee)
 
-      passed_go ->
-        updated_player = Player.add_money(updated_player, @go_bonus)
+        passed_go ->
+          Player.add_money(updated_player, @go_bonus)
 
-      true ->
-        updated_player
-    end
+        true ->
+          updated_player
+      end
 
     updated_player
-
-    if passed_go,
-      do: %{updated_player | money: updated_player.money + @go_bonus},
-      else: updated_player
   end
 
   # Update a player in the game state
@@ -362,13 +377,14 @@ defmodule GameObjects.Game do
   """
   @impl true
   def handle_call({:end_turn, session_id}, _from, state) do
-    case :ets.lookup(@game_store, {:game, state.current_player}) do
+    case :ets.lookup(@game_store, :game) do
       [] ->
         {:reply, {:err, "No active game found."}, state}
 
-      [{_key, current_player}] ->
+      [{_key, game}] ->
+        current_player = game.current_player
         if GameObjects.Player.get_id(current_player) == session_id do
-          if current_player.turns_taken > 0 do
+          if current_player.rolled do
             current_player_index =
               Enum.find_index(state.players, fn player ->
                 player.id == state.current_player.id
@@ -378,11 +394,19 @@ defmodule GameObjects.Game do
             next_player_index = rem(current_player_index + 1, length(state.players))
             next_player = Enum.at(state.players, next_player_index)
 
+            # If the next player is in jail, check for and apply the get_out_of_jail card
+            {next_player, state} =
+              if next_player.in_jail do
+                check_and_apply_get_out_of_jail_card(next_player, state)
+              else
+                {next_player, state}
+              end
+
             # Reset turns_taken for the current player
             updated_players =
               List.replace_at(state.players, current_player_index, %{
                 current_player
-                | turns_taken: 0
+                | rolled: false
               })
 
             # Update statu
@@ -402,6 +426,34 @@ defmodule GameObjects.Game do
         else
           {:reply, {:err, "Invalid session ID"}, state}
         end
+    end
+  end
+
+  defp check_and_apply_get_out_of_jail_card(next_player, state) do
+    get_out_cards =
+      Enum.filter(Player.get_cards(next_player), fn card ->
+        case card.effect do
+          {:get_out_of_jail, true} -> true
+          _ -> false
+        end
+      end)
+
+    if get_out_cards != [] do
+      get_out_card = hd(get_out_cards)
+      updated_next_player = GameObjects.Card.apply_effect(get_out_card, next_player)
+      updated_next_player = Player.remove_card(updated_next_player, get_out_card)
+
+      updated_players =
+        Enum.map(state.players, fn player ->
+          if player.id == next_player.id, do: updated_next_player, else: player
+        end)
+
+      updated_state = %{state | players: updated_players, active_card: nil}
+      MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
+
+      {updated_next_player, updated_state}
+    else
+      {next_player, state}
     end
   end
 
