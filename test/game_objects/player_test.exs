@@ -221,10 +221,29 @@ defmodule GameObjects.PlayerTest do
 
 
   # 🏃 M O V E  L O G I C 🏃
-  # set_position(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  # set_position(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # :OK
   test "set_position/2 sets the position", %{player: player} do
     updated = Player.set_position(player, 10)
     assert updated.position == 10
+  end
+
+  # :OK
+  test "set_position/2 sets the position (0)", %{player: player} do
+    updated = Player.set_position(player, 0)
+    assert updated.position == 0
+  end
+
+  # :OK
+  test "set_position/2 sets the position (-10)", %{player: player} do
+    updated = Player.set_position(player, -10)
+    assert updated.position == -10
+  end
+
+  # :OK
+  test "set_position/2 sets the position (0.001)", %{player: player} do
+    updated = Player.set_position(player, 0.001)
+    assert updated.position == 0.001
   end
 
   # move(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
