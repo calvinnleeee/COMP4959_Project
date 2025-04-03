@@ -19,9 +19,14 @@ defmodule MonopolyWeb.WelcomeLive do
     {:noreply, assign(socket, show_modal: true, players: players)}
   end
 
-  # Handles event when "Cancel" is clicked – hides the modal
-  def handle_event("close_modal", _, socket) do
-    {:noreply, assign(socket, show_modal: false)}
+  # Handles event when "Leave Game" is clicked – removes player and hides the modal
+  def handle_event("leave_game", _, socket) do
+    Game.leave_game(socket.assigns.session_id)
+
+    {:ok, state} = Game.get_state()
+    players = state.players
+
+    {:noreply, assign(socket, show_modal: false, players: players)}
   end
 
    # Handle session_id coming from JS hook via pushEvent

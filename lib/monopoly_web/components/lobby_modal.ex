@@ -14,14 +14,14 @@ defmodule MonopolyWeb.Components.LobbyModal do
           <table class="w-full text-left border-collapse">
             <thead>
               <tr>
-                <th class="border-b pb-2 text-sm font-semibold text-gray-600">Player ID</th>
+                <th class="border-b pb-2 text-sm font-semibold text-gray-600">Players</th>
                 <th class="border-b pb-2 text-sm font-semibold text-gray-600">Money</th>
               </tr>
             </thead>
             <tbody>
               <%= for player <- @players do %>
                 <tr>
-                  <td class="py-1 text-sm text-gray-800"><%= player.id %></td>
+                  <td class="py-1 text-sm text-gray-800"><%= player.sprite_id %></td>
                   <td class="py-1 text-sm text-gray-800">$<%= player.money %></td>
                 </tr>
               <% end %>
@@ -30,9 +30,9 @@ defmodule MonopolyWeb.Components.LobbyModal do
         </div>
 
         <button
-          phx-click="close_modal"
-          class="mt-4 text-blue-500 hover:underline text-sm">
-          Cancel
+          phx-click="leave_game"
+          class="mt-4 text-red-500 hover:underline text-sm">
+          Leave Game
         </button>
       </div>
     </div>
