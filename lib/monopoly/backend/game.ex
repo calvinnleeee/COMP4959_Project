@@ -545,16 +545,17 @@ defmodule GameObjects.Game do
     player = state.current_player
 
     cond do
-      GameObjects.Property.is_property(tile) ->
+      # Check that the tile is a property
+      tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
         if GameObjects.Property.is_owned(tile) do
           {:reply, {:err, "Property already owned"}, state}
         else
           # updated_player_properties = GameObjects.Property.buy_property(tile, player)
           updated_property = GameObjects.Property.set_owner(tile, player.id)
           # Charge the player if has money
-          if player.money > GameObjects.Property.get_price(tile) do
+          if player.money > GameObjects.Property.get_buy_cost(tile) do
             updated_player =
-              GameObjects.Player.lose_money(player, GameObjects.Property.get_price(tile))
+              GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
 
             updated_properties =
               Enum.map(state.properties, fn property ->
