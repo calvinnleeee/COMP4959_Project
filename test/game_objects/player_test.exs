@@ -77,31 +77,51 @@ defmodule GameObjects.PlayerTest do
   end
 
   # 💸 M O N E Y 💸
-  # set_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  # set_money(__MODULE__.t(), integer()) :: __MODULE__.t(): FAILED
   test "set_money/2 updates first player's money", %{player: player} do
     updated = Player.set_money(player, 100)
     assert updated.money == 100
+    assert Player.get_money(player) == 100 # not updated
   end
 
-  test "set_money/2 updates second player's money (0)", %{player: player} do
+  test "set_money/2 updates first player's money (0)", %{player: player} do
     updated = Player.set_money(player, 0)
     assert updated.money == 0
+    assert Player.get_money(player) == 0 # not updated
   end
 
-  test "set_money/2 updates second player's money (float)", %{player: player} do
-    updated = Player.set_money(player, 10.2)
+  test "set_money/2 updates second player's money (float)", %{second_player: second_player} do
+    updated = Player.set_money(second_player, 10.2)
     assert updated.money == 10.2
+    assert Player.get_money(second_player) == 10.2 # not updated
   end
 
-  test "set_money/2 updates second player's money (negative)", %{player: player} do
-    updated = Player.set_money(player, -10)
+  test "set_money/2 updates second player's money (negative)", %{second_player: second_player} do
+    updated = Player.set_money(second_player, -10)
     assert updated.money == -10
+    assert Player.get_money(second_player) == -10 # not updated
   end
 
   # add_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
-  test "add_money/2 increases player's money", %{player: player} do
+  # Assume both players starting with the default money (1500)
+  test "add_money/2 increases first player's money", %{player: player} do
     updated = Player.add_money(player, 200)
     assert updated.money == 1700
+  end
+
+  test "add_money/2 increases first player's money(0)", %{player: player} do
+    updated = Player.add_money(player, 0)
+    assert updated.money == 1700 # not updated
+  end
+
+  test "add_money/2 increases second player's money(-10)", %{second_player: second_player} do
+    updated = Player.add_money(second_player, -200)
+    assert updated.money == 1300
+  end
+
+  test "add_money/2 increases second player's money(0.52)", %{second_player: second_player} do
+    updated = Player.add_money(second_player, 0.52)
+    assert updated.money == 1300.52
   end
 
   # lose_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
