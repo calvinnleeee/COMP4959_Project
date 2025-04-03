@@ -17,7 +17,7 @@ defmodule GameObjects.PlayerTest do
   # OK
   @second_player_id "123Inez😉"
   @second_player_name "⑅*ॱ˖•. ·͙*̩̩͙˚̩̥̩ì̖̗n̖̹̍è̖̤z̖͎̥̩̥̏̀̀*̩̩͙‧͙ .•˖ॱ*⑅"
-  @second_player_sprite_id 29832
+  @second_player_sprite_id 3285
 
   # Basic setup test for hardcoded test
   # OK
@@ -173,15 +173,54 @@ defmodule GameObjects.PlayerTest do
   end
 
   # @spec lose_money(__MODULE__.t(), __MODULE__.t(), integer()) :: {__MODULE__.t(), __MODULE__.t()}
-  test "lose_money/3 transfers money between players", %{player: player1} do
-    player2 = Player.new("player2", "Inez", 2)
-    {p1_after, p2_after} = Player.lose_money(player1, player2, 500)
+  # :OK
+  test "lose_money/3 transfers money between players", %{player: player, second_player: second_player} do
+    # Assume money set up as the default (1500)
+    {p1_after, p2_after} = Player.lose_money(player, second_player, 500)
 
     assert p1_after.money == 1000
     assert p2_after.money == 2000
   end
 
-  # M O V E  L O G I C
+  # :OK
+  test "lose_money/3 transfers money between players (0)", %{player: player, second_player: second_player} do
+    # Assume money set up as the default (1500)
+    {p1_after, p2_after} = Player.lose_money(player, second_player, 0)
+
+    assert p1_after.money == 1500
+    assert p2_after.money == 1500
+  end
+
+  # :OK
+  test "lose_money/3 transfers money between players (-100)", %{player: player, second_player: second_player} do
+    # Assume money set up as the default (1500)
+    {p1_after, p2_after} = Player.lose_money(player, second_player, -100)
+
+    assert p1_after.money == 1600
+    assert p2_after.money == 1400
+  end
+
+  # :OK
+  test "lose_money/3 transfers money between players (0.01)", %{player: player, second_player: second_player} do
+    # Assume money set up as the default (1500)
+    {p1_after, p2_after} = Player.lose_money(player, second_player, 0.01)
+
+    assert p1_after.money == 1499.99
+    assert p2_after.money == 1500.01
+  end
+
+  # :ERROR
+  test "lose_money/3 transfers money between a legit player and unknown player(nil)", %{player: player} do
+    fake_player = %{id: nil, money: 0}
+
+    # Expected exception KeyError but nothing was raised
+    assert_raise KeyError, fn ->
+      Player.lose_money(player, fake_player, 100)
+    end
+  end
+
+
+  # 🏃 M O V E  L O G I C 🏃
   # set_position(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
   test "set_position/2 sets the position", %{player: player} do
     updated = Player.set_position(player, 10)
