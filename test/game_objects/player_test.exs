@@ -1,26 +1,34 @@
-# Generated player_text
 defmodule GameObjects.PlayerTest do
+  # Unit tests for player.ex
+  #
+  # TODO(?)
+  #   - Save logic after a players' status change (Setters doesn't work)
+
   use ExUnit.Case
   alias GameObjects.Player
 
-  # Test player 1: OK
+  # Test player 1
+  # OK
   @player_id "albert123"
   @player_name "Albert"
   @player_sprite_id 1
 
-  # Test player 2 with funcky string: OK
+  # Test player 2 with funcky string
+  # OK
   @second_player_id "123Inez😉"
   @second_player_name "⑅*ॱ˖•. ·͙*̩̩͙˚̩̥̩ì̖̗n̖̹̍è̖̤z̖͎̥̩̥̏̀̀*̩̩͙‧͙ .•˖ॱ*⑅"
   @second_player_sprite_id 29832
 
-  # Basic setup test for hardcoded test : OK
+  # Basic setup test for hardcoded test
+  # OK
   setup do
     player = Player.new(@player_id, @player_name, @player_sprite_id)
     second_player = Player.new(@second_player_id, @second_player_name, @second_player_sprite_id)
     %{player: player, second_player: second_player}
   end
 
-  # new(id, name, player_sprite_id) creates player with default value : ok
+  # new(id, name, player_sprite_id) creates player with default value
+  # OK
   test "new/3 creates a player with default values", %{player: player} do
     assert player.id == @player_id
     assert player.name == @player_name
@@ -50,8 +58,8 @@ defmodule GameObjects.PlayerTest do
     assert second_player.rolled === false
   end
 
-
   # new(id, name, player_sprite_id) returns correct values : ERROR -> line 127 typo (player.jail_turn's')
+  # OK
   test "Getters for returning correct values (player 1)", %{player: player} do
     assert Player.get_id(player) == @player_id
     assert Player.get_name(player) == @player_name
@@ -64,6 +72,7 @@ defmodule GameObjects.PlayerTest do
     assert Player.get_jail_turns(player) == 0
   end
 
+  # :OK
   test "Getters for returning correct values (player 2)", %{second_player: second_player} do
     assert Player.get_id(second_player) == @second_player_id
     assert Player.get_name(second_player) == @second_player_name
@@ -77,57 +86,90 @@ defmodule GameObjects.PlayerTest do
   end
 
   # 💸 M O N E Y 💸
-  # set_money(__MODULE__.t(), integer()) :: __MODULE__.t(): FAILED
+  # set_money(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # :ERROR
   test "set_money/2 updates first player's money", %{player: player} do
     updated = Player.set_money(player, 100)
     assert updated.money == 100
     assert Player.get_money(player) == 100 # not updated
   end
 
+  # :ERROR
   test "set_money/2 updates first player's money (0)", %{player: player} do
     updated = Player.set_money(player, 0)
     assert updated.money == 0
     assert Player.get_money(player) == 0 # not updated
   end
 
+  # :ERROR
   test "set_money/2 updates second player's money (float)", %{second_player: second_player} do
     updated = Player.set_money(second_player, 10.2)
     assert updated.money == 10.2
     assert Player.get_money(second_player) == 10.2 # not updated
   end
 
+  # :ERROR
   test "set_money/2 updates second player's money (negative)", %{second_player: second_player} do
     updated = Player.set_money(second_player, -10)
     assert updated.money == -10
     assert Player.get_money(second_player) == -10 # not updated
   end
 
-  # add_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  # add_money(__MODULE__.t(), integer()) :: __MODULE__.t()
   # Assume both players starting with the default money (1500)
+  # :OK
   test "add_money/2 increases first player's money", %{player: player} do
     updated = Player.add_money(player, 200)
     assert updated.money == 1700
   end
 
+  # :ERROR
   test "add_money/2 increases first player's money(0)", %{player: player} do
     updated = Player.add_money(player, 0)
     assert updated.money == 1700 # not updated
   end
 
+  # :OK
   test "add_money/2 increases second player's money(-10)", %{second_player: second_player} do
     updated = Player.add_money(second_player, -200)
     assert updated.money == 1300
   end
 
+  # :ERROR
   test "add_money/2 increases second player's money(0.52)", %{second_player: second_player} do
     updated = Player.add_money(second_player, 0.52)
     assert updated.money == 1300.52
   end
 
-  # lose_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
-  test "lose_money/2 reduces player's money", %{player: player} do
+  # lose_money(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # Assume both players starting from the default value (1500)
+  # :OK
+  test "lose_money/2 reduces the first player's money", %{player: player} do
     updated = Player.lose_money(player, 300)
     assert updated.money == 1200
+    assert Player.get_money(player)
+  end
+
+  # :ERROR
+  test "lose_money/2 reduces the first player's money (-300)", %{player: player} do
+    updated = Player.lose_money(player, -300)
+    assert updated.money == 1500 # not updated
+    assert Player.get_money(player) # result: 1800
+  end
+
+  # :OK
+  test "lose_money/2 reduces the second player's money (0)", %{second_player: second_player} do
+    # Assume starting from 1500
+    updated = Player.lose_money(second_player, 0)
+    assert updated.money == 1500
+    assert Player.get_money(second_player)
+  end
+
+  # :OK
+  test "lose_money/2 reduces the second player's money (0.50)", %{second_player: second_player} do
+    updated = Player.lose_money(second_player, 0.50)
+    assert updated.money == 1499.50
+    assert Player.get_money(second_player)
   end
 
   # @spec lose_money(__MODULE__.t(), __MODULE__.t(), integer()) :: {__MODULE__.t(), __MODULE__.t()}
