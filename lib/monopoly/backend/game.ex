@@ -27,7 +27,6 @@ defmodule GameObjects.Game do
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
 
-
   # Game struct definition
   # properties and players are both lists of their respective structs
   defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
@@ -223,33 +222,28 @@ defmodule GameObjects.Game do
     # Checking what the user has landed on.
     updated_game =
       cond do
+        # if player lands on card
         current_tile.type in ["community", "chance"] ->
           case Deck.draw_card(updated_game.deck, current_tile.type) do
             {:ok, card} ->
-              %{updated_game | active_card: card}
+              case card.effect do
+                {:get_out_of_jail, _value} ->
+                  owned_card = GameObjects.Card.mark_as_owned(card)
+                  updated_deck = Deck.update_deck(updated_game.deck, owned_card)
+                  new_player_state = Player.add_card(updated_game.current_player, owned_card)
+                  updated_game = update_player(updated_game, new_player_state)
+                  %{updated_game | deck: updated_deck, active_card: owned_card}
 
-              {effect, _value} when effect == :get_out_of_jail ->
-                owned_card = GameObjects.Card.mark_as_owned(card)
-                updated_deck = Deck.update_deck(updated_game.deck, owned_card)
-                new_player_state = Player.add_card(updated_game.current_player, owned_card)
-                updated_game = update_player(updated_game, new_player_state)
-                %{updated_game | deck: updated_deck, active_card: owned_card}
+                _ ->
+                  %{updated_game | active_card: card}
+              end
 
-              _ ->
-                %{updated_game | active_card: card}
-            end
-
-          {:error, _reason} ->
-            updated_game
-        end
-      else
-        updated_game
             {:error, _reason} ->
               updated_game
           end
 
+        # if player lands on a property
         current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
-          # if player lands on a property
           if GameObjects.Property.is_owned(current_tile) do
             # check who owns it
             case GameObjects.Property.get_owner(current_tile) do
@@ -281,6 +275,7 @@ defmodule GameObjects.Game do
 
               owner.id == player.id ->
                 # TODO: now what? upgrade?
+                Logger.info("#{player} owns #{current_tile.name}. Upgrade?")
 
               _ ->
                 Logger.error("Huhhhh? Who's the owner?")
@@ -290,6 +285,9 @@ defmodule GameObjects.Game do
             # Frontend will invoke the purchase flow
             MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
           end
+
+        true ->
+          updated_game
       end
 
     {{dice, sum, is_doubles}, current_tile, updated_game}
@@ -383,6 +381,7 @@ defmodule GameObjects.Game do
 
       [{_key, game}] ->
         current_player = game.current_player
+
         if GameObjects.Player.get_id(current_player) == session_id do
           if current_player.rolled do
             current_player_index =
