@@ -74,6 +74,10 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
+  def buy_property(session_id, tile) do
+    GenServer.call(__MODULE__, {:buy_property, session_id, tile})
+  end
+
   # ---- Private functions & GenServer Callbacks ----
 
   @impl true
@@ -527,6 +531,45 @@ defmodule GameObjects.Game do
           MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
           {:reply, {:ok, updated_state}, updated_state}
       end
+    end
+  end
+
+  @doc """
+    Buy the given property for the current player.
+    tile is assumed to be a Property but checks regardless.
+  """
+  defp handle_call({:buy_property, session_id, tile}, _from, state) do
+    player = state.current_player
+
+    cond do
+      GameObjects.Property.is_property(tile) ->
+        if GameObjects.Property.is_owned(tile) do
+          {:reply, {:err, "Property already owned"}, state}
+        else
+          # updated_player_properties = GameObjects.Property.buy_property(tile, player)
+          updated_property = GameObjects.Property.set_owner(tile, player.id)
+          # Charge the player
+          updated_player =
+            GameObjects.Player.lose_money(player, GameObjects.Property.get_price(tile))
+
+          updated_properties =
+            Enum.map(state.properties, fn property ->
+              if property.id == tile.id, do: updated_property, else: property
+            end)
+
+          updated_players =
+            Enum.map(state.players, fn p ->
+              if p.id == player.id, do: updated_player, else: p
+            end)
+
+          updated_state = %{state | properties: updated_properties, players: updated_players}
+          :ets.insert(@game_store, {:game, updated_state})
+          MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
+          {:reply, {:ok, updated_state}, updated_state}
+        end
+
+      true ->
+        {:reply, {:err, "Invalid tile"}, state}
     end
   end
 
