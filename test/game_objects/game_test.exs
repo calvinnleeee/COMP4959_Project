@@ -180,5 +180,43 @@ defmodule GameObjects.GameTest do
 
   end
 
+  describe "game state operations" do
+    test "validates initial player money" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.money == 1500
+    end
+
+    test "validates player properties" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.properties == []
+    end
+
+    test "validates player position" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.position == 0
+    end
+
+    test "validates player jail status" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.in_jail == false
+    end
+
+    test "validates player turns taken" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.turns_taken == 0
+    end
+
+    test "validates player sprite ID" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert player.sprite_id == 0
+    end
+    
+  end
 
 end
