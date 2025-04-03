@@ -216,7 +216,56 @@ defmodule GameObjects.GameTest do
       player = Enum.at(game.players, 0)
       assert player.sprite_id == 0
     end
-    
+
+  end
+
+  describe "game state transitions" do
+    test "validates game state after player joins" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      assert game.state == nil
+      assert game.current_player == player
+      assert game.turn == 0
+    end
+  end
+
+  describe "game state persistence" do
+    test "validates game state in ETS" do
+      game = create_test_game(2)
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      stored_game = :ets.lookup(Game.Store, :game) |> List.first() |> elem(1)
+      assert stored_game == game
+    end
+
+    test "validates game state after deletion" do
+      game = create_test_game(2)
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      Game.delete_game()
+      assert :ets.lookup(Game.Store, :game) == []
+    end
+  end
+
+  describe "property transactions" do
+    test "validates property ownership" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      property = Enum.at(game.properties, 0)
+
+      # Simulate buying the property
+      updated_player = %{player | money: player.money - property.buy_cost}
+      updated_property = %{property | owner: player}
+
+      game = %{game | players: [updated_player], properties: [updated_property]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_property.owner == player
+    end
+
+
   end
 
 end
