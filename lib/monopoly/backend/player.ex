@@ -124,7 +124,7 @@ defmodule GameObjects.Player do
     """
     @spec get_jail_turns(__MODULE__.t()) :: integer()
     def get_jail_turns(player) do
-        player.jail_turn
+        player.jail_turns
     end
 
     @doc """

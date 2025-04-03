@@ -3,19 +3,21 @@ defmodule GameObjects.PlayerTest do
   use ExUnit.Case
   alias GameObjects.Player
 
-  # Global Variable
-  # @initial_money 1500
-  # @board_size 40
-
-  # Hardcoded test
+  # Test player 1: OK
   @player_id "albert123"
   @player_name "Albert"
   @player_sprite_id 1
 
+  # Test player 2 with funcky string: OK
+  @second_player_id "123Inez😉"
+  @second_player_name "⑅*ॱ˖•. ·͙*̩̩͙˚̩̥̩ì̖̗n̖̹̍è̖̤z̖͎̥̩̥̏̀̀*̩̩͙‧͙ .•˖ॱ*⑅"
+  @second_player_sprite_id 29832
+
   # Basic setup test for hardcoded test : OK
   setup do
     player = Player.new(@player_id, @player_name, @player_sprite_id)
-    %{player: player}
+    second_player = Player.new(@second_player_id, @second_player_name, @second_player_sprite_id)
+    %{player: player, second_player: second_player}
   end
 
   # new(id, name, player_sprite_id) creates player with default value : ok
@@ -23,18 +25,34 @@ defmodule GameObjects.PlayerTest do
     assert player.id == @player_id
     assert player.name == @player_name
     assert player.money == 1500
-    assert player.player_sprite_id == @player_sprite_id
+    assert player.sprite_id == @player_sprite_id
     assert player.position == 0
     assert player.properties == []
     assert player.cards == []
-    assert player.in_jail # Boolean
+    assert player.in_jail === false
     assert player.jail_turns == 0
-    assert player.turns_take == 0
-    assert player.rolled # Boolean
+    assert player.turns_taken == 0
+    assert player.rolled === false
   end
 
+  # :OK
+  test "new/3 creates a second player with default values", %{second_player: second_player} do
+    assert second_player.id == @second_player_id
+    assert second_player.name == @second_player_name
+    assert second_player.money == 1500
+    assert second_player.sprite_id == @second_player_sprite_id
+    assert second_player.position == 0
+    assert second_player.properties == []
+    assert second_player.cards == []
+    assert second_player.in_jail === false
+    assert second_player.jail_turns == 0
+    assert second_player.turns_taken == 0
+    assert second_player.rolled === false
+  end
+
+
   # new(id, name, player_sprite_id) returns correct values : ERROR -> line 127 typo (player.jail_turn's')
-  test "Getters for returning correct values", %{player: player} do
+  test "Getters for returning correct values (player 1)", %{player: player} do
     assert Player.get_id(player) == @player_id
     assert Player.get_name(player) == @player_name
     assert Player.get_money(player) == 1500
@@ -46,11 +64,38 @@ defmodule GameObjects.PlayerTest do
     assert Player.get_jail_turns(player) == 0
   end
 
-  # M O N E Y
+  test "Getters for returning correct values (player 2)", %{second_player: second_player} do
+    assert Player.get_id(second_player) == @second_player_id
+    assert Player.get_name(second_player) == @second_player_name
+    assert Player.get_money(second_player) == 1500
+    assert Player.get_sprite_id(second_player) == @second_player_sprite_id
+    assert Player.get_position(second_player) == 0
+    assert Player.get_properties(second_player) == []
+    assert Player.get_cards(second_player) == []
+    refute Player.get_in_jail(second_player)
+    assert Player.get_jail_turns(second_player) == 0
+  end
+
+  # 💸 M O N E Y 💸
   # set_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
-  test "set_money/2 updates player's money", %{player: player} do
+  test "set_money/2 updates first player's money", %{player: player} do
     updated = Player.set_money(player, 100)
     assert updated.money == 100
+  end
+
+  test "set_money/2 updates second player's money (0)", %{player: player} do
+    updated = Player.set_money(player, 0)
+    assert updated.money == 0
+  end
+
+  test "set_money/2 updates second player's money (float)", %{player: player} do
+    updated = Player.set_money(player, 10.2)
+    assert updated.money == 10.2
+  end
+
+  test "set_money/2 updates second player's money (negative)", %{player: player} do
+    updated = Player.set_money(player, -10)
+    assert updated.money == -10
   end
 
   # add_money(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
