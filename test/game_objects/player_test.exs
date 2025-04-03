@@ -246,31 +246,106 @@ defmodule GameObjects.PlayerTest do
     assert updated.position == 0.001
   end
 
-  # move(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  # move(__MODULE__.t(), integer()) :: __MODULE__.t()
   # Integer.mod/2 to wrap around the board, limit is set by the @board_size (40) constant
+
+  # :OK
   test "move/2 wraps around board size", %{player: player} do
     # When the number is over 40
     moved = Player.move(player, 42)
     assert moved.position == 2
   end
 
-  # J A I L  L O G I C
-  # set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t(): OK
+  # :OK
+  test "move/2 with a positive integer", %{player: player} do
+    moved = Player.move(player, 3)
+    assert moved.position == 3
+  end
+
+  # :OK
+  test "move/2 with a negative integer", %{player: player} do
+    moved = Player.move(player, -10)
+    assert moved.position == 30
+  end
+
+  # 🚧 J A I L  L O G I C 🚧
+  # set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t()
+  # : OK
   test "set_in_jail/2 sets jail status", %{player: player} do
     updated = Player.set_in_jail(player, true)
     assert updated.in_jail
   end
 
-  # set_jail_turn(__MODULE__.t(), integer()) :: __MODULE__.t(): OK
+  # :OK
+  test "set_in_jail/2 does bit cgabge anything if already in jail", %{player: player} do
+    jailed = Player.set_in_jail(player, true)
+    still_jailed = Player.set_in_jail(jailed, true) # Maybe we can add warning message?
+
+    assert still_jailed.in_jail == true
+    assert jailed == still_jailed
+  end
+
+  # :ERROR
+  test "set_in_jail/2 with nil raises ArgumentError" do
+    # maybe we can add  set_in_jail(nil, _in_jail), do: raise ArgumentError, "Invalid player: nil" or set_in_jail(%__MODULE__{} = player, in_jail), do: %{player | in_jail: in_jail}
+    assert_raise ArgumentError, fn ->
+      Player.set_in_jail(nil, true)
+    end
+  end
+
+  # set_jail_turn(__MODULE__.t(), integer()) :: __MODULE__.t()
+  # : OK
   test "set_jail_turn/2 sets jail turns", %{player: player} do
     updated = Player.set_jail_turn(player, 2)
     assert updated.jail_turns == 2
   end
 
-  # P R O P E R T Y
-  # add_property(__MODULE__.t(), %GameObjects.Property{}) :: __MODULE__.t(): OK
+  # : ERROR Nothing was raised
+  test "set_jail_turn/2 fails with non-numbers", %{player: player} do
+    assert_raise ArgumentError, fn ->
+      Player.set_jail_turn(player, "abc")
+    end
+  end
+
+  # 🏡 P R O P E R T Y 🏡
+  # add_property(__MODULE__.t(), %GameObjects.Property{}) :: __MODULE__.t()
+  # :OK
   test "add_property/2 adds a property", %{player: player} do
     property = %GameObjects.Property{name: "West End"}
+    updated = Player.add_property(player, property)
+    assert updated.properties == [property]
+  end
+
+  # :ERROR
+  # def add_property(player, tile) do
+  #%{player | properties: Enum.concat(get_properties(player), [tile])}
+  #end
+  test "add_property/2 allows duplicate properties", %{player: player} do
+    property = %GameObjects.Property{name: "West End"}
+
+    player = Player.add_property(player, property)
+    updated = Player.add_property(player, property)
+
+    assert updated.properties == [property, property]
+  end
+
+  # :ERROR
+  test "add_property/2 doesn't allow to have empty string name", %{player: player} do
+    property = %GameObjects.Property{name: ""}
+    updated = Player.add_property(player, property)
+    assert updated.properties == [property]
+  end
+
+  # :OK
+  test "add_property/2 with numbers", %{player: player} do
+    property = %GameObjects.Property{name: 12123}
+    updated = Player.add_property(player, property)
+    assert updated.properties == [property]
+  end
+
+    # :OK
+  test "add_property/2 with crazy string", %{player: player} do
+    property = %GameObjects.Property{name: "🏡.•°¤*(¯`★´¯)*¤°   🎀  𝓅𝑒𝓃𝓉𝒽☯𝓊𝓈𝑒  🎀   °¤*)¯´★`¯(*¤°•."}
     updated = Player.add_property(player, property)
     assert updated.properties == [property]
   end
