@@ -123,6 +123,10 @@ defmodule MonopolyWeb.JailLive do
     </style>
     <div class="jail-container">
       <h1 class="jail-header">Jail Screen</h1>
+
+      <div class="jail-image">
+        <img src="/images/jail_scene.png" alt="Jail scene" class="jail-scene-img" />
+      </div>
       <p class="jail-description">Turns remaining in jail: <%= @turns_remaining %></p>
 
       <div class="button-group">
