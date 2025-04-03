@@ -18,11 +18,94 @@ defmodule MonopolyWeb.Components.JailScreen do
       </div>
       <p class="text-lg mb-4">Turns remaining in jail: <%= @player.jail_turns %></p>
 
+<<<<<<< HEAD
       <div class="flex justify-center gap-4 mb-6">
         <button
           phx-click={@on_roll_dice}
           class="px-4 py-2 font-bold text-white rounded cursor-pointer bg-yellow-500 hover:bg-yellow-600">
           Roll Dice
+=======
+    .jail-description {
+      font-size: 1.125rem;
+      margin-bottom: 16px;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .jail-button {
+      padding: 8px 16px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Pay button styles */
+    .pay-button {
+      background-color: #4299e1;
+    }
+
+    .pay-button:hover {
+      background-color: #2b6cb0;
+    }
+
+    /* Card button styles */
+    .card-button {
+      background-color: #48bb78;
+    }
+
+    .card-button:hover {
+      background-color: #2f855a;
+    }
+
+    /* Roll button styles */
+    .roll-button {
+      background-color: #ecc94b;
+    }
+
+    .roll-button:hover {
+      background-color: #d69e2e;
+    }
+
+    .result-text {
+      margin-top: 16px;
+      font-size: 1.25rem;
+    }
+
+    .result-text p {
+      margin: 8px 0;
+    }
+
+    .result-text .bold {
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    </style>
+    <div class="jail-container">
+      <h1 class="jail-header">Jail Screen</h1>
+
+      <div class="jail-image">
+        <img src="/images/jail_scene.png" alt="Jail scene" class="jail-scene-img" />
+      </div>
+      <p class="jail-description">Turns remaining in jail: <%= @turns_remaining %></p>
+
+      <div class="button-group">
+        <button phx-click="pay" class="jail-button pay-button">
+          Pay $50
+        </button>
+        <button phx-click="card" class="jail-button card-button">
+          Use Get Out of Jail Free Card
+        </button>
+        <button phx-click="roll" class="jail-button roll-button">
+          Roll Doubles
+>>>>>>> 47f3e56 (added picture to jail screen for the best page in the game)
         </button>
       </div>
       <div class="mt-4 text-xl">
