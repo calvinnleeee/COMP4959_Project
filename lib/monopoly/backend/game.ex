@@ -221,7 +221,7 @@ defmodule GameObjects.Game do
 
     current_tile = get_tile(game, current_player.position)
     updated_game = update_player(game, current_player)
-    current_state = updated_game.state
+    current_state = updated_game
 
     # Checking what the user has landed on.
     updated_game =
@@ -275,7 +275,7 @@ defmodule GameObjects.Game do
                   {:reply, {:ok, updated_state}, updated_state}
                 else
                   # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
-                  leave_game(session_id)
+                  leave_game(current_player.id)
                 end
 
               true ->
