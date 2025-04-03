@@ -535,7 +535,7 @@ defmodule GameObjects.Game do
   end
 
   @doc """
-    Buy the given property for the current player.
+    Buy the given property for the current player, update owner of property and charge money, and update state.
     tile is assumed to be a Property but checks regardless.
   """
   defp handle_call({:buy_property, session_id, tile}, _from, state) do
@@ -548,24 +548,26 @@ defmodule GameObjects.Game do
         else
           # updated_player_properties = GameObjects.Property.buy_property(tile, player)
           updated_property = GameObjects.Property.set_owner(tile, player.id)
-          # Charge the player
-          updated_player =
-            GameObjects.Player.lose_money(player, GameObjects.Property.get_price(tile))
+          # Charge the player if has money
+          if player.money > GameObjects.Property.get_price(tile) do
+            updated_player =
+              GameObjects.Player.lose_money(player, GameObjects.Property.get_price(tile))
 
-          updated_properties =
-            Enum.map(state.properties, fn property ->
-              if property.id == tile.id, do: updated_property, else: property
-            end)
+            updated_properties =
+              Enum.map(state.properties, fn property ->
+                if property.id == tile.id, do: updated_property, else: property
+              end)
 
-          updated_players =
-            Enum.map(state.players, fn p ->
-              if p.id == player.id, do: updated_player, else: p
-            end)
+            updated_players =
+              Enum.map(state.players, fn p ->
+                if p.id == player.id, do: updated_player, else: p
+              end)
 
-          updated_state = %{state | properties: updated_properties, players: updated_players}
-          :ets.insert(@game_store, {:game, updated_state})
-          MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
+            updated_state = %{state | properties: updated_properties, players: updated_players}
+            :ets.insert(@game_store, {:game, updated_state})
+            MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
+            {:reply, {:ok, updated_state}, updated_state}
+          end
         end
 
       true ->
