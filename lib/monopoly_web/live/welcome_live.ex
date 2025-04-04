@@ -27,7 +27,7 @@ defmodule MonopolyWeb.WelcomeLive do
     Game.leave_game(socket.assigns.session_id)
 
     {:ok, state} = Game.get_state()
-    players = state.players
+    players = if state != %{}, do: state.players, else: []
 
     {:noreply, assign(socket, show_modal: false, players: players)}
   end
@@ -52,6 +52,7 @@ defmodule MonopolyWeb.WelcomeLive do
   end
 
   # Renders the LiveView HTML, including the modal if show_modal is true
+  @impl true
   def render(assigns) do
     ~H"""
     <div id="session-id-hook" phx-hook="SessionId"></div>

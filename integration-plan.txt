@@ -6,12 +6,12 @@ piece-by-piece starting in order from what the player interacts with from enteri
 handle testing with at least 2 players, ideally 4
 open up 2~4 browsers to load up the players
 
-( ) player can set a name
-( ) each player can join the game
+( ) player can set a name (currently not handled)
+(x) each player can join the game
 	(x) when a new player joins, all views update to show new players in lobby
-( ) a player can leave the lobby
-	( ) if a player leaves, all views are updated to show player's id being gong
-( ) each player's piece is handled
+(x) a player can leave the lobby
+	(x) if a player leaves, all views are updated to remove that player's id
+( ) each player's piece is handled (currently automatically assigned)
 ( ) game start (whether automatically, start from first/any player, or ready up from all players)
 
 ( ) turn start for first player
