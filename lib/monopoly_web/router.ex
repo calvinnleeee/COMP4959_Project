@@ -22,6 +22,7 @@ defmodule MonopolyWeb.Router do
     live "/game", GameLive, :index
     live "/game/:id", GameLive, :show
 
+    live "/testmodal", TestModalLive, :show
   end
 
   # Other scopes may use custom stacks.

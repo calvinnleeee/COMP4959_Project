@@ -1,6 +1,8 @@
 defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
+  import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
+  import MonopolyWeb.Components.BuyModal
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
@@ -22,7 +24,9 @@ defmodule MonopolyWeb.GameLive do
       is_doubles: false,
       doubles_count: 0,
       doubles_notification: nil,
-      jail_notification: nil
+      jail_notification: nil,
+      show_buy_modal: false,
+      current_property: nil
     )}
   end
 
@@ -101,6 +105,29 @@ defmodule MonopolyWeb.GameLive do
     })}
   end
 
+  # event handler for buy modal
+  def handle_event("buy_property", _params, socket) do
+    property = socket.assigns.current_property
+    current_player = socket.assigns.current_player
+    update_player = Map.update!(current_player, :money, fn money -> money - property.buy_cost end)
+    {:noreply, assign(socket, %{
+      current_player: update_player,
+      player_properties: property,
+      dice_result: nil,
+      dice_values: nil,
+      is_doubles: false,
+      doubles_count: 0,
+      doubles_notification: nil,
+      jail_notification: nil,
+      show_buy_modal: false,
+      current_property: nil})}
+  end
+
+  def handle_event("cancel_buying", _params, socket) do
+    {:noreply, assign(socket, show_buy_modal: false)}
+  end
+
+
   def render(assigns) do
     ~H"""
     <div class="game-container">
@@ -130,6 +157,13 @@ defmodule MonopolyWeb.GameLive do
         doubles_count={@doubles_count}
         jail_notification={@jail_notification}
       />
+
+      <!-- Modal for buying property : @id or "buy-modal"-->
+      <%= if @show_buy_modal && @current_property do %>
+        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
+          on_cancel={hide_modal("buy-modal")}/>
+      <% end %>
+
     </div>
     """
   end
