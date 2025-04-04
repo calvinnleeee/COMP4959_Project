@@ -299,7 +299,6 @@ defmodule GameObjects.Game do
 
                   updated_state = %{current_state | players: updated_players}
                   :ets.insert(@game_store, {:game, updated_state})
-                  # MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
                   updated_state
                 end
 
