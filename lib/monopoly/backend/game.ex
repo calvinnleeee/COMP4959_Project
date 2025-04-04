@@ -8,7 +8,6 @@ defmodule GameObjects.Game do
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}
 
-
   ##############################################################
   # Constants
 
@@ -27,7 +26,6 @@ defmodule GameObjects.Game do
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
 
-
   ##############################################################
   # Game struct definition
 
@@ -37,7 +35,6 @@ defmodule GameObjects.Game do
   # - active_card tracks the current card being played by the current player
   # - turn is the current turn number
   defstruct [:players, :properties, :deck, :current_player, :active_card, :turn]
-
 
   ##############################################################
   # Public API functions
@@ -97,7 +94,6 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-
   ##############################################################
   # Player-related handlers
 
@@ -121,15 +117,16 @@ defmodule GameObjects.Game do
           # Provide the game state to the player if they are already in the game
           MonopolyWeb.Endpoint.broadcast("game_state", "game_update", existing_game)
           {:reply, {:ok, existing_game}, existing_game}
-
         else
           # Let the player join the game if the game is not full
           if length(existing_game.players) >= @max_player do
             {:reply, {:err, "Maximum 6 Players"}, existing_game}
           else
             player_count = length(existing_game.players)
-            name = "Player #{player_count + 1}" # change later for custom names
-            sprite_id = player_count # currently assigns a sprite to them, may allow choice later
+            # change later for custom names
+            name = "Player #{player_count + 1}"
+            # currently assigns a sprite to them, may allow choice later
+            sprite_id = player_count
             new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
             updated_game = update_in(existing_game.players, &[new_player | &1])
@@ -159,7 +156,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, new_game}, new_game}
     end
   end
-
 
   @doc """
     Rolls the dice for the current player, defers the handling logic to another
@@ -199,7 +195,6 @@ defmodule GameObjects.Game do
     end
   end
 
-
   # Handle the result of rolling the dice while a player is in jail.
   defp handle_jail_roll(game) do
     player = game.current_player
@@ -226,16 +221,17 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
-
   # Handle the result of rolling the dice if a player is not in jail.
   defp handle_normal_roll(game) do
     current_player = game.current_player
 
     # Update player after dice roll
     {dice, sum, is_doubles} = Dice.roll()
-    current_player = %{current_player |
-      turns_taken: if(is_doubles, do: current_player.turns_taken + 1, else: 0),
-      rolled: !is_doubles
+
+    current_player = %{
+      current_player
+      | turns_taken: if(is_doubles, do: current_player.turns_taken + 1, else: 0),
+        rolled: !is_doubles
     }
 
     should_go_to_jail = Dice.check_for_jail(current_player.turns_taken, is_doubles)
@@ -279,9 +275,10 @@ defmodule GameObjects.Game do
           if GameObjects.Property.is_owned(current_tile) do
             # check who owns it
             owner = GameObjects.Property.get_owner(current_tile)
+
             case owner.id == current_player.id do
               false ->
-                prop_rent = GameObjects.Property.get_current_rent(current_tile)
+                prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
                 # pay rent
                 if GameObjects.Player.get_money(current_player) >= prop_rent do
                   {player_minus_rent, owner_plus_rent} =
@@ -305,7 +302,6 @@ defmodule GameObjects.Game do
               true ->
                 MonopolyWeb.Endpoint.broadcast("game_state", "upgradable_property", updated_game)
                 updated_game
-
             end
           else
             # Property is Not owned, announce that via broadcast
@@ -319,7 +315,6 @@ defmodule GameObjects.Game do
 
     {{dice, sum, is_doubles}, current_tile, updated_game}
   end
-
 
   # Update the player's position based on the dice result, handles passing go.
   defp move_player(player, steps) do
@@ -353,7 +348,6 @@ defmodule GameObjects.Game do
     updated_player
   end
 
-
   # Update a player in the game state
   defp update_player(game, updated_player) do
     updated_players =
@@ -368,12 +362,10 @@ defmodule GameObjects.Game do
     %{game | players: updated_players, current_player: updated_player}
   end
 
-
   # Get tile from properties list by position
   defp get_tile(game, position) do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
-
 
   @doc """
     Removes a player from the game and updates the ETS table.
@@ -406,7 +398,6 @@ defmodule GameObjects.Game do
         {:reply, {:ok, updated_state}, updated_state}
     end
   end
-
 
   @doc """
     End the current player's turn if they have rolled the dice already. The current
@@ -453,10 +444,11 @@ defmodule GameObjects.Game do
               })
 
             # Update state
-            updated_state = %{state |
-              players: updated_players,
-              current_player: next_player,
-              turn: state.turn + 1
+            updated_state = %{
+              state
+              | players: updated_players,
+                current_player: next_player,
+                turn: state.turn + 1
             }
 
             :ets.insert(@game_store, {:game, updated_state})
@@ -470,7 +462,6 @@ defmodule GameObjects.Game do
         end
     end
   end
-
 
   # Handler for applying a 'Get out of jail' card for the upcoming player if they have one,
   # before they begin their turn.
@@ -502,7 +493,6 @@ defmodule GameObjects.Game do
     end
   end
 
-
   ##############################################################
   # Game-related handlers
 
@@ -515,7 +505,6 @@ defmodule GameObjects.Game do
   def handle_call(:get_state, _from, state) do
     {:reply, {:ok, state}, state}
   end
-
 
   @doc """
     Starts the game if there are enough players. Initializes the struct's missing
@@ -556,7 +545,6 @@ defmodule GameObjects.Game do
     end
   end
 
-
   @doc """
     Handles a card being played by the current player.
 
@@ -585,10 +573,11 @@ defmodule GameObjects.Game do
             end)
 
           # Clear the active card
-          updated_state = %{state |
-            players: updated_players,
-            current_player: updated_player,
-            active_card: nil
+          updated_state = %{
+            state
+            | players: updated_players,
+              current_player: updated_player,
+              active_card: nil
           }
 
           # Broadcast the state change
@@ -645,7 +634,6 @@ defmodule GameObjects.Game do
         {:reply, {:err, "Invalid tile"}, state}
     end
   end
-
 
   @doc """
     Saves the current game state in the event the server crashes or terminates.
