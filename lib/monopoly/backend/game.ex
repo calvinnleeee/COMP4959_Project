@@ -84,6 +84,16 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:buy_property, session_id, tile})
   end
 
+  # Set a player inactive when they disconnect
+  def set_player_inactive(session_id) do
+    GenServer.call(__MODULE__, {:set_player_inactive, session_id})
+  end
+
+  # Set a player inactive if they reconnect
+  def set_player_active(session_id) do
+    GenServer.call(__MODULE__, {:set_player_active, session_id})
+  end
+
   # Initialization implementation for the GenServer.
   @impl true
   def init(_) do
@@ -696,6 +706,65 @@ defmodule GameObjects.Game do
       true ->
         {:reply, {:err, "Invalid tile"}, state}
     end
+  end
+
+  @doc """
+    Sets a player as inactive in the game state. Should only be used when a player disconnects.
+    session_id: the session ID of the player to be marked as inactive.
+    Updates the player's `active` status to `false` and broadcasts the new game state.
+    Replies with `{:ok, updated_state}` if successful.
+  """
+  @impl true
+  def handle_call({:set_player_inactive, session_id}, _from, state) do
+    updated_players =
+      Enum.map(state.players, fn player ->
+        if player.id == session_id and player.active do
+          %{player | active: false}
+        else
+          player
+        end
+      end)
+
+    updated_current_player =
+      if state.current_player.id == session_id and state.current_player.active do
+        %{state.current_player | active: false}
+      else
+        state.current_player
+      end
+
+    # Frontend should check whether the current player is inactive or not.
+    # If so, FE should call end turn for the inactive player.
+    updated_state = %{state | players: updated_players, current_player: updated_current_player}
+
+    :ets.insert(@game_store, {:game, updated_state})
+    MonopolyWeb.Endpoint.broadcast("game_state", "player_inactive", updated_state)
+
+    {:reply, {:ok, updated_state}, updated_state}
+  end
+
+  @doc """
+    Sets a player as active in the game state. Should only be used when a previously inactive
+    player reconnects.
+    session_id: the session ID of the player to be marked as active.
+    Updates the player's `active` status to `true` if and only if they have money >=0 and broadcasts the new game state.
+    Replies with `{:ok, updated_state}` if successful.
+  """
+  @impl true
+  def handle_call({:set_player_active, session_id}, _from, state) do
+    updated_players =
+      Enum.map(state.players, fn player ->
+        if player.id == session_id and not player.active and player.money >= 0 do
+          %{player | active: true}
+        else
+          player
+        end
+      end)
+
+    updated_state = %{state | players: updated_players}
+    :ets.insert(@game_store, {:game, updated_state})
+    MonopolyWeb.Endpoint.broadcast("game_state", "player_active", updated_state)
+
+    {:reply, {:ok, updated_state}, updated_state}
   end
 
   @doc """
