@@ -72,11 +72,6 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  # !! SLATED FOR REMOVAL
-  def take_turn(session_id, tile) do
-    GenServer.call(__MODULE__, {:take_turn, session_id, tile})
-  end
-
   # End the current player's turn.
   def end_turn(session_id) do
     GenServer.call(__MODULE__, {:end_turn, session_id})
@@ -314,15 +309,13 @@ defmodule GameObjects.Game do
               true ->
                 # TODO: now what? upgrade?
                 Logger.info("#{owner.name} owns #{current_tile.name}. Upgrade?")
-                # FIX THIS PART TO RETURN A STATE
+                {:reply, {:ok, updated_game}, updated_game}
 
-              # _ ->
-              #   Logger.error("Huhhhh? Who's the owner?")
             end
           else
             # Property is Not owned, announce that via broadcast
             # Frontend will invoke the purchase flow
-            MonopolyWeb.Endpoint.broadcast("game_state", "buy_prop?", updated_game)
+            MonopolyWeb.Endpoint.broadcast("game_state", "unowned_property", updated_game)
           end
 
         true ->
