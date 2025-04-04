@@ -300,16 +300,15 @@ defmodule GameObjects.Game do
                   updated_state = %{current_state | players: updated_players}
                   :ets.insert(@game_store, {:game, updated_state})
                   # MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
-                  {:reply, {:ok, updated_state}, updated_state}
+                  updated_state
                 else
                   # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
                   leave_game(current_player.id)
                 end
 
               true ->
-                # TODO: now what? upgrade?
-                Logger.info("#{owner.name} owns #{current_tile.name}. Upgrade?")
-                {:reply, {:ok, updated_game}, updated_game}
+                MonopolyWeb.Endpoint.broadcast("game_state", "upgradable_property", updated_game)
+                updated_game
 
             end
           else
