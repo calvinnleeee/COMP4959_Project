@@ -18,7 +18,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
 
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
-    assigns = assign(assigns, :color, get_player_color(assigns.player.sprite_id))
+    assigns = assign(assigns, :color, get_player_color(nil))
 
     ~H"""
     <div id="player-dashboard" class="player-dashboard">

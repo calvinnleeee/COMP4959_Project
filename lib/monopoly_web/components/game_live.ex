@@ -1,21 +1,28 @@
 defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.Components.PlayerDashboard
+  alias GameObjects.Game
+  alias GameObjects.Player
 
-  def mount(_params, session, socket) do
+  def mount(params, _session, socket) do
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     # For development/testing purpose, use sample data
     # In production this would integrate with GameObjects.Game
-    session_id = Map.get(session, "session_id", "player-1")
+    # session_id = Map.get(session, "session_id", "player-1")
+    session_id = params["id"] || "player-1"
 
     # Create sample player and game data
-    sample_player = create_sample_player(session_id)
-    sample_game = create_sample_game(sample_player)
-    sample_properties = create_sample_properties()
+    # sample_player = create_sample_player(session_id)
+    # sample_game = create_sample_game(sample_player)
+    # sample_properties = create_sample_properties()
+    {:ok, game} = Game.get_state()
+    user = Enum.find(game.players, fn p -> p.id == session_id end)
 
     {:ok, assign(socket,
-      game: sample_game,
-      current_player: sample_player,
-      player_properties: sample_properties,
+      game: game,
+      user: user,
+      current_player: game.current_player,
+      player_properties: if(user != nil, do: Player.get_properties(user), else: []),
       session_id: session_id,
       dice_result: nil,
       dice_values: nil,
@@ -118,7 +125,7 @@ defmodule MonopolyWeb.GameLive do
 
       <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
-        player={@current_player}
+        player={@user}
         current_player_id={@current_player.id}
         properties={@player_properties}
         on_roll_dice={JS.push("roll_dice")}

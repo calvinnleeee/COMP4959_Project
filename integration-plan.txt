@@ -12,10 +12,13 @@ open up 2~4 browsers to load up the players
 (x) a player can leave the lobby
 	(x) if a player leaves, all views are updated to remove that player's id
 ( ) each player's piece is handled (currently automatically assigned)
-( ) game start (whether automatically, start from first/any player, or ready up from all players)
+(x) game start (button), all players redirect to game page
 
+(x) each player sees their own dashboard
+	(x) current player roll dice button enabled
+	(x) other players' buttons disabled
 ( ) turn start for first player
-	( ) other players cannot act
+	(x) other players cannot act
 	( ) other players' dashboards don't update (only current player's)
 ( ) first player rolls
 	( ) all players see updated position of first player
