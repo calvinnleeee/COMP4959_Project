@@ -82,7 +82,7 @@ defmodule GameObjects.Player do
     @doc """
     Gets a player's sprite id. Returns a string representing the player's sprite id.
     """
-    @spec get_sprite_id(__MODULE__.t()) :: String.t()
+    @spec get_sprite_id(__MODULE__.t()) :: integer()
     def get_sprite_id(player) do
         player.sprite_id
     end
