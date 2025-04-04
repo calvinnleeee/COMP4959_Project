@@ -130,7 +130,7 @@ defmodule MonopolyWeb.GameLive do
       player = new_game.current_player
 
       jail_notification =
-        if !was_jailed && player.in_jail do
+        if player.turns_taken == 3 do
           "You rolled doubles 3 times in a row! Go to jail!"
         else
           nil
