@@ -34,7 +34,7 @@ defmodule GameObjects.Game do
   # - current_player is the current player's struct, containing their state
   # - active_card tracks the current card being played by the current player
   # - turn is the current turn number
-  defstruct [:players, :properties, :deck, :current_player, :active_card, :turn]
+  defstruct [:players, :properties, :deck, :current_player, :active_card, :winner, :turn]
 
   ##############################################################
   # Public API functions
@@ -148,6 +148,7 @@ defmodule GameObjects.Game do
           deck: nil,
           current_player: nil,
           active_card: nil,
+          winner: nil,
           turn: 0
         }
 
@@ -185,7 +186,31 @@ defmodule GameObjects.Game do
             end
 
           current_position = updated_game.current_player.position
+
+          # For Checking whether the current_player should be game over
+          updated_player = player_lost_condition(updated_game.current_player)
+
+          current_player_index =
+            Enum.find_index(updated_game.players, fn player ->
+              player.id == updated_game.current_player.id
+            end)
+
+          updated_players =
+            List.replace_at(updated_game.players, current_player_index, updated_player)
+
+          winner = game_over_condition(updated_players)
+
+          updated_game = %{
+            updated_game
+            | players: updated_players,
+              current_player: updated_player,
+              winner: winner
+          }
+
+          # Storing the game state
           :ets.insert(@game_store, {:game, updated_game})
+
+          # Broadcast the game state
           MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
           {:reply, {:ok, dice_result, current_position, current_tile, updated_game}, updated_game}
         end
@@ -419,14 +444,20 @@ defmodule GameObjects.Game do
 
         if GameObjects.Player.get_id(current_player) == session_id do
           if current_player.rolled do
+            # For Checking whether the current_player should be game over
+            updated_player = player_lost_condition(current_player)
+
             current_player_index =
               Enum.find_index(state.players, fn player ->
                 player.id == state.current_player.id
               end)
 
+            updated_players = List.replace_at(state.players, current_player_index, updated_player)
+            winner = game_over_condition(updated_players)
+            state = %{state | players: updated_players, winner: winner}
+
             # Get next player
-            next_player_index = rem(current_player_index + 1, length(state.players))
-            next_player = Enum.at(state.players, next_player_index)
+            next_player = find_next_active_player(state.players, current_player_index)
 
             # If the next player is in jail, check for and apply the get_out_of_jail card
             {next_player, state} =
@@ -491,6 +522,38 @@ defmodule GameObjects.Game do
     else
       {next_player, state}
     end
+  end
+
+  # Check whether the current player should be marked as inactive (Game over)
+  defp player_lost_condition(target_player) do
+    if target_player != nil and target_player.money < 0 do
+      %{target_player | active: false}
+    else
+      target_player
+    end
+  end
+
+  # Check if there's a winner
+  defp game_over_condition(players) do
+    active_players = Enum.filter(players, fn player -> player.active end)
+
+    if length(active_players) == 1 do
+      hd(active_players)
+    else
+      nil
+    end
+  end
+
+  # Skip inactive player
+  defp find_next_active_player(players, current_index) do
+    total = length(players)
+
+    Enum.find_value(1..total, fn i ->
+      index = rem(current_index + i, total)
+      player = Enum.at(players, index)
+
+      if player.active, do: player, else: nil
+    end)
   end
 
   ##############################################################
@@ -609,7 +672,7 @@ defmodule GameObjects.Game do
           # updated_player_properties = GameObjects.Property.buy_property(tile, player)
           updated_property = GameObjects.Property.set_owner(tile, player.id)
           # Charge the player if has money
-          if player.money > GameObjects.Property.get_buy_cost(tile) do
+          if player.money >= GameObjects.Property.get_buy_cost(tile) do
             updated_player =
               GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
 
