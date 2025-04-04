@@ -122,17 +122,21 @@ defmodule GameObjects.Game do
           if length(existing_game.players) >= @max_player do
             {:reply, {:err, "Maximum 6 Players"}, existing_game}
           else
-            player_count = length(existing_game.players)
-            # change later for custom names
-            name = "Player #{player_count + 1}"
-            # currently assigns a sprite to them, may allow choice later
-            sprite_id = player_count
-            new_player = GameObjects.Player.new(session_id, name, sprite_id)
+            if existing_game.current_player == nil do
+              player_count = length(existing_game.players)
+              # change later for custom names
+              name = "Player #{player_count + 1}"
+              # currently assigns a sprite to them, may allow choice later
+              sprite_id = player_count
+              new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
-            updated_game = update_in(existing_game.players, &[new_player | &1])
-            :ets.insert(@game_store, {:game, updated_game})
-            MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
-            {:reply, {:ok, updated_game}, updated_game}
+              updated_game = update_in(existing_game.players, &[new_player | &1])
+              :ets.insert(@game_store, {:game, updated_game})
+              MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
+              {:reply, {:ok, updated_game}, updated_game}
+            else
+              {:reply, {:err, "Game has already started"}, existing_game}
+            end
           end
         end
 
