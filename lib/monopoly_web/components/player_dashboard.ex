@@ -2,6 +2,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
   import MonopolyWeb.CoreComponents
+  alias GameObjects.Player
 
   # Main player dashboard component
   attr :player, :map, required: true, doc: "The player data to display"
@@ -18,7 +19,8 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
 
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
-    assigns = assign(assigns, :color, get_player_color(nil))
+    color = if assigns.player != nil, do: get_player_color(Player.get_sprite_id(assigns.player)), else: "#FF0000"
+    assigns = assign(assigns, :color, color)
 
     ~H"""
     <div id="player-dashboard" class="player-dashboard">
@@ -243,7 +245,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
       _ -> "#FFFFFF" # White (fallback)
     end
   end
-  defp get_player_color(_), do: "#FF0000" # Default to red
+  # defp get_player_color(_), do: "#FF0000" # Default to red
 
   # Helper functions for property attributes
   defp property_mortgaged?(property), do: Map.get(property, :mortgaged, false)
