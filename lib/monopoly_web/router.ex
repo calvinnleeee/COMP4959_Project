@@ -19,6 +19,8 @@ defmodule MonopolyWeb.Router do
 
     live "/", WelcomeLive, :index
 
+    live "/game-dummy", GameDummy, :index
+
     live "/game", GameLive, :index
     live "/game/:id", GameLive, :show
 
