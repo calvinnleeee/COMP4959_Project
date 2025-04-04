@@ -192,7 +192,11 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
-  # Handle rolling dice for not in jail players
+  @doc """
+    Handle rollilng the dice for players NOT in Jail.
+    Check if the tile the player lands on is a Card (Community or Chance) or a Property.
+    Pays rent if property owned by another player, otherwise inform of chance to buy.
+  """
   defp handle_normal_roll(game) do
     player = game.current_player
     {dice, sum, is_doubles} = Dice.roll()
@@ -216,6 +220,7 @@ defmodule GameObjects.Game do
     current_tile = get_tile(game, updated_player.position)
     updated_game = update_player(game, updated_player)
 
+    # Checking what the user has landed on.
     updated_game =
       if current_tile.type in ["community", "chance"] do
         case Deck.draw_card(updated_game.deck, current_tile.type) do
