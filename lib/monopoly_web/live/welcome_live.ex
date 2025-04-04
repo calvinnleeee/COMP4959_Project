@@ -4,12 +4,14 @@ defmodule MonopolyWeb.WelcomeLive do
   alias GameObjects.Game
 
   # Initializes socket state when the LiveView mounts
+  @impl true
   def mount(_, _, socket) do
     if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
-    {:ok, assign(socket, show_modal: false)}
+    {:ok, assign(socket, show_modal: false, game_started: false)}
   end
 
   # Handles event when "Join Game" is clicked
+  @impl true
   def handle_event("open_modal", _, socket) do
     Game.join_game(socket.assigns.session_id)
 
@@ -32,24 +34,42 @@ defmodule MonopolyWeb.WelcomeLive do
     {:noreply, assign(socket, show_modal: false, players: players)}
   end
 
-   # Handle session_id coming from JS hook via pushEvent
+  # Handles event when "Start Game" is clicked – starts the game and redirects
+  def handle_event("start_game", _, socket) do
+    Game.start_game()
+    {:noreply, socket}
+  end
+
+  # Handle session_id coming from JS hook via pushEvent
   def handle_event("set_session_id", %{"id" => id}, socket) do
     {:noreply, assign(socket, session_id: id)}
   end
 
-  @impl true
   # Handles real time updates when new game state is broadcast
+  @impl true
   def handle_info(%{event: "game_update", payload: state}, socket) do
     current_player = Enum.find(state.players, fn p -> p.id == socket.assigns.session_id end)
     sprite_id = current_player && current_player.sprite_id || nil
 
-    {:noreply, assign(socket, players: state.players, sprite_id: sprite_id)}
+    game_started = state.current_player != nil
+
+    # If the game has started, push a navigation to redirect the user to the game screen.
+    # Otherwise, do nothing and keep the user on the current page.
+    socket =
+      if state.current_player != nil do
+        push_navigate(socket, to: "/game")
+      else
+        socket
+      end
+
+     {:noreply, assign(socket, players: state.players, sprite_id: sprite_id, game_started: game_started)}
   end
 
   # Handles real time update when game is deleted
   def handle_info(%{event: "game_deleted"}, socket) do
     {:noreply, assign(socket, players: [], show_modal: false)}
   end
+
 
   # Renders the LiveView HTML, including the modal if show_modal is true
   @impl true
