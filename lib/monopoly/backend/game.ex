@@ -301,9 +301,6 @@ defmodule GameObjects.Game do
                   :ets.insert(@game_store, {:game, updated_state})
                   # MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
                   updated_state
-                else
-                  # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
-                  leave_game(current_player.id)
                 end
 
               true ->
