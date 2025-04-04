@@ -1,16 +1,16 @@
 defmodule GameObjects.Game do
   @moduledoc """
-  This module represents the Game object, which contains vital data and methods to run it.
-
-  `players` is a list of GameObjects.Player structs.
+  This module represents the Game object, which holds vital state information and defines
+  the methods for handling game logic.
   """
   require Logger
   use GenServer
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}
 
-  # CONSTANTS HERE
-  # ETS table defined in application.ex
+
+  ##############################################################
+  # Constants
 
   @game_store Game.Store
   @max_player 6
@@ -27,18 +27,27 @@ defmodule GameObjects.Game do
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
 
-  # Game struct definition
-  # properties and players are both lists of their respective structs
-  defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
 
-  # ---- Public API functions ----
+  ##############################################################
+  # Game struct definition
+
+  # - properties and players are both lists of their respective structs
+  # - deck is a list of Card structs
+  # - current_player is the current player's struct, containing their state
+  # - active_card tracks the current card being played by the current player
+  # - turn is the current turn number
+  defstruct [:players, :properties, :deck, :current_player, :active_card, :turn]
+
+
+  ##############################################################
+  # Public API functions
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
   # Initialize a new Player instance and add it to the Game.
-  # Assumes the player's client will have a PID and Web socket.
+  # Assumes the player's client will have a PID and web socket.
   def join_game(session_id) do
     GenServer.call(__MODULE__, {:join_game, session_id})
   end
@@ -53,6 +62,7 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :start_game)
   end
 
+  # Delete the active game instance from the ETS table.
   def delete_game() do
     GenServer.call(__MODULE__, :delete_game)
   end
@@ -62,24 +72,27 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
+  # !! SLATED FOR REMOVAL
   def take_turn(session_id, tile) do
     GenServer.call(__MODULE__, {:take_turn, session_id, tile})
   end
 
+  # End the current player's turn.
   def end_turn(session_id) do
     GenServer.call(__MODULE__, {:end_turn, session_id})
   end
 
+  # Roll the dice for the current player.
   def roll_dice(session_id) do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
+  # Allow the current player to buy a property.
   def buy_property(session_id, tile) do
     GenServer.call(__MODULE__, {:buy_property, session_id, tile})
   end
 
-  # ---- Private functions & GenServer Callbacks ----
-
+  # Initialization implementation for the GenServer.
   @impl true
   def init(_) do
     unless :ets.whereis(@game_store) != :undefined do
@@ -89,29 +102,39 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  # ---- PLayer related handles ---- #
 
-  # Add a new player to the game , update game state in ETS and broadcast change.
-  # If game doesn't exist in ETS, create a new game and add player to it.
+  ##############################################################
+  # Player-related handlers
 
-  # session_id:  unique identifier for a player (their socket).
-  # name: string, the player's chosen gamertag/nickname
-  # sprite_id: a unique number to identify the the sprite they've selected.
+  @doc """
+    Add a new player to the game, update the game state in the ETS table, and
+    broadcast the change. A new game is made if one doesn't exist in the table.
+    The player added is tracked using their `session_id`.
+
+    session_id: unique identifier for a player (their socket)
+    name: a string representing the player's chosen/given nickname
+    sprite_id: a unique number identifying the sprite they've selected
+
+    Replies with {:ok, updated_game_state} if successful, else {:err, reason}.
+  """
   @impl true
   def handle_call({:join_game, session_id}, _from, _state) do
     case :ets.lookup(@game_store, :game) do
       # If the game already exists
       [{:game, existing_game}] ->
         if Enum.any?(existing_game.players, fn player -> player.id == session_id end) do
+          # Provide the game state to the player if they are already in the game
           MonopolyWeb.Endpoint.broadcast("game_state", "game_update", existing_game)
           {:reply, {:ok, existing_game}, existing_game}
+
         else
+          # Let the player join the game if the game is not full
           if length(existing_game.players) >= @max_player do
             {:reply, {:err, "Maximum 6 Players"}, existing_game}
           else
             player_count = length(existing_game.players)
-            name = "Player #{player_count + 1}"
-            sprite_id = player_count
+            name = "Player #{player_count + 1}" # change later for custom names
+            sprite_id = player_count # currently assigns a sprite to them, may allow choice later
             new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
             updated_game = update_in(existing_game.players, &[new_player | &1])
@@ -142,13 +165,24 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Handle dice rolling
+
+  @doc """
+    Rolls the dice for the current player, defers the handling logic to another
+    function depending on the player's current position (whether in jail or not).
+    Updates the position of the current player after the roll.
+
+    session_id: the session ID of the player rolling the dice
+
+    Replies with :ok and a collection of data if successful, else :err with a reason.
+  """
   @impl true
   def handle_call({:roll_dice, session_id}, _from, state) do
+    # Check for an active game, otherwise ignore the call
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
 
+        # Only allow the current player to roll the dice
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
@@ -170,7 +204,8 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Handle rolling dice when player is in jail
+
+  # Handle the result of rolling the dice while a player is in jail.
   defp handle_jail_roll(game) do
     player = game.current_player
     {jail_status, dice, sum} = Dice.jail_roll(player.jail_turns)
@@ -183,6 +218,7 @@ defmodule GameObjects.Game do
 
         :failed_to_escape ->
           player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          # !! requires a check for money <= 0, player loses if they can't pay
           player = Player.lose_money(player, @jail_fee)
           move_player(player, sum)
 
@@ -195,11 +231,8 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
-  @doc """
-    Handle rolling the dice for players NOT in Jail.
-    Check if the tile the player lands on is a Card (Community or Chance) or a Property.
-    Pays rent if property owned by another player, otherwise inform of chance to buy.
-  """
+
+  # Handle the result of rolling the dice if a player is not in jail.
   defp handle_normal_roll(game) do
     current_player = game.current_player
 
@@ -299,7 +332,8 @@ defmodule GameObjects.Game do
     {{dice, sum, is_doubles}, current_tile, updated_game}
   end
 
-  # Move player and handle passing go
+
+  # Update the player's position based on the dice result, handles passing go.
   defp move_player(player, steps) do
     old_position = player.position
     updated_player = Player.move(player, steps)
@@ -331,6 +365,7 @@ defmodule GameObjects.Game do
     updated_player
   end
 
+
   # Update a player in the game state
   defp update_player(game, updated_player) do
     updated_players =
@@ -345,11 +380,20 @@ defmodule GameObjects.Game do
     %{game | players: updated_players, current_player: updated_player}
   end
 
+
   # Get tile from properties list by position
   defp get_tile(game, position) do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
 
+
+  @doc """
+    Removes a player from the game and updates the ETS table.
+
+    session_id: the session ID of the player leaving the game
+
+    Replies with :ok and the updated game state if successful, else :ok with an empty game.
+  """
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     filtered_players =
@@ -375,9 +419,15 @@ defmodule GameObjects.Game do
     end
   end
 
+
   @doc """
-    End the current player's turn, but check if the rolled first, if not make them roll.
-    Set next player as new current, reste the current player's turn count, and update state.
+    End the current player's turn if they have rolled the dice already. The current
+    player's turn count will reset and the next player will be set as the new current
+    player.
+
+    session_id: the session ID of the player ending their turn
+
+    Replies with :ok
   """
   @impl true
   def handle_call({:end_turn, session_id}, _from, state) do
@@ -414,12 +464,11 @@ defmodule GameObjects.Game do
                 | rolled: false
               })
 
-            # Update statu
-            updated_state = %{
-              state
-              | players: updated_players,
-                current_player: next_player,
-                turn: state.turn + 1
+            # Update state
+            updated_state = %{state |
+              players: updated_players,
+              current_player: next_player,
+              turn: state.turn + 1
             }
 
             :ets.insert(@game_store, {:game, updated_state})
@@ -434,6 +483,9 @@ defmodule GameObjects.Game do
     end
   end
 
+
+  # Handler for applying a 'Get out of jail' card for the upcoming player if they have one,
+  # before they begin their turn.
   defp check_and_apply_get_out_of_jail_card(next_player, state) do
     get_out_cards =
       Enum.filter(Player.get_cards(next_player), fn card ->
@@ -462,15 +514,27 @@ defmodule GameObjects.Game do
     end
   end
 
-  # ---- Game Related handles ---- #
 
-  # Get current game state.
+  ##############################################################
+  # Game-related handlers
+
+  @doc """
+    Gets the current state of the game.
+
+    Replies with :ok and the current game.
+  """
   @impl true
   def handle_call(:get_state, _from, state) do
     {:reply, {:ok, state}, state}
   end
 
-  # Start the game
+
+  @doc """
+    Starts the game if there are enough players. Initializes the struct's missing
+    values.
+
+    Replies with :ok and the updated game state if successful, else :err with the reason.
+  """
   @impl true
   def handle_call(:start_game, _from, state) do
     if length(state.players) > 1 do
@@ -485,7 +549,11 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Delete the game
+  @doc """
+    Deletes the game from the ETS table if it exists.
+
+    Replies with :ok and an empty game if successful, else :err with a reason.
+  """
   @impl true
   def handle_call(:delete_game, _from, _state) do
     case :ets.lookup(@game_store, :game) do
@@ -500,7 +568,14 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Play a card
+
+  @doc """
+    Handles a card being played by the current player.
+
+    session_id: the session ID of the player playing the card
+
+    Replies with :ok and the updated game state if successful, else :err with a reason.
+  """
   @impl true
   def handle_call({:play_card, session_id}, _from, state) do
     current_player = state.current_player
@@ -522,11 +597,10 @@ defmodule GameObjects.Game do
             end)
 
           # Clear the active card
-          updated_state = %{
-            state
-            | players: updated_players,
-              current_player: updated_player,
-              active_card: nil
+          updated_state = %{state |
+            players: updated_players,
+            current_player: updated_player,
+            active_card: nil
           }
 
           # Broadcast the state change
@@ -537,8 +611,13 @@ defmodule GameObjects.Game do
   end
 
   @doc """
-    Buy the given property for the current player, update owner of property and charge money, and update state.
-    tile is assumed to be a Property but checks regardless.
+    Handles the buying logic of a property for the current player. The owner's property
+    is updated, the player's money is deducted, and the game state is updated.
+
+    session_id: the session ID of the player buying the property
+    tile: the property being bought
+
+    Replies with :ok and the updated game state if successful, else :err with a reason.
   """
   @impl true
   def handle_call({:buy_property, session_id, tile}, _from, state) do
@@ -579,7 +658,10 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Terminate and save state on failure.
+
+  @doc """
+    Saves the current game state in the event the server crashes or terminates.
+  """
   @impl true
   def terminate(_reason, state) do
     :ets.insert(@game_store, {:game, state})
