@@ -1,16 +1,15 @@
 defmodule GameObjects.Game do
   @moduledoc """
-  This module represents the Game object, which contains vital data and methods to run it.
-
-  `players` is a list of GameObjects.Player structs.
+  This module represents the Game object, which holds vital state information and defines
+  the methods for handling game logic.
   """
   require Logger
   use GenServer
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}
 
-  # CONSTANTS HERE
-  # ETS table defined in application.ex
+  ##############################################################
+  # Constants
 
   @game_store Game.Store
   @max_player 6
@@ -27,19 +26,25 @@ defmodule GameObjects.Game do
   # we will keep parking tax as a static 100 because it is easy.
   @parking_tax_fee 200
 
-
+  ##############################################################
   # Game struct definition
-  # properties and players are both lists of their respective structs
-  defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
 
-  # ---- Public API functions ----
+  # - properties and players are both lists of their respective structs
+  # - deck is a list of Card structs
+  # - current_player is the current player's struct, containing their state
+  # - active_card tracks the current card being played by the current player
+  # - turn is the current turn number
+  defstruct [:players, :properties, :deck, :current_player, :active_card, :turn]
+
+  ##############################################################
+  # Public API functions
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
   # Initialize a new Player instance and add it to the Game.
-  # Assumes the player's client will have a PID and Web socket.
+  # Assumes the player's client will have a PID and web socket.
   def join_game(session_id) do
     GenServer.call(__MODULE__, {:join_game, session_id})
   end
@@ -54,6 +59,7 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :start_game)
   end
 
+  # Delete the active game instance from the ETS table.
   def delete_game() do
     GenServer.call(__MODULE__, :delete_game)
   end
@@ -63,20 +69,22 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
-  def take_turn(session_id, tile) do
-    GenServer.call(__MODULE__, {:take_turn, session_id, tile})
-  end
-
+  # End the current player's turn.
   def end_turn(session_id) do
     GenServer.call(__MODULE__, {:end_turn, session_id})
   end
 
+  # Roll the dice for the current player.
   def roll_dice(session_id) do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
-  # ---- Private functions & GenServer Callbacks ----
+  # Allow the current player to buy a property.
+  def buy_property(session_id, tile) do
+    GenServer.call(__MODULE__, {:buy_property, session_id, tile})
+  end
 
+  # Initialization implementation for the GenServer.
   @impl true
   def init(_) do
     unless :ets.whereis(@game_store) != :undefined do
@@ -86,28 +94,38 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
-  # ---- PLayer related handles ---- #
+  ##############################################################
+  # Player-related handlers
 
-  # Add a new player to the game , update game state in ETS and broadcast change.
-  # If game doesn't exist in ETS, create a new game and add player to it.
+  @doc """
+    Add a new player to the game, update the game state in the ETS table, and
+    broadcast the change. A new game is made if one doesn't exist in the table.
+    The player added is tracked using their `session_id`.
 
-  # session_id:  unique identifier for a player (their socket).
-  # name: string, the player's chosen gamertag/nickname
-  # sprite_id: a unique number to identify the the sprite they've selected.
+    session_id: unique identifier for a player (their socket)
+    name: a string representing the player's chosen/given nickname
+    sprite_id: a unique number identifying the sprite they've selected
+
+    Replies with {:ok, updated_game_state} if successful, else {:err, reason}.
+  """
   @impl true
   def handle_call({:join_game, session_id}, _from, _state) do
     case :ets.lookup(@game_store, :game) do
       # If the game already exists
       [{:game, existing_game}] ->
         if Enum.any?(existing_game.players, fn player -> player.id == session_id end) do
+          # Provide the game state to the player if they are already in the game
           MonopolyWeb.Endpoint.broadcast("game_state", "game_update", existing_game)
           {:reply, {:ok, existing_game}, existing_game}
         else
+          # Let the player join the game if the game is not full
           if length(existing_game.players) >= @max_player do
             {:reply, {:err, "Maximum 6 Players"}, existing_game}
           else
             player_count = length(existing_game.players)
+            # change later for custom names
             name = "Player #{player_count + 1}"
+            # currently assigns a sprite to them, may allow choice later
             sprite_id = player_count
             new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
@@ -139,13 +157,23 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Handle dice rolling
+  @doc """
+    Rolls the dice for the current player, defers the handling logic to another
+    function depending on the player's current position (whether in jail or not).
+    Updates the position of the current player after the roll.
+
+    session_id: the session ID of the player rolling the dice
+
+    Replies with :ok and a collection of data if successful, else :err with a reason.
+  """
   @impl true
   def handle_call({:roll_dice, session_id}, _from, state) do
+    # Check for an active game, otherwise ignore the call
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
 
+        # Only allow the current player to roll the dice
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
@@ -167,7 +195,7 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Handle rolling dice when player is in jail
+  # Handle the result of rolling the dice while a player is in jail.
   defp handle_jail_roll(game) do
     player = game.current_player
     {jail_status, dice, sum} = Dice.jail_roll(player.jail_turns)
@@ -180,6 +208,7 @@ defmodule GameObjects.Game do
 
         :failed_to_escape ->
           player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          # !! requires a check for money <= 0, player loses if they can't pay
           player = Player.lose_money(player, @jail_fee)
           move_player(player, sum)
 
@@ -192,64 +221,102 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
-  # Handle rolling dice for not in jail players
+  # Handle the result of rolling the dice if a player is not in jail.
   defp handle_normal_roll(game) do
-    player = game.current_player
+    current_player = game.current_player
+
+    # Update player after dice roll
     {dice, sum, is_doubles} = Dice.roll()
 
-    updated_player =
-      if is_doubles do
-        %{player | turns_taken: player.turns_taken + 1}
-      else
-        %{player | turns_taken: 0, rolled: true}
-      end
+    current_player = %{
+      current_player
+      | turns_taken: if(is_doubles, do: current_player.turns_taken + 1, else: 0),
+        rolled: !is_doubles
+    }
 
-    should_go_to_jail = Dice.check_for_jail(updated_player.turns_taken, is_doubles)
+    should_go_to_jail = Dice.check_for_jail(current_player.turns_taken, is_doubles)
 
-    updated_player =
+    current_player =
       if should_go_to_jail do
-        %{updated_player | in_jail: true, position: @jail_position, turns_taken: 0}
+        %{current_player | in_jail: true, position: @jail_position, turns_taken: 0}
       else
-        move_player(updated_player, sum)
+        move_player(current_player, sum)
       end
 
-    current_tile = get_tile(game, updated_player.position)
-    updated_game = update_player(game, updated_player)
+    current_tile = get_tile(game, current_player.position)
+    updated_game = update_player(game, current_player)
+    current_state = updated_game
 
+    # Checking what the user has landed on.
     updated_game =
-      if current_tile.type in ["community", "chance"] do
-        case Deck.draw_card(updated_game.deck, current_tile.type) do
-          {:ok, card} ->
-            case card.effect do
-              {effect, _value} when effect in [:pay, :earn] ->
-                player_after_effect =
-                  GameObjects.Card.apply_effect(card, updated_game.current_player)
+      cond do
+        # if player lands on card
+        current_tile.type in ["community", "chance"] ->
+          case Deck.draw_card(updated_game.deck, current_tile.type) do
+            {:ok, card} ->
+              case card.effect do
+                {:get_out_of_jail, _value} ->
+                  owned_card = GameObjects.Card.mark_as_owned(card)
+                  updated_deck = Deck.update_deck(updated_game.deck, owned_card)
+                  new_player_state = Player.add_card(updated_game.current_player, owned_card)
+                  updated_game = update_player(updated_game, new_player_state)
+                  %{updated_game | deck: updated_deck, active_card: owned_card}
 
-                updated_game = update_player(updated_game, player_after_effect)
-                %{updated_game | active_card: card}
+                _ ->
+                  %{updated_game | active_card: card}
+              end
 
-              {effect, _value} when effect == :get_out_of_jail ->
-                owned_card = GameObjects.Card.mark_as_owned(card)
-                updated_deck = Deck.update_deck(updated_game.deck, owned_card)
-                new_player_state = Player.add_card(updated_game.current_player, owned_card)
-                updated_game = update_player(updated_game, new_player_state)
-                %{updated_game | deck: updated_deck, active_card: owned_card}
+            {:error, _reason} ->
+              updated_game
+          end
 
-              _ ->
-                %{updated_game | active_card: card}
+        # if player lands on a property
+        current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
+          if GameObjects.Property.is_owned(current_tile) do
+            # check who owns it
+            owner = GameObjects.Property.get_owner(current_tile)
+
+            case owner.id == current_player.id do
+              false ->
+                prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
+                # pay rent
+                if GameObjects.Player.get_money(current_player) >= prop_rent do
+                  {player_minus_rent, owner_plus_rent} =
+                    GameObjects.Player.lose_money(current_player, owner, prop_rent)
+
+                  # update player and owner
+                  updated_players =
+                    Enum.map(current_state.players, fn p ->
+                      cond do
+                        p.id == current_player.id -> player_minus_rent
+                        p.id == owner.id -> owner_plus_rent
+                        true -> p
+                      end
+                    end)
+
+                  updated_state = %{current_state | players: updated_players}
+                  :ets.insert(@game_store, {:game, updated_state})
+                  updated_state
+                end
+
+              true ->
+                MonopolyWeb.Endpoint.broadcast("game_state", "upgradable_property", updated_game)
+                updated_game
             end
+          else
+            # Property is Not owned, announce that via broadcast
+            # Frontend will invoke the purchase flow
+            MonopolyWeb.Endpoint.broadcast("game_state", "unowned_property", updated_game)
+          end
 
-          {:error, _reason} ->
-            updated_game
-        end
-      else
-        updated_game
+        true ->
+          updated_game
       end
 
     {{dice, sum, is_doubles}, current_tile, updated_game}
   end
 
-  # Move player and handle passing go
+  # Update the player's position based on the dice result, handles passing go.
   defp move_player(player, steps) do
     old_position = player.position
     updated_player = Player.move(player, steps)
@@ -300,6 +367,13 @@ defmodule GameObjects.Game do
     Enum.find(game.properties, fn property -> property.id == position end)
   end
 
+  @doc """
+    Removes a player from the game and updates the ETS table.
+
+    session_id: the session ID of the player leaving the game
+
+    Replies with :ok and the updated game state if successful, else :ok with an empty game.
+  """
   @impl true
   def handle_call({:leave_game, session_id}, _from, state) do
     filtered_players =
@@ -326,8 +400,13 @@ defmodule GameObjects.Game do
   end
 
   @doc """
-    End the current player's turn, but check if the rolled first, if not make them roll.
-    Set next player as new current, reste the current player's turn count, and update state.
+    End the current player's turn if they have rolled the dice already. The current
+    player's turn count will reset and the next player will be set as the new current
+    player.
+
+    session_id: the session ID of the player ending their turn
+
+    Replies with :ok
   """
   @impl true
   def handle_call({:end_turn, session_id}, _from, state) do
@@ -337,6 +416,7 @@ defmodule GameObjects.Game do
 
       [{_key, game}] ->
         current_player = game.current_player
+
         if GameObjects.Player.get_id(current_player) == session_id do
           if current_player.rolled do
             current_player_index =
@@ -363,7 +443,7 @@ defmodule GameObjects.Game do
                 | rolled: false
               })
 
-            # Update statu
+            # Update state
             updated_state = %{
               state
               | players: updated_players,
@@ -383,6 +463,8 @@ defmodule GameObjects.Game do
     end
   end
 
+  # Handler for applying a 'Get out of jail' card for the upcoming player if they have one,
+  # before they begin their turn.
   defp check_and_apply_get_out_of_jail_card(next_player, state) do
     get_out_cards =
       Enum.filter(Player.get_cards(next_player), fn card ->
@@ -411,15 +493,25 @@ defmodule GameObjects.Game do
     end
   end
 
-  # ---- Game Related handles ---- #
+  ##############################################################
+  # Game-related handlers
 
-  # Get current game state.
+  @doc """
+    Gets the current state of the game.
+
+    Replies with :ok and the current game.
+  """
   @impl true
   def handle_call(:get_state, _from, state) do
     {:reply, {:ok, state}, state}
   end
 
-  # Start the game
+  @doc """
+    Starts the game if there are enough players. Initializes the struct's missing
+    values.
+
+    Replies with :ok and the updated game state if successful, else :err with the reason.
+  """
   @impl true
   def handle_call(:start_game, _from, state) do
     if length(state.players) > 1 do
@@ -434,7 +526,11 @@ defmodule GameObjects.Game do
     end
   end
 
-  # Delete the game
+  @doc """
+    Deletes the game from the ETS table if it exists.
+
+    Replies with :ok and an empty game if successful, else :err with a reason.
+  """
   @impl true
   def handle_call(:delete_game, _from, _state) do
     case :ets.lookup(@game_store, :game) do
@@ -450,93 +546,98 @@ defmodule GameObjects.Game do
   end
 
   @doc """
-    Handle the possible scenarios when a player lands on a tile, either a property (owned or not) or a card (chance or community).
-    session_id: is the unique player id (socket)
-    tile: refers to that specific tile the player lands on after moving.
+    Handles a card being played by the current player.
+
+    session_id: the session ID of the player playing the card
+
+    Replies with :ok and the updated game state if successful, else :err with a reason.
   """
   @impl true
-  # TBU
-  def handle_call({:take_turn, session_id, tile}, _from, state) do
-    # Take turn logic
+  def handle_call({:play_card, session_id}, _from, state) do
+    current_player = state.current_player
 
-    # Grab the player from state
-    player = Enum.find(state.players, fn p -> p.id == session_id end)
-
-    # if player lands on a property
-    if GameObjects.Property.is_owned(tile) do
-      # Assuming that tile is actually of type Property...
-      prop_rent = GameObjects.Property.get_current_rent(tile)
-      # player = Enum.find(state.players, fn player -> player.id == session_id end)
-      if GameObjects.Player.get_money(player) >= prop_rent do
-        # do
-        # player struct not pid
-        owner = GameObjects.Property.get_owner(tile)
-
-        {player_minus_rent, owner_plus_rent} =
-          GameObjects.Player.lose_money(player, owner, prop_rent)
-
-        # update player and owner
-        updated_players =
-          Enum.map(state.players, fn p ->
-            cond do
-              p.id == player.id -> player_minus_rent
-              p.id == owner.id -> owner_plus_rent
-              true -> p
-            end
-          end)
-
-        updated_state = %{state | players: updated_players}
-        :ets.insert(@game_store, {:game, updated_state})
-        MonopolyWeb.Endpoint.broadcast("game_state", "rent_paid", updated_state)
-        {:reply, {:ok, updated_state}, updated_state}
-      else
-        # TODO: removed player from game using their session_id, someone with better game flow sense review this pls.
-        leave_game(session_id)
-      end
+    if current_player.id != session_id do
+      {:reply, {:err, "Invalid session ID"}, state}
     else
-      # Property is Not owned
-      prop_cost = GameObjects.Property.get_buy_cost(tile)
-      # player = Enum.find(state.players, fn p -> p.id == session_id end)
-      if GameObjects.Player.get_money(player) >= prop_cost do
-        # TODO: prompt user to purchase (on frontend?)
-        updated_property = GameObjects.Property.buy_property(tile, player)
-        updated_player = GameObjects.Player.add_property(player, tile)
-        updated_player = GameObjects.Player.lose_money(updated_player, prop_cost)
+      case state.active_card do
+        nil ->
+          {:reply, {:err, "No active card to play"}, state}
 
-        # update properties and player in state
-        updated_properties =
-          Enum.map(state.properties, fn prpy ->
-            cond do
-              prpy.id == updated_property.id -> updated_property
-            end
-          end)
+        card ->
+          # Apply effect to the current player and update the players list
+          updated_player = GameObjects.Card.apply_effect(card, current_player)
 
-        updated_players =
-          Enum.map(state.players, fn p ->
-            cond do
-              p.id == updated_player.id -> updated_player
-            end
-          end)
+          updated_players =
+            Enum.map(state.players, fn player ->
+              if player.id == current_player.id, do: updated_player, else: player
+            end)
 
-        updated_state = %{
-          state
-          | properties: updated_properties,
-            players: updated_players
-        }
+          # Clear the active card
+          updated_state = %{
+            state
+            | players: updated_players,
+              current_player: updated_player,
+              active_card: nil
+          }
 
-        :ets.insert(@game_store, {:game, updated_state})
-
-        MonopolyWeb.Endpoint.broadcast("game_state", "property_purchased", updated_state)
-
-        {:reply, {:ok, updated_state}, updated_state}
-      else
-        # TODO: end turn, that it?
-        end_turn(session_id)
+          # Broadcast the state change
+          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
+          {:reply, {:ok, updated_state}, updated_state}
       end
     end
   end
 
-  # Terminate and save state on failure.
+  @doc """
+    Handles the buying logic of a property for the current player. The owner's property
+    is updated, the player's money is deducted, and the game state is updated.
+
+    session_id: the session ID of the player buying the property
+    tile: the property being bought
+
+    Replies with :ok and the updated game state if successful, else :err with a reason.
+  """
+  @impl true
+  def handle_call({:buy_property, session_id, tile}, _from, state) do
+    player = state.current_player
+
+    cond do
+      # Check that the tile is a property
+      tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
+        if GameObjects.Property.is_owned(tile) do
+          {:reply, {:err, "Property already owned"}, state}
+        else
+          # updated_player_properties = GameObjects.Property.buy_property(tile, player)
+          updated_property = GameObjects.Property.set_owner(tile, player.id)
+          # Charge the player if has money
+          if player.money > GameObjects.Property.get_buy_cost(tile) do
+            updated_player =
+              GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
+
+            updated_properties =
+              Enum.map(state.properties, fn property ->
+                if property.id == tile.id, do: updated_property, else: property
+              end)
+
+            updated_players =
+              Enum.map(state.players, fn p ->
+                if p.id == player.id, do: updated_player, else: p
+              end)
+
+            updated_state = %{state | properties: updated_properties, players: updated_players}
+            :ets.insert(@game_store, {:game, updated_state})
+            MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
+            {:reply, {:ok, updated_state}, updated_state}
+          end
+        end
+
+      true ->
+        {:reply, {:err, "Invalid tile"}, state}
+    end
+  end
+
+  @doc """
+    Saves the current game state in the event the server crashes or terminates.
+  """
   @impl true
   def terminate(_reason, state) do
     :ets.insert(@game_store, {:game, state})
