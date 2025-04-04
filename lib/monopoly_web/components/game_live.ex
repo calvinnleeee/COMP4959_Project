@@ -10,7 +10,6 @@ defmodule MonopolyWeb.GameLive do
   # State includes the game state, player's struct, which buttons are enabled,
   # and dice-related values
   def mount(_params, session, socket) do
-    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     # For development/testing purpose, use sample data
     # In production this would integrate with GameObjects.Game
     # AKA do not default to player-1 in prod?
@@ -22,6 +21,11 @@ defmodule MonopolyWeb.GameLive do
     {:ok, game} = Game.start_game()
     player = Enum.find(game.players, fn player -> player.id == session_id end)
     property = Enum.at(game.properties, player.position)
+    # Enable this once player.active flag exists, handles refreshing
+    # game = if !player.active do Game.join_game(session_id) else game end
+
+    # Subscribe to the backend game state updates
+    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
 
     {
       :ok,
@@ -309,5 +313,11 @@ defmodule MonopolyWeb.GameLive do
       />
     </div>
     """
+  end
+
+  # Remove user from game
+  def terminate(_reason, socket) do
+    Game.disconnect_from_game(socket.assigns.player.id)
+    :ok
   end
 end
