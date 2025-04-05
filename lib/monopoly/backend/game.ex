@@ -417,7 +417,7 @@ defmodule GameObjects.Game do
 
   # Helper function for Step 3: Send the player to jail if needed
   defp send_to_jail(current_player) do
-    %{current_player | in_jail: true, position: @jail_position, turns_taken: 0}
+    %{current_player | in_jail: true, position: @jail_position, turns_taken: 0, rolled: true}
   end
 
   # Helper function for Step 4: Get the tile the player landed on
@@ -1014,7 +1014,13 @@ defmodule GameObjects.Game do
                 if p.id == player.id, do: updated_player, else: p
               end)
 
-            updated_state = %{state | properties: updated_properties, players: updated_players, current_player: updated_player}
+            updated_state = %{
+              state
+              | properties: updated_properties,
+                players: updated_players,
+                current_player: updated_player
+            }
+
             :ets.insert(@game_store, {:game, updated_state})
             MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
             {:reply, {:ok, updated_state}, updated_state}
