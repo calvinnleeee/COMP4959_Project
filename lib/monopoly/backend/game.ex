@@ -89,20 +89,6 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
   end
 
-  # Upgrade a property
-  def upgrade_property(session_id, property_id) do
-    GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
-  end
-
-  # Downgrade a property
-  def downgrade_property(session_id, property_id) do
-    GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
-  end
-
-  # Play a card.
-  def play_card(session_id) do
-    GenServer.call(__MODULE__, {:play_card, session_id})
-
   # Allow the current player to buy a property.
   def buy_property(session_id, tile) do
     GenServer.call(__MODULE__, {:buy_property, session_id, tile})
@@ -716,13 +702,13 @@ defmodule GameObjects.Game do
             {updated_property, cost} = property.sell_upgrade(property)
 
             Enum.forEach(game.properties, fn prop ->
-                if prop.type == updated_property.type do
-                  if (abs(prop.upgrades - updated_property.upgrades)) > 0 do
-                    {:reply, {:err, "Properties must be within one upgrade of each other"}, state}
-                  end
+              if prop.type == updated_property.type do
+                if (abs(prop.upgrades - updated_property.upgrades)) > 0 do
+                  {:reply, {:err, "Properties must be within one upgrade of each other"}, state}
                 end
-              end)
-            end
+              end
+            end)
+
 
             if (property.upgrade_level <= 1) do
                 #sell property
