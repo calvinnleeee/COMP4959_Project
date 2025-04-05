@@ -649,23 +649,21 @@ defmodule GameObjects.Game do
             {updated_property, cost} = Property.build_upgrade(property)
 
             #money and player update
-            #cost = property.house_price
-            if cost == 0 do
-              {:reply, {:err, "Cannot upgrade"}, state}
+            cond do
+              cost == 0 ->
+                {:reply, {:err, "Cannot upgrade"}, state}
+
+              current_player.money < cost ->
+                {:reply, {:err, "Not enough money"}, state}
+
+              true ->
+                updated_player = Player.lose_money(current_player, cost)
+                player_updated_game = update_player(game, updated_player)
+                prop_updated_game = update_property(player_updated_game, updated_property)
+
+                :ets.insert(@game_store, {:game, prop_updated_game})
+                {:reply, {:ok, prop_updated_game}, prop_updated_game}
             end
-            if current_player.money < cost do
-              {:reply, {:err, "Not enough money"}, state}
-            end
-            updated_player = Player.lose_money(current_player, cost)
-            player_updated_game = update_player(game, updated_player)
-
-            #updated_property = Property.inc_upgrade(property)
-            prop_updated_game = update_property(player_updated_game, updated_property)
-
-
-            #store the updated game state in ETS
-            :ets.insert(@game_store, {:game, prop_updated_game})
-            {:reply, {:ok, prop_updated_game}, prop_updated_game}
           else
             {:reply, {:err, "You don't own this property"}, state}
           end
