@@ -731,7 +731,7 @@ defmodule GameObjects.Game do
                   Enum.map(game.properties, fn property ->
                     if property.type == updated_property.type do
                       modified_prop = Property.set_upgrade(property, 0)
-                      if property.id == updated property.id do
+                      if property.id == updated_property.id do
                         Property.set_owner(modified_prop, nil)
                       else
                         modified_prop
