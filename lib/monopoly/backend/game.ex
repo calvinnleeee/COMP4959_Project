@@ -632,8 +632,6 @@ defmodule GameObjects.Game do
     end
   end
 
-
-
   # Update game state with property upgrade and reduced player money
   @impl true
   defp handle_call(:upgrade_property, session_id, property, state) do
@@ -645,9 +643,6 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Not your turn"}, state}
         else
           property = get_property(game, property)
-
-
-
           #check with abdu if we assign owners with id
           if property.owner == current_player.id do
 
@@ -693,9 +688,6 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Not your turn"}, state}
         else
           property = get_property(game, property)
-
-
-
           #check with abdu if we assign owners with id
           if property.owner == current_player.id do
 
@@ -708,7 +700,6 @@ defmodule GameObjects.Game do
                 end
               end
             end)
-
 
             if (property.upgrade_level <= 1) do
                 #sell property
@@ -737,11 +728,8 @@ defmodule GameObjects.Game do
               end
               updated_player = Player.add_money(current_player, cost)
               player_updated_game = update_player(game, updated_player)
-
               #updated_property = Property.inc_upgrade(property)
               prop_updated_game = update_property(player_updated_game, updated_property)
-
-
               #store the updated game state in ETS
               :ets.insert(@game_store, {:game, prop_updated_game})
               {:reply, {:ok, prop_updated_game}, prop_updated_game}
@@ -755,7 +743,6 @@ defmodule GameObjects.Game do
 
       [] ->
         {:reply, {:err, "No active game"}, state}
-
     end
   end
 
@@ -776,42 +763,6 @@ defmodule GameObjects.Game do
       end)
 
     %{game | properties: updated_properties}
-  end
-
-  # Play a card
-  @impl true
-  def handle_call({:play_card, session_id}, _from, state) do
-    current_player = state.current_player
-
-    if current_player.id != session_id do
-      {:reply, {:err, "Invalid session ID"}, state}
-    else
-      case state.active_card do
-        nil ->
-          {:reply, {:err, "No active card to play"}, state}
-
-        card ->
-          # Apply effect to the current player and update the players list
-          updated_player = GameObjects.Card.apply_effect(card, current_player)
-
-          updated_players =
-            Enum.map(state.players, fn player ->
-              if player.id == current_player.id, do: updated_player, else: player
-            end)
-
-          # Clear the active card
-          updated_state = %{
-            state
-            | players: updated_players,
-              current_player: updated_player,
-              active_card: nil
-          }
-
-          # Broadcast the state change
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-      end
-    end
   end
 
   @doc """
