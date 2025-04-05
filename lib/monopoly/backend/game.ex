@@ -253,17 +253,17 @@ defmodule GameObjects.Game do
     updated_player =
       case jail_status do
         :out_of_jail ->
-          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0, rolled: true}
           move_player(player, sum)
 
         :failed_to_escape ->
-          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0}
+          player = %{player | in_jail: false, jail_turns: 0, turns_taken: 0, rolled: true}
           # !! requires a check for money <= 0, player loses if they can't pay
           player = Player.lose_money(player, @jail_fee)
           move_player(player, sum)
 
         :stay_in_jail ->
-          %{player | jail_turns: player.jail_turns + 1}
+          %{player | jail_turns: player.jail_turns + 1, rolled: true}
       end
 
     current_tile = get_tile(game, updated_player.position)
