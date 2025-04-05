@@ -214,7 +214,15 @@ defmodule MonopolyWeb.BackendTestingLive do
         %Phoenix.Socket.Broadcast{event: "property_bought", payload: updated_game},
         socket
       ) do
-    {:noreply, assign(socket, message: "Landed on unowned property.", game: updated_game)}
+    {:noreply, assign(socket, message: "Bought a property.", game: updated_game)}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "card_played", payload: updated_game},
+        socket
+      ) do
+    {:noreply, assign(socket, message: "Played get out of jail card.", game: updated_game)}
   end
 
   @impl true
