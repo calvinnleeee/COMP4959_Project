@@ -693,18 +693,20 @@ defmodule GameObjects.Game do
 
             {updated_property, cost} = Property.sell_upgrade(property)
 
-            if (property.upgrade_level <= 1) do
-                #sell property
-                updated_property = Property.set_owner(updated_property, nil)
-                # nil_owner_updated_game = update_property(game, updated_property)
+            ##RAILROAD/UTILITY CHECK AND SELLING SHOULD GO HERE.
+
+            #sell property
+            if (property.upgrades <= 1) do
                 #set other props of same type to upgrade level 0
                 updated_properties =
                   Enum.map(game.properties, fn property ->
                     if property.type == updated_property.type do
-                      if property.upgrades >= 1 do
-                        {:reply, {:err, "Sell other houses first"}, state}
+                      modified_prop = Property.set_upgrade(property, 0)
+                      if property.id == updated property.id do
+                        Property.set_owner(modified_prop, nil)
+                      else
+                        modified_prop
                       end
-                      Property.set_upgrade(property, 0)
                     else
                       property
                     end
@@ -738,11 +740,6 @@ defmodule GameObjects.Game do
       [] ->
         {:reply, {:err, "No active game"}, state}
     end
-  end
-
-  # Get property from game list by property id
-  defp get_property(game, property) do
-    Enum.find(game.properties, fn prop -> prop.id == property.id end)
   end
 
    # Update a player in the game state
