@@ -368,21 +368,53 @@ defmodule GameObjects.Game do
 
             {updated_property, cost} = property.sell_upgrade(property)
 
-            #money and player update
-            #cost = property.house_price
-            if cost == 0 do
-              {:reply, {:err, "Cannot downgrade"}, state}
+            Enum.forEach(game.properties, fn prop ->
+                if prop.type == updated_property.type do
+                  if (abs(prop.upgrades - updated_property.upgrades)) > 0 do
+                    {:reply, {:err, "Properties must be within one upgrade of each other"}, state}
+                  end
+                end
+              end)
             end
-            updated_player = Player.add_money(current_player, cost)
-            player_updated_game = update_player(game, updated_player)
 
-            #updated_property = Property.inc_upgrade(property)
-            prop_updated_game = update_property(player_updated_game, updated_property)
+            if (property.upgrade_level <= 1) do
+                #sell property
+                updated_property = Property.set_owner(updated_property, nil)
+                # nil_owner_updated_game = update_property(game, updated_property)
+                #set other props of same type to upgrade level 0
+                updated_properties =
+                  Enum.map(game.properties, fn property ->
+                    if property.type == updated_property.type do
+                      Property.set_upgrade(property, 0)
+                    else
+                      property
+                    end
+                  end)
+                prop_updated_game = %{game | properties: updated_properties}
+                updated_player = Player.add_money(current_player, property.buy_cost)
+                player_updated_game = update_player(prop_updated_game, updated_player)
+                #store the updated game state in ETS
+                :ets.insert(@game_store, {:game, player_updated_game})
+                {:reply, {:ok, player_updated_game}, player_updated_game}
+
+            else
+              # downgrade property
+              if cost == 0 do
+                {:reply, {:err, "Cannot downgrade"}, state}
+              end
+              updated_player = Player.add_money(current_player, cost)
+              player_updated_game = update_player(game, updated_player)
+
+              #updated_property = Property.inc_upgrade(property)
+              prop_updated_game = update_property(player_updated_game, updated_property)
 
 
-            #store the updated game state in ETS
-            :ets.insert(@game_store, {:game, prop_updated_game})
-            {:reply, {:ok, prop_updated_game}, prop_updated_game}
+              #store the updated game state in ETS
+              :ets.insert(@game_store, {:game, prop_updated_game})
+              {:reply, {:ok, prop_updated_game}, prop_updated_game}
+              #money and player update
+              #cost = property.house_price
+            end
           else
             {:reply, {:err, "You don't own this property"}, state}
           end
