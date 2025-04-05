@@ -81,12 +81,12 @@ defmodule GameObjects.Game do
 
   # Upgrade a property
   def upgrade_property(session_id, property_id) do
-    GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
+    GenServer.call(__MODULE__, {:upgrade_property, session_id, property})
   end
 
   # Downgrade a property
   def downgrade_property(session_id, property_id) do
-    GenServer.call(__MODULE__, {:upgrade_property, session_id, property_id})
+    GenServer.call(__MODULE__, {:downgrade_property, session_id, property})
   end
 
   # Allow the current player to buy a property.
@@ -633,8 +633,9 @@ defmodule GameObjects.Game do
   end
 
   # Update game state with property upgrade and reduced player money
+  # takes a whole property object
   @impl true
-  defp handle_call(:upgrade_property, session_id, property, state) do
+  def handle_call(:upgrade_property, session_id, property, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
@@ -642,11 +643,10 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          property = get_property(game, property)
           #check with abdu if we assign owners with id
-          if property.owner == current_player.id do
+          if property.owner.id == current_player.id do
 
-            {updated_property, cost} = property.build_upgrade(property)
+            {updated_property, cost} = Property.build_upgrade(property)
 
             #money and player update
             #cost = property.house_price
@@ -678,8 +678,9 @@ defmodule GameObjects.Game do
   end
 
   # Update game state with property downgrade and increased player money
+  # takes a whole property object
   @impl true
-  defp handle_call(:downgrade_property, session_id, property, state) do
+  def handle_call(:downgrade_property, session_id, property, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
@@ -687,19 +688,10 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          property = get_property(game, property)
           #check with abdu if we assign owners with id
-          if property.owner == current_player.id do
+          if property.owner.id == current_player.id do
 
-            {updated_property, cost} = property.sell_upgrade(property)
-
-            Enum.forEach(game.properties, fn prop ->
-              if prop.type == updated_property.type do
-                if (abs(prop.upgrades - updated_property.upgrades)) > 0 do
-                  {:reply, {:err, "Properties must be within one upgrade of each other"}, state}
-                end
-              end
-            end)
+            {updated_property, cost} = Property.sell_upgrade(property)
 
             if (property.upgrade_level <= 1) do
                 #sell property
@@ -709,6 +701,9 @@ defmodule GameObjects.Game do
                 updated_properties =
                   Enum.map(game.properties, fn property ->
                     if property.type == updated_property.type do
+                      if property.upgrades >= 1 do
+                        {:reply, {:err, "Sell other houses first"}, state}
+                      end
                       Property.set_upgrade(property, 0)
                     else
                       property
@@ -725,16 +720,15 @@ defmodule GameObjects.Game do
               # downgrade property
               if cost == 0 do
                 {:reply, {:err, "Cannot downgrade"}, state}
+              else
+                updated_player = Player.add_money(current_player, cost)
+                player_updated_game = update_player(game, updated_player)
+                #updated_property = Property.inc_upgrade(property)
+                prop_updated_game = update_property(player_updated_game, updated_property)
+                #store the updated game state in ETS
+                :ets.insert(@game_store, {:game, prop_updated_game})
+                {:reply, {:ok, prop_updated_game}, prop_updated_game}
               end
-              updated_player = Player.add_money(current_player, cost)
-              player_updated_game = update_player(game, updated_player)
-              #updated_property = Property.inc_upgrade(property)
-              prop_updated_game = update_property(player_updated_game, updated_property)
-              #store the updated game state in ETS
-              :ets.insert(@game_store, {:game, prop_updated_game})
-              {:reply, {:ok, prop_updated_game}, prop_updated_game}
-              #money and player update
-              #cost = property.house_price
             end
           else
             {:reply, {:err, "You don't own this property"}, state}
