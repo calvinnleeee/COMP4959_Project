@@ -27,9 +27,11 @@ defmodule MonopolyWeb.BackendTestingLive do
 
   def handle_event("set_session_id", %{"id" => id}, socket) do
     {:ok, state} = GameObjects.Game.get_state()
+
     if state != %{} do
       IO.puts("Ongoing game")
     end
+
     {:noreply, assign(socket, session_id: id)}
   end
 
@@ -79,6 +81,24 @@ defmodule MonopolyWeb.BackendTestingLive do
   end
 
   @impl true
+  def handle_event("buy_property", _params, socket) do
+    session_id = socket.assigns.session_id
+    {:ok, current_game} = GameObjects.Game.get_state()
+    IO.inspect(current_game, label: "Current Game State")
+
+    current_player = current_game.current_player
+    property = Enum.at(current_game.properties, current_player.position)
+
+    case GameObjects.Game.buy_property(session_id, property) do
+      {:ok, updated_game} ->
+        {:noreply, assign(socket, game: updated_game)}
+
+      {:err, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
+  end
+
+  @impl true
   def handle_info(
         %Phoenix.Socket.Broadcast{
           event: "player_joined",
@@ -100,6 +120,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     case GameObjects.Game.roll_dice(session_id) do
       {:ok, dice_result, current_position, current_tile, updated_game} ->
         message = "Landed on #{current_tile.name}"
+
         button_states =
           socket.assigns.button_states
           |> Map.put(:buy_property, current_tile.owner !== nil)
@@ -130,7 +151,7 @@ defmodule MonopolyWeb.BackendTestingLive do
   def handle_info(%Phoenix.Socket.Broadcast{event: "turn_ended", payload: updated_state}, socket) do
     roll_condition =
       !(updated_state.current_player.id === socket.assigns.session_id) ||
-      updated_state.current_player.rolled
+        updated_state.current_player.rolled
 
     button_states =
       socket.assigns.button_states
@@ -181,6 +202,22 @@ defmodule MonopolyWeb.BackendTestingLive do
   end
 
   @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "unowned_property", payload: updated_game},
+        socket
+      ) do
+    {:noreply, assign(socket, message: "Landed on unowned property.", game: updated_game)}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "property_bought", payload: updated_game},
+        socket
+      ) do
+    {:noreply, assign(socket, message: "Landed on unowned property.", game: updated_game)}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <h1 style="font-size:50px">Backend Integration</h1>
@@ -188,7 +225,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     <div id="session-id-hook" phx-hook="SessionId"></div>
 
     <h2>Session ID: {@session_id}</h2>
-     <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
+    <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
     <h2 style="font-size: 40px">Lobby actions</h2>
 
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
@@ -231,7 +268,7 @@ defmodule MonopolyWeb.BackendTestingLive do
         Start Game
       </button>
     </div>
-     <hr style="margin-bottom: 30px; margin-top: 30px;" />
+    <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
       <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
@@ -274,7 +311,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Roll Dice
           </button>
-
+          
     <!-- Buy Properties -->
           <button
             phx-click="buy_property"
@@ -288,7 +325,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Buy Properties
           </button>
-
+          
     <!-- Upgrade -->
           <button
             phx-click="upgrade"
@@ -302,7 +339,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Upgrade
           </button>
-
+          
     <!-- Downgrade -->
           <button
             phx-click="downgrade"
@@ -316,7 +353,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Downgrade
           </button>
-
+          
     <!-- End Turn -->
           <button
             phx-click="end_turn"
@@ -331,7 +368,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             End Turn
           </button>
-
+          
     <!-- Leave Game -->
           <button
             phx-click="leave_game"
@@ -346,7 +383,7 @@ defmodule MonopolyWeb.BackendTestingLive do
             Leave Game
           </button>
         </div>
-         <hr \ />
+        <hr \ />
         <h2 style="font-size: 30px;">Turn: {@game.turn}</h2>
 
         <h4 style="font-size: 20px;">Players:</h4>
