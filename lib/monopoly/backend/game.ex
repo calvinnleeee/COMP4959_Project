@@ -200,7 +200,7 @@ defmodule GameObjects.Game do
         current_player = game.current_player
 
         # Only allow the current player to roll the dice
-        if current_player.id != session_id do
+        if current_player.id != session_id || current_player.rolled do
           {:reply, {:err, "Not your turn"}, state}
         else
           {dice_result, current_tile, updated_game} =
