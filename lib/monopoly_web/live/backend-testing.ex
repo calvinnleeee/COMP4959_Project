@@ -121,15 +121,10 @@ defmodule MonopolyWeb.BackendTestingLive do
       {:ok, dice_result, current_position, current_tile, updated_game} ->
         message = "Landed on #{current_tile.name}"
 
-        button_states =
-          socket.assigns.button_states
-          |> Map.put(:buy_property, current_tile.owner !== nil)
-
         {:noreply,
          socket
          |> assign(:game, updated_game)
-         |> assign(:button_states, button_states)
-         |> put_flash(:info, message)}
+         |> assign(:message, message)}
 
       {:err, reason} ->
         {:noreply, put_flash(socket, :error, reason)}
@@ -153,16 +148,9 @@ defmodule MonopolyWeb.BackendTestingLive do
       !(updated_state.current_player.id === socket.assigns.session_id) ||
         updated_state.current_player.rolled
 
-    button_states =
-      socket.assigns.button_states
-      |> Map.put(:roll_dice, roll_condition)
-      |> Map.put(:end_turn, !(updated_state.current_player.id === socket.assigns.session_id))
-      |> Map.put(:leave_game, false)
-
     {:noreply,
      assign(socket,
-       game: updated_state,
-       button_states: button_states
+       game: updated_state
      )}
   end
 
@@ -176,17 +164,10 @@ defmodule MonopolyWeb.BackendTestingLive do
         !(updated_game.current_player.id === socket.assigns.session_id) ||
           updated_game.current_player.rolled
 
-      button_states =
-        socket.assigns.button_states
-        |> Map.put(:roll_dice, roll_condition)
-        |> Map.put(:end_turn, !(updated_game.current_player.id === socket.assigns.session_id))
-        |> Map.put(:leave_game, false)
-
       {:noreply,
        assign(socket,
          message: "New Game Created",
-         game: updated_game,
-         button_states: button_states
+         game: updated_game
        )}
     else
       {:noreply, assign(socket, message: "New Game Created", game: updated_game)}
@@ -319,7 +300,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Roll Dice
           </button>
-          
+
     <!-- Buy Properties -->
           <button
             phx-click="buy_property"
@@ -333,7 +314,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Buy Properties
           </button>
-          
+
     <!-- Upgrade -->
           <button
             phx-click="upgrade"
@@ -347,7 +328,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Upgrade
           </button>
-          
+
     <!-- Downgrade -->
           <button
             phx-click="downgrade"
@@ -361,7 +342,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Downgrade
           </button>
-          
+
     <!-- End Turn -->
           <button
             phx-click="end_turn"
@@ -376,7 +357,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             End Turn
           </button>
-          
+
     <!-- Leave Game -->
           <button
             phx-click="leave_game"
