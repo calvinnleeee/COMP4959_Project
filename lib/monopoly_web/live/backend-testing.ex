@@ -7,12 +7,12 @@ defmodule MonopolyWeb.BackendTestingLive do
     if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
 
     button_states = %{
-      roll_dice: true,
-      buy_property: true,
-      upgrade: true,
-      downgrade: true,
-      end_turn: true,
-      leave_game: true
+      roll_dice: false,
+      buy_property: false,
+      upgrade: false,
+      downgrade: false,
+      end_turn: false,
+      leave_game: false
     }
 
     {:ok,
@@ -220,12 +220,12 @@ defmodule MonopolyWeb.BackendTestingLive do
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
       <button
         phx-click="join_game"
-        disabled={is_nil(@session_id) || !is_nil(@game)}
+        disabled={is_nil(@session_id)}
         style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@session_id) || not is_nil(@game), do: "#aaa", else: "#43A047"}; " <>
+        "background-color: #{if is_nil(@session_id), do: "#aaa", else: "#43A047"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@session_id) || not is_nil(@game), do: "not-allowed", else: "pointer"};"
+        "cursor: #{if is_nil(@session_id), do: "not-allowed", else: "pointer"};"
         }
       >
         Join Game
