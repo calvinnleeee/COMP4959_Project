@@ -749,10 +749,6 @@ defmodule GameObjects.Game do
                 :ets.insert(@game_store, {:game, player_updated_game})
                 {:reply, {:ok, player_updated_game}, player_updated_game}
 
-              # fail to downgrade
-              cost == 0 ->
-                {:reply, {:err, "Cannot downgrade"}, state}
-
               # succeed in downgrading
               true ->
                 updated_player = Player.add_money(current_player, cost)
