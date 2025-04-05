@@ -3,7 +3,9 @@ defmodule MonopolyWeb.GameLive do
   The VHM board which communicates with the backend Game server.
   """
   use MonopolyWeb, :live_view
+  import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
+  import MonopolyWeb.Components.BuyModal
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -42,7 +44,9 @@ defmodule MonopolyWeb.GameLive do
         dice_values: nil,
         is_doubles: false,
         doubles_notification: nil,
-        jail_notification: nil
+        jail_notification: nil,
+        show_buy_modal: false,
+        current_property: nil # TODO: integrate this with divergent changes
       )
     }
   end
@@ -276,6 +280,29 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+  # event handler for buy modal
+  def handle_event("buy_property", _params, socket) do
+    property = socket.assigns.current_property
+    current_player = socket.assigns.current_player
+    update_player = Map.update!(current_player, :money, fn money -> money - property.buy_cost end)
+    {:noreply, assign(socket, %{
+      current_player: update_player,
+      player_properties: property,
+      dice_result: nil,
+      dice_values: nil,
+      is_doubles: false,
+      doubles_count: 0,
+      doubles_notification: nil,
+      jail_notification: nil,
+      show_buy_modal: false,
+      current_property: nil})}
+  end
+
+  def handle_event("cancel_buying", _params, socket) do
+    {:noreply, assign(socket, show_buy_modal: false)}
+  end
+
+
   def render(assigns) do
     # TODO: buttons
     # - Roll dice
@@ -311,6 +338,13 @@ defmodule MonopolyWeb.GameLive do
         doubles_count={@player.turns_taken}
         jail_notification={@jail_notification}
       />
+
+      <!-- Modal for buying property : @id or "buy-modal"-->
+      <%= if @show_buy_modal && @current_property do %>
+        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
+          on_cancel={hide_modal("buy-modal")}/>
+      <% end %>
+
     </div>
     """
   end
