@@ -79,6 +79,16 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:roll_dice, session_id})
   end
 
+  # Upgrade a property
+  def upgrade_property(session_id, property_id) do
+    GenServer.call(__MODULE__, {:upgrade_property, session_id, property})
+  end
+
+  # Downgrade a property
+  def downgrade_property(session_id, property_id) do
+    GenServer.call(__MODULE__, {:downgrade_property, session_id, property})
+  end
+
   # Allow the current player to buy a property.
   def buy_property(session_id, tile) do
     GenServer.call(__MODULE__, {:buy_property, session_id, tile})
@@ -622,46 +632,126 @@ defmodule GameObjects.Game do
     end
   end
 
-  @doc """
-    Handles a card being played by the current player.
-
-    session_id: the session ID of the player playing the card
-
-    Replies with :ok and the updated game state if successful, else :err with a reason.
-  """
+  # Update game state with property upgrade and reduced player money
+  # takes a whole property object
   @impl true
-  def handle_call({:play_card, session_id}, _from, state) do
-    current_player = state.current_player
+  def handle_call(:upgrade_property, session_id, property, state) do
+    case :ets.lookup(@game_store, :game) do
+      [{:game, game}] ->
+        current_player = game.current_player
 
-    if current_player.id != session_id do
-      {:reply, {:err, "Invalid session ID"}, state}
-    else
-      case state.active_card do
-        nil ->
-          {:reply, {:err, "No active card to play"}, state}
+        if current_player.id != session_id do
+          {:reply, {:err, "Not your turn"}, state}
+        else
+          #check with abdu if we assign owners with id
+          if property.owner.id == current_player.id do
 
-        card ->
-          # Apply effect to the current player and update the players list
-          updated_player = GameObjects.Card.apply_effect(card, current_player)
+            {updated_property, cost} = Property.build_upgrade(property)
 
-          updated_players =
-            Enum.map(state.players, fn player ->
-              if player.id == current_player.id, do: updated_player, else: player
-            end)
+            #money and player update
+            cond do
+              cost == 0 ->
+                {:reply, {:err, "Cannot upgrade"}, state}
 
-          # Clear the active card
-          updated_state = %{
-            state
-            | players: updated_players,
-              current_player: updated_player,
-              active_card: nil
-          }
+              current_player.money < cost ->
+                {:reply, {:err, "Not enough money"}, state}
 
-          # Broadcast the state change
-          MonopolyWeb.Endpoint.broadcast("game_state", "card_played", updated_state)
-          {:reply, {:ok, updated_state}, updated_state}
-      end
+              true ->
+                updated_player = Player.lose_money(current_player, cost)
+                player_updated_game = update_player(game, updated_player)
+                prop_updated_game = update_property(player_updated_game, updated_property)
+
+                :ets.insert(@game_store, {:game, prop_updated_game})
+                {:reply, {:ok, prop_updated_game}, prop_updated_game}
+            end
+          else
+            {:reply, {:err, "You don't own this property"}, state}
+          end
+        end
+
+      [] ->
+        {:reply, {:err, "No active game"}, state}
+
     end
+  end
+
+  # Update game state with property downgrade and increased player money
+  # takes a whole property object
+  @impl true
+  def handle_call(:downgrade_property, session_id, property, state) do
+    case :ets.lookup(@game_store, :game) do
+      [{:game, game}] ->
+        current_player = game.current_player
+
+        if current_player.id != session_id do
+          {:reply, {:err, "Not your turn"}, state}
+        else
+          #check with abdu if we assign owners with id
+          if property.owner.id == current_player.id do
+
+            {updated_property, cost} = Property.sell_upgrade(property)
+
+            ##RAILROAD/UTILITY CHECK AND SELLING SHOULD GO HERE.
+
+            #sell property
+            if (property.upgrades <= 1) do
+                #set other props of same type to upgrade level 0
+                updated_properties =
+                  Enum.map(game.properties, fn property ->
+                    if property.type == updated_property.type do
+                      modified_prop = Property.set_upgrade(property, 0)
+                      if property.id == updated property.id do
+                        Property.set_owner(modified_prop, nil)
+                      else
+                        modified_prop
+                      end
+                    else
+                      property
+                    end
+                  end)
+                prop_updated_game = %{game | properties: updated_properties}
+                updated_player = Player.add_money(current_player, property.buy_cost)
+                player_updated_game = update_player(prop_updated_game, updated_player)
+                #store the updated game state in ETS
+                :ets.insert(@game_store, {:game, player_updated_game})
+                {:reply, {:ok, player_updated_game}, player_updated_game}
+
+            else
+              # downgrade property
+              if cost == 0 do
+                {:reply, {:err, "Cannot downgrade"}, state}
+              else
+                updated_player = Player.add_money(current_player, cost)
+                player_updated_game = update_player(game, updated_player)
+                #updated_property = Property.inc_upgrade(property)
+                prop_updated_game = update_property(player_updated_game, updated_property)
+                #store the updated game state in ETS
+                :ets.insert(@game_store, {:game, prop_updated_game})
+                {:reply, {:ok, prop_updated_game}, prop_updated_game}
+              end
+            end
+          else
+            {:reply, {:err, "You don't own this property"}, state}
+          end
+        end
+
+      [] ->
+        {:reply, {:err, "No active game"}, state}
+    end
+  end
+
+   # Update a player in the game state
+  defp update_property(game, updated_property) do
+    updated_properties =
+      Enum.map(game.properties, fn property ->
+        if property.id == updated_property.id do
+          updated_property
+        else
+          property
+        end
+      end)
+
+    %{game | properties: updated_properties}
   end
 
   @doc """
