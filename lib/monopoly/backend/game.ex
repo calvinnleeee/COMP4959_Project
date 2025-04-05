@@ -89,7 +89,7 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, {:set_player_inactive, session_id})
   end
 
-  # Set a player inactive if they reconnect
+  # Set a player active if they reconnect
   def set_player_active(session_id) do
     GenServer.call(__MODULE__, {:set_player_active, session_id})
   end
