@@ -272,100 +272,6 @@ defmodule GameObjects.Game do
   end
 
   # Handle the result of rolling the dice if a player is not in jail.
-  # defp handle_normal_roll(game) do
-  #   current_player = game.current_player
-
-  #   # Update player after dice roll
-  #   {dice, sum, is_doubles} = Dice.roll()
-
-  #   current_player = %{
-  #     current_player
-  #     | turns_taken: if(is_doubles, do: current_player.turns_taken + 1, else: 0),
-  #       rolled: !is_doubles
-  #   }
-
-  #   should_go_to_jail = Dice.check_for_jail(current_player.turns_taken, is_doubles)
-
-  #   current_player =
-  #     if should_go_to_jail do
-  #       %{current_player | in_jail: true, position: @jail_position, turns_taken: 0}
-  #     else
-  #       move_player(current_player, sum)
-  #     end
-
-  #   current_tile = get_tile(game, current_player.position)
-  #   updated_game = update_player(game, current_player)
-  #   current_state = updated_game
-
-  #   # Checking what the user has landed on.
-  #   updated_game =
-  #     cond do
-  #       # if player lands on card
-  #       current_tile.type in ["community", "chance"] ->
-  #         case Deck.draw_card(updated_game.deck, current_tile.type) do
-  #           {:ok, card} ->
-  #             case card.effect do
-  #               {:get_out_of_jail, _value} ->
-  #                 owned_card = GameObjects.Card.mark_as_owned(card)
-  #                 updated_deck = Deck.update_deck(updated_game.deck, owned_card)
-  #                 new_player_state = Player.add_card(updated_game.current_player, owned_card)
-  #                 updated_game = update_player(updated_game, new_player_state)
-  #                 %{updated_game | deck: updated_deck, active_card: owned_card}
-
-  #               _ ->
-  #                 %{updated_game | active_card: card}
-  #             end
-
-  #           {:error, _reason} ->
-  #             updated_game
-  #         end
-
-  #       # if player lands on a property
-  #       # current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
-  #       #   if GameObjects.Property.is_owned(current_tile) do
-  #       #     # check who owns it
-  #       #     owner = GameObjects.Property.get_owner(current_tile)
-
-  #       #     case owner.id == current_player.id do
-  #       #       false ->
-  #       #         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
-  #       #         # pay rent
-  #       #         if GameObjects.Player.get_money(current_player) >= prop_rent do
-  #       #           {player_minus_rent, owner_plus_rent} =
-  #       #             GameObjects.Player.lose_money(current_player, owner, prop_rent)
-
-  #       #           # update player and owner
-  #       #           updated_players =
-  #       #             Enum.map(current_state.players, fn p ->
-  #       #               cond do
-  #       #                 p.id == current_player.id -> player_minus_rent
-  #       #                 p.id == owner.id -> owner_plus_rent
-  #       #                 true -> p
-  #       #               end
-  #       #             end)
-
-  #       #           updated_state = %{current_state | players: updated_players}
-  #       #           IO.inspect(updated_game, label: "landing on property")
-  #       #           :ets.insert(@game_store, {:game, updated_state})
-  #       #           updated_state
-  #       #         end
-
-  #       #       true ->
-  #       #         MonopolyWeb.Endpoint.broadcast("game_state", "updated_state", updated_game)
-  #       #         updated_game
-  #       #     end
-  #       #   else
-  #       #     # Property is Not owned, announce that via broadcast
-  #       #     # Frontend will invoke the purchase flow
-  #       #     MonopolyWeb.Endpoint.broadcast("game_state", "updated_state", updated_game)
-  #       #   end
-
-  #       true ->
-  #         updated_game
-  #     end
-
-  #   {{dice, sum, is_doubles}, current_tile, updated_game}
-  # end
   defp handle_normal_roll(game) do
     current_player = game.current_player
 
@@ -420,13 +326,7 @@ defmodule GameObjects.Game do
     %{current_player | in_jail: true, position: @jail_position, turns_taken: 0, rolled: true}
   end
 
-  # Helper function for Step 4: Get the tile the player landed on
-  # defp get_tile(game, position) do
-  #   # You can assume there's a method that returns the tile from the position
-  #   GameObjects.Board.get_tile_at_position(game.board, position)
-  # end
-
-  # Helper function for Step 6a: Handle the case when the player lands on a card
+  # Helper function for Step 6: Handle the case when the player lands on a card
   defp handle_card_landing(updated_game, current_tile) do
     case Deck.draw_card(updated_game.deck, current_tile.type) do
       {:ok, card} ->
@@ -449,8 +349,8 @@ defmodule GameObjects.Game do
     end
   end
 
+  # Helper function for Step 6: Handle the case when player lands on a card
   defp handle_property_landing(updated_game, current_tile, current_player, sum) do
-    # Check if the tile is a property and not any special type
     if is_property_tile(current_tile) do
       if GameObjects.Property.is_owned(current_tile) do
         # Step 1: Get owner of the property
@@ -513,7 +413,7 @@ defmodule GameObjects.Game do
       # Step 6: Store the updated game state
       store_updated_game_state(updated_game)
     else
-      # Player can't afford the rent, handle accordingly (this part can be extended)
+      # Player can't afford the rent, return state
       updated_game
     end
   end
@@ -848,19 +748,6 @@ defmodule GameObjects.Game do
               true ->
                 updated_player = Player.lose_money(current_player, cost)
 
-                # update property in player properties list
-                # updated_player = %{
-                #   updated_player
-                #   | properties:
-                #       Enum.map(updated_player.properties, fn property ->
-                #         if property.id == updated_property.id do
-                #           updated_property
-                #         else
-                #           property
-                #         end
-                #       end)
-                # }
-
                 player_updated_game = update_player(game, updated_player)
                 prop_updated_game = update_property(player_updated_game, updated_property)
 
@@ -886,7 +773,6 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          # check with abdu if we assign owners with id
           if property.owner === nil || property.owner.id != current_player.id do
             {:reply, {:err, "You don't own this property"}, state}
           else
@@ -940,15 +826,6 @@ defmodule GameObjects.Game do
                 prop_updated_game = %{game | properties: updated_properties}
                 updated_player = Player.add_money(updated_player, updated_property.buy_cost)
 
-                # update player props list
-                # updated_player = %{
-                #   updated_player
-                #   | properties:
-                #       Enum.reject(updated_player.properties, fn property ->
-                #         property.id == updated_property.id
-                #       end)
-                # }
-
                 player_updated_game = update_player(prop_updated_game, updated_player)
                 :ets.insert(@game_store, {:game, player_updated_game})
                 MonopolyWeb.Endpoint.broadcast("game_state", "property_sold", player_updated_game)
@@ -957,7 +834,7 @@ defmodule GameObjects.Game do
 
               # sell property
               property.upgrades <= 1 ->
-                # set other props of same type to upgrade level 0
+                # 1. Set other props of same type to upgrade level 0
                 updated_properties =
                   Enum.map(game.properties, fn property ->
                     if property.type == updated_property.type do
@@ -973,7 +850,6 @@ defmodule GameObjects.Game do
                     end
                   end)
 
-                IO.inspect(updated_properties, label: "updated_properties sell")
                 # 2. Update player: remove sold property, set same-type upgrades to 1
                 updated_player_properties =
                   current_player.properties
@@ -1015,9 +891,6 @@ defmodule GameObjects.Game do
 
               # succeed in downgrading
               true ->
-                # updated_player = Player.add_money(current_player, cost)
-                # player_updated_game = update_player(game, updated_player)
-                # updated_property = Property.inc_upgrade(property)
                 updated_player =
                   current_player
                   |> Player.add_money(cost)
@@ -1091,12 +964,9 @@ defmodule GameObjects.Game do
         if GameObjects.Property.is_owned(tile) do
           {:reply, {:err, "Property already owned"}, state}
         else
-          # updated_player_properties = GameObjects.Property.buy_property(tile, player)
-          # updated_property = GameObjects.Property.set_owner(tile, player)
           # Charge the player if has money
           if player.money >= GameObjects.Property.get_buy_cost(tile) do
             updated_player_properties = GameObjects.Property.buy_property(tile, player)
-            # updated_property = GameObjects.Property.set_owner(tile, player)
 
             updated_player =
               GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
@@ -1106,23 +976,6 @@ defmodule GameObjects.Game do
               | properties: updated_player_properties
             }
 
-            # add to player_props
-            # updated_player = %{
-            #   updated_player
-            #   | properties:
-            #       if Enum.any?(updated_player.properties, fn p -> p.id == updated_property.id end) do
-            #         # No need to add if property already exists
-            #         updated_player.properties
-            #       else
-            #         # Add to the front if not present
-            #         [updated_property | updated_player.properties]
-            #       end
-            # }
-
-            # updated_properties =
-            #   Enum.map(state.properties, fn property ->
-            #     if property.id == tile.id, do: updated_property, else: property
-            #   end)
             updated_properties =
               Enum.map(state.properties, fn property ->
                 # If the property is part of the updated_player_properties, replace it
