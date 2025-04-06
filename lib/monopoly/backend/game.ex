@@ -2,12 +2,16 @@ defmodule GameObjects.Game do
   @moduledoc """
   This module represents the Game object, which holds vital state information and defines
   the methods for handling game logic.
+  This module represents the Game object, which holds vital state information and defines
+  the methods for handling game logic.
   """
   require Logger
   use GenServer
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}
 
+  ##############################################################
+  # Constants
   ##############################################################
   # Constants
 
@@ -195,6 +199,7 @@ defmodule GameObjects.Game do
   @impl true
   def handle_call({:roll_dice, session_id}, _from, state) do
     # Check for an active game, otherwise ignore the call
+    # Check for an active game, otherwise ignore the call
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
@@ -271,6 +276,7 @@ defmodule GameObjects.Game do
     {{dice, sum, jail_status}, current_tile, updated_game}
   end
 
+  # Handle the result of rolling the dice if a player is not in jail.
   # Handle the result of rolling the dice if a player is not in jail.
   defp handle_normal_roll(game) do
     current_player = game.current_player
