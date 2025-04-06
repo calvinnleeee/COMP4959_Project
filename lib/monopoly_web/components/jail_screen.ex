@@ -7,7 +7,6 @@ defmodule MonopolyWeb.Components.JailScreen do
   attr :on_roll_dice, JS, default: %JS{}, doc: "JS command for roll dice action"
   attr :dice, :list, default: nil, doc: "List of dice values rolled"
   attr :result, :string, default: nil, doc: "Result message after rolling dice"
-
   def jail_screen(assigns) do
     ~H"""
     <div id="jail-screen" class="jail-screen max-w-lg my-12 mx-auto p-6 bg-gray-100 border border-gray-300 rounded-lg text-center">

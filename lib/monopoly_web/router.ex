@@ -31,9 +31,17 @@ defmodule MonopolyWeb.Router do
     live "/testing/backend", BackendTestingLive
 =======
     get "/", PageController, :home
+<<<<<<< HEAD
     live "/jail", JailLive
     live "/game", GameLive
 >>>>>>> 417f4aa (navigate back to GameLive after leaving jail)
+=======
+
+    live "/game", GameLive, :index
+    live "/game/:id", GameLive, :show
+
+
+>>>>>>> 32a6845 (convert LiveServe to Component)
   end
 
   # Other scopes may use custom stacks.

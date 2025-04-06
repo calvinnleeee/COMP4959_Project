@@ -323,7 +323,6 @@ defmodule MonopolyWeb.GameLive do
         result={@jail_notification}
       />
       <% else %>
-
       <!-- Placeholder for game board -->
         <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
           Game board will be here
