@@ -887,7 +887,9 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Not your turn"}, state}
         else
           # check with abdu if we assign owners with id
-          if property.owner.id == current_player.id || property.owner === nil do
+          if property.owner === nil || property.owner.id != current_player.id do
+            {:reply, {:err, "You don't own this property"}, state}
+          else
             {updated_property, cost} = Property.sell_upgrade(property)
 
             cond do
@@ -1048,8 +1050,6 @@ defmodule GameObjects.Game do
 
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
             end
-          else
-            {:reply, {:err, "You don't own this property"}, state}
           end
         end
 
