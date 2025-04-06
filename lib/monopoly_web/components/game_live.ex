@@ -45,30 +45,33 @@ defmodule MonopolyWeb.GameLive do
         doubles_notification: nil,
         jail_notification: nil,
         show_buy_modal: false,
-        current_property: nil # TODO: integrate this with divergent changes
+        # TODO: integrate this with divergent changes
+        current_property: nil
       )
     }
   end
 
   # Check if property is unowned, or owned by player and upgradeable
   defp buyable(property, player) do
-    (property.owner == nil &&
-      property.buy_cost != nil &&
-      property.buy_cost <= player.money) ||
-    (property.owner != nil &&
-      property.owner.id == player.id &&
-      property.upgrades != nil &&
-      property.upgrades > 0 &&
-      property.type != "railroad" &&
-      property.type != "utility" &&
-      ((property.upgrades < length(property.rent_cost) - 2 &&
-          property.house_price <= player.money) ||
-         (property.upgrades == length(property.rent_cost) - 2 &&
-            property.hotel_price <= player.money)))
+    purchaseable = fn x, y ->
+      x.owner == nil && x.buy_cost != nil && x.buy_cost <= y.money
+    end
+
+    upgradeable = fn x, y ->
+      x.owner != nil && x.owner.id == y.id && x.house_price != nil &&
+        cond do
+          x.upgrades == 0 -> false
+          x.upgrades < length(x.rent_cost) - 2 -> x.house_price < y.money
+          x.upgrades == length(x.rent_cost) - 2 -> x.hotel_price < y.money
+          true -> false
+        end
+    end
+
+    purchaseable.(property, player) || upgradeable.(property, player)
   end
 
   # Check if property is owned by player
-  defp downgradeable(property, player) do
+  defp sellable(property, player) do
     property.owner != nil && property.owner.id == player.id
   end
 
@@ -186,7 +189,7 @@ defmodule MonopolyWeb.GameLive do
         :noreply,
         assign(
           socket,
-          buy_prop: buyable(property, player)
+          buy_prop: buyable(property, player),
           sell_prop: sellable(property, player)
         )
       }
@@ -229,23 +232,25 @@ defmodule MonopolyWeb.GameLive do
     property = socket.assigns.current_property
     current_player = socket.assigns.current_player
     update_player = Map.update!(current_player, :money, fn money -> money - property.buy_cost end)
-    {:noreply, assign(socket, %{
-      current_player: update_player,
-      player_properties: property,
-      dice_result: nil,
-      dice_values: nil,
-      is_doubles: false,
-      doubles_count: 0,
-      doubles_notification: nil,
-      jail_notification: nil,
-      show_buy_modal: false,
-      current_property: nil})}
+
+    {:noreply,
+     assign(socket, %{
+       current_player: update_player,
+       player_properties: property,
+       dice_result: nil,
+       dice_values: nil,
+       is_doubles: false,
+       doubles_count: 0,
+       doubles_notification: nil,
+       jail_notification: nil,
+       show_buy_modal: false,
+       current_property: nil
+     })}
   end
 
   def handle_event("cancel_buying", _params, socket) do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
-
 
   def render(assigns) do
     # TODO: buttons
@@ -258,7 +263,7 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-      <!-- Placeholder for game board -->
+    <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
         <%= if @game.current_player.in_jail do %>
@@ -268,7 +273,7 @@ defmodule MonopolyWeb.GameLive do
         <% end %>
       </div>
 
-      <!-- Player dashboard with dice results and all notifications -->
+    <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
         player={@game.current_player}
         current_player_id={@game.current_player.id}
@@ -283,12 +288,15 @@ defmodule MonopolyWeb.GameLive do
         jail_notification={@jail_notification}
       />
 
-      <!-- Modal for buying property : @id or "buy-modal"-->
+    <!-- Modal for buying property : @id or "buy-modal"-->
       <%= if @show_buy_modal && @current_property do %>
-        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
-          on_cancel={hide_modal("buy-modal")}/>
+        <.buy_modal
+          id="buy-modal"
+          show={@show_buy_modal}
+          property={@current_property}
+          on_cancel={hide_modal("buy-modal")}
+        />
       <% end %>
-
     </div>
     """
   end
