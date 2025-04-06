@@ -6,7 +6,6 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.BuyModal
   import MonopolyWeb.Components.JailScreen
-  import
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -318,9 +317,16 @@ defmodule MonopolyWeb.GameLive do
       <.jail_screen
         player={@current_player}
         current_player_id={@current_player.id}
+<<<<<<< HEAD
         on_roll_dice={JS.push("jail_roll")}
         dice={@dice_values}
         result={@jail_notification}
+=======
+        on_roll_dice={JS.push("roll_dice")}
+        on_pay_jail_fee={JS.push("pay_jail_fee")}
+        dice={@dice_values}
+        result={@dice_result}
+>>>>>>> bfda37e (changed jail_screen to be a component that renders based on in_jail status)
       />
       <% else %>
       <!-- Placeholder for game board -->

@@ -16,32 +16,17 @@ defmodule MonopolyWeb.Router do
 
   scope "/", MonopolyWeb do
     pipe_through :browser
+
     # get "/", PageController, :home
     live "/", WelcomeLive, :index
-
-<<<<<<< HEAD
 
     live "/game-dummy", GameDummy, :index # dummy screen to redirect to after "Start Game" button is clicked
 
     live "/game", GameLive
 
-
     live "/testmodal", TestModalLive, :show
 
     live "/testing/backend", BackendTestingLive
-=======
-    get "/", PageController, :home
-<<<<<<< HEAD
-    live "/jail", JailLive
-    live "/game", GameLive
->>>>>>> 417f4aa (navigate back to GameLive after leaving jail)
-=======
-
-    live "/game", GameLive, :index
-    live "/game/:id", GameLive, :show
-
-
->>>>>>> 32a6845 (convert LiveServe to Component)
   end
 
   # Other scopes may use custom stacks.
