@@ -446,20 +446,6 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             End Turn
           </button>
-          
-    <!-- Leave Game -->
-          <button
-            phx-click="leave_game"
-            disabled={@button_states.leave_game}
-            style={
-        "padding: 10px 20px; " <>
-        "background-color: #{if @button_states.leave_game, do: "#aaa", else: "#871C1C"}; " <>
-        "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if @button_states.leave_game, do: "not-allowed", else: "pointer"};"
-        }
-          >
-            Leave Game
-          </button>
         </div>
         <hr style="margin-top: 20px" />
         <h2 style="font-size: 40px">Turn: {@game.turn}</h2>
