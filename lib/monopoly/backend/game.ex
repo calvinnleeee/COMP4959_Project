@@ -151,7 +151,8 @@ defmodule GameObjects.Game do
               sprite_id = player_count
               new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
-              updated_game = update_in(existing_game.players, &[new_player | &1])
+              updated_game = update_in(existing_game.players, &(&1 ++ [new_player]))
+
               :ets.insert(@game_store, {:game, updated_game})
               MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_game)
               {:reply, {:ok, updated_game}, updated_game}
