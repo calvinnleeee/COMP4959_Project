@@ -459,7 +459,8 @@ defmodule GameObjects.Game do
     if is_property_tile(current_tile) do
       if GameObjects.Property.is_owned(current_tile) do
         # Step 1: Get owner of the property
-        owner = get_property_owner(current_tile)
+        stored_owner = get_property_owner(current_tile)
+        owner = Enum.find(updated_game.players, fn p -> p.id == stored_owner.id end)
 
         # Step 2: Compare owner and current player to see if rent needs to be paid
         handle_property_ownership(updated_game, current_player, owner, current_tile, sum)
@@ -488,7 +489,6 @@ defmodule GameObjects.Game do
       false ->
         # If the player does not own the property, charge rent
         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
-
         # Step 4: Check if the player has enough money to pay the rent
         handle_rent_payment(updated_game, current_player, owner, prop_rent)
 
@@ -661,7 +661,6 @@ defmodule GameObjects.Game do
 
       [{_key, game}] ->
         current_player = game.current_player
-        IO.inspect(current_player, label: "ending_turn")
 
         if GameObjects.Player.get_id(current_player) == session_id do
           if current_player.rolled do
@@ -679,7 +678,6 @@ defmodule GameObjects.Game do
             updated_players = List.replace_at(state.players, current_player_index, updated_player)
             winner = game_over_condition(updated_players)
             state = %{state | players: updated_players, winner: winner}
-            IO.inspect(updated_player.properties, label: "end_turn player.properties")
 
             # Get next player
             next_player = find_next_active_player(state.players, current_player_index)
@@ -839,8 +837,6 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          IO.inspect("hello")
-          IO.inspect(property.owner === nil)
 
           if property.owner === nil || property.owner.id != current_player.id do
             {:reply, {:err, "You don't own this property"}, state}
