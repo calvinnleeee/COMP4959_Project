@@ -197,7 +197,7 @@ defmodule GameObjects.Property do
         updated_property = set_owner(property, player)
 
         # Adding the new property
-        railroad_count = count + 1
+        railroad_count = count
 		player_properties = Player.get_properties(Player.add_property(player, updated_property))
         new_properties = Enum.map(player_properties, fn r ->
         	if r.type == "railroad" do

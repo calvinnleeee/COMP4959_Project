@@ -249,10 +249,10 @@ defmodule GameObjects.PropertyTest do
 			properties: [property, property2, property3], cards: [], in_jail: true, jail_turns: 0}
 			new_property = Property.new(3, "test", "railroad", 100, [100, 200, 300], 0, 50, 51)
 			[old_property1, old_property2, old_property3, added_property] = Property.buy_property(new_property, player)
-			assert added_property == %{new_property | owner: player, upgrades: 3}
-			assert old_property1.upgrades == 3
+			assert added_property == %{new_property | owner: player, upgrades: 2}
+			assert old_property1.upgrades == 2
 			assert old_property2.upgrades == 0
-			assert old_property3.upgrades == 3
+			assert old_property3.upgrades == 2
 		end
 		
 	end

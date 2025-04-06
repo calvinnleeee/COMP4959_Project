@@ -15,7 +15,7 @@ defmodule GameObjects.Player do
     @initial_money 1500
     @board_size 40
 
-    defstruct [:id, :name, :money, :sprite_id, :position, :properties, :cards, :in_jail, :jail_turns, :turns_taken, :rolled]
+    defstruct [:id, :name, :money, :sprite_id, :position, :properties, :cards, :in_jail, :jail_turns, :turns_taken, :rolled, :active]
 
     # Type definition: when refering to it, use __MODULE__.t()
     @type t :: %__MODULE__{
@@ -29,7 +29,8 @@ defmodule GameObjects.Player do
         in_jail: boolean(),
         jail_turns: integer(),
         turns_taken: integer(),
-        rolled: boolean()
+        rolled: boolean(),
+        active: boolean()
     }
 
     @doc """
