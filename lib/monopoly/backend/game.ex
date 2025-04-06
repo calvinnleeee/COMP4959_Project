@@ -939,6 +939,8 @@ defmodule GameObjects.Game do
 
                 player_updated_game = update_player(prop_updated_game, updated_player)
                 :ets.insert(@game_store, {:game, player_updated_game})
+                MonopolyWeb.Endpoint.broadcast("game_state", "property_sold", player_updated_game)
+
                 {:reply, {:ok, player_updated_game}, player_updated_game}
 
               # sell property
@@ -960,16 +962,16 @@ defmodule GameObjects.Game do
                   end)
 
                 # 2. Update player: remove sold property, set same-type upgrades to 1
-                # updated_player_properties =
-                #   current_player.properties
-                #   |> Enum.reject(fn property -> property.id == updated_property.id end)
-                #   |> Enum.map(fn property ->
-                #     if property.type == updated_property.type do
-                #       Property.set_upgrade(property, 0)
-                #     else
-                #       property
-                #     end
-                #   end)
+                updated_player_properties =
+                  current_player.properties
+                  |> Enum.reject(fn property -> property.id == updated_property.id end)
+                  |> Enum.map(fn property ->
+                    if property.type == updated_property.type do
+                      Property.set_upgrade(property, 0)
+                    else
+                      property
+                    end
+                  end)
 
                 # updated_player = Player.add_money(current_player, property.buy_cost)
 
@@ -977,12 +979,21 @@ defmodule GameObjects.Game do
                   current_player
                   |> Player.add_money(updated_property.buy_cost)
 
+                updated_player = %{
+                  updated_player
+                  | properties: updated_player_properties
+                }
+
+                IO.inspect(updated_player.properties, label: "sold property")
+
                 # |> Map.put(:properties, updated_player_properties)
 
                 prop_updated_game = %{game | properties: updated_properties}
                 player_updated_game = update_player(prop_updated_game, updated_player)
                 # store the updated game state in ETS
                 :ets.insert(@game_store, {:game, player_updated_game})
+                MonopolyWeb.Endpoint.broadcast("game_state", "property_sold", prop_updated_game)
+
                 {:reply, {:ok, player_updated_game}, player_updated_game}
 
               # succeed in downgrading
@@ -1009,6 +1020,13 @@ defmodule GameObjects.Game do
                 prop_updated_game = update_property(player_updated_game, updated_property)
                 # store the updated game state in ETS
                 :ets.insert(@game_store, {:game, prop_updated_game})
+
+                MonopolyWeb.Endpoint.broadcast(
+                  "game_state",
+                  "property_downgraded",
+                  prop_updated_game
+                )
+
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
             end
           else
