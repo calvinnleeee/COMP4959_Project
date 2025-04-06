@@ -444,6 +444,8 @@ defmodule GameObjects.Game do
             %{updated_game | deck: updated_deck, active_card: owned_card}
 
           _ ->
+            updated_player = GameObjects.Card.apply_effect(card, updated_game.current_player)
+            updated_game = update_player(updated_game, updated_player)
             %{updated_game | active_card: card}
         end
 
@@ -664,7 +666,10 @@ defmodule GameObjects.Game do
         if GameObjects.Player.get_id(current_player) == session_id do
           if current_player.rolled do
             # For Checking whether the current_player should be game over
-            updated_player = player_lost_condition(current_player)
+            updated_player =
+              current_player
+              |> player_lost_condition()
+              |> Map.put(:rolled, false)
 
             current_player_index =
               Enum.find_index(state.players, fn player ->
@@ -685,13 +690,6 @@ defmodule GameObjects.Game do
               else
                 {next_player, state}
               end
-
-            # Reset turns_taken for the current player
-            updated_players =
-              List.replace_at(state.players, current_player_index, %{
-                current_player
-                | rolled: false
-              })
 
             # Update state
             updated_state = %{

@@ -281,6 +281,9 @@ defmodule MonopolyWeb.BackendTestingLive do
     </div>
      <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
+      <%= if @game.winner do %>
+        <h1>Winner: <%= @game.winner.name %></h1>
+      <% end %>
       <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
       <ul>
