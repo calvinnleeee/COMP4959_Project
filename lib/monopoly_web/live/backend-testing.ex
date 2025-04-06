@@ -256,7 +256,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     <h2>Session ID: {@session_id}</h2>
 
     <h2 style="font-size: 20px">Message: {@message}</h2>
-    <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
+     <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
     <h2 style="font-size: 40px">Lobby actions</h2>
 
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
@@ -299,11 +299,12 @@ defmodule MonopolyWeb.BackendTestingLive do
         Start Game
       </button>
     </div>
-    <hr style="margin-bottom: 30px; margin-top: 30px;" />
+     <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
       <%= if @game.winner do %>
-        <h1>Winner: <%= @game.winner.name %></h1>
+        <h1>Winner: {@game.winner.name}</h1>
       <% end %>
+
       <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
       <ul>
@@ -353,7 +354,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Roll Dice
           </button>
-          
+
     <!-- Buy Properties -->
           <button
             phx-click="buy_property"
@@ -367,7 +368,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Buy Properties
           </button>
-          
+
     <!-- Upgrade -->
           <button
             phx-click="upgrade-property"
@@ -381,7 +382,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Upgrade
           </button>
-          
+
     <!-- Downgrade -->
           <button
             phx-click="downgrade"
@@ -395,7 +396,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             Downgrade
           </button>
-          
+
     <!-- End Turn -->
           <button
             phx-click="end_turn"
@@ -410,7 +411,7 @@ defmodule MonopolyWeb.BackendTestingLive do
           >
             End Turn
           </button>
-          
+
     <!-- Leave Game -->
           <button
             phx-click="leave_game"
@@ -425,11 +426,11 @@ defmodule MonopolyWeb.BackendTestingLive do
             Leave Game
           </button>
         </div>
-        <hr style="margin-top: 20px" />
+         <hr style="margin-top: 20px" />
         <h2 style="font-size: 40px">Turn: {@game.turn}</h2>
-        <hr />
+         <hr />
         <h4 style="font-size: 40px">Current Player:</h4>
-        <hr /> Session ID: {@game.current_player.id}
+         <hr /> Session ID: {@game.current_player.id}
         <%= if @game.current_player.id == @session_id do %>
           ⬅️ <span style="font-weight: 800;"> My Turn </span>
         <% end %>
@@ -446,22 +447,27 @@ defmodule MonopolyWeb.BackendTestingLive do
           </div>
           Rolled: {@game.current_player.rolled}
         </div>
-        <hr />
+
+        <%= for prop <- @game.current_player.properties do %>
+          {prop.name} - {prop.type}
+        <% end %>
+         <hr />
         <h4 style="font-size: 40px; margin-top: 20px">Active card:</h4>
-        <hr />
+         <hr />
         <%= if @game.active_card do %>
-          <span>{@game.active_card.name}</span> <br />
-          <span>{@game.active_card.type}</span> <br />
+          <span>{@game.active_card.name}</span> <br /> <span>{@game.active_card.type}</span> <br />
           <span>{format_effect(@game.active_card.effect)}</span> <br />
         <% end %>
-        <hr />
+         <hr />
         <h4 style="font-size: 40px; margin-top: 20px">Properties:</h4>
-        <hr />
+         <hr />
         <ul>
           <%= for prop <- @game.properties do %>
             <li>
               <h2 style="font-size: 30px; margin-top: 20px">{prop.id}: {prop.name} ({prop.type})</h2>
-              Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ /> Owner:
+              Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ />
+              Upgrade: {prop.upgrades} <br \ />
+              Owner:
               <span style="font-weight: 800">{if prop.owner, do: prop.owner.name, else: "None"}</span>
               <span style="font-weight: 800">({if prop.owner, do: prop.owner.id, else: "None"})</span>
             </li>
