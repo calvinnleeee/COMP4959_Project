@@ -1,120 +1,44 @@
 defmodule MonopolyWeb.JailLive do
   use Phoenix.LiveView
+  alias GameObject.Game
 
-  def mount(_params, _session, socket) do
+
+  def mount(_params, %{"session_id" => player_id} = _session, socket) do
+    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state:#{player_id}")
     # Initialize with 3 turns remaining, no dice roll result
-    {:ok, assign(socket, turns_remaining: 3, dice: nil, result: nil)}
+    {:ok, assign(socket, player_id: player_id, turns_remaining: 3, dice: nil, result: nil)}
+  end
+
+  def handle_info({:game_update, game_state}, socket) do
+    # Extract jail-related info from the game_state
+    turns_remaining = game_state.jail_turns || 3
+    {:noreply, assign(socket, turns_remaining: turns_remaining)}
   end
 
   def render(assigns) do
     ~L"""
-    <style>
-    .jail-container {
-      max-width: 512px;
-      margin: 48px auto;
-      padding: 24px;
-      background-color: #f7fafc; /* light gray */
-      border: 1px solid #e2e8f0; /* light gray border */
-      border-radius: 8px;
-      text-align: center;
-    }
+    <div class="max-w-lg my-12 mx-auto p-6 bg-gray-100 border border-gray-300 rounded-lg text-center">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Jail Screen</h1>
 
-    .jail-header {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #2d3748; /* dark gray */
-      margin-bottom: 16px;
-    }
+    <div class="jail-image">
+      <img src="/images/jail_scene.png" alt="Jail scene" class="mx-auto" />
+    </div>
+    <p class="text-lg mb-4">Turns remaining in jail: <%= @turns_remaining %></p>
 
-    .jail-description {
-      font-size: 1.125rem;
-      margin-bottom: 16px;
-    }
+    <div class="flex justify-center gap-4 mb-6">
+      <button phx-click="pay" class="px-4 py-2 font-bold text-white rounded cursor-pointer bg-blue-500 hover:bg-blue-700">
+        Pay $50
+      </button>
+      <button phx-click="roll_dice" class="px-4 py-2 font-bold text-white rounded cursor-pointer bg-yellow-500 hover:bg-yellow-600">
+        Roll Doubles
+      </button>
+    </div>
 
-    .button-group {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .jail-button {
-      padding: 8px 16px;
-      font-weight: bold;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    /* Pay button styles */
-    .pay-button {
-      background-color: #4299e1;
-    }
-
-    .pay-button:hover {
-      background-color: #2b6cb0;
-    }
-
-    /* Card button styles */
-    .card-button {
-      background-color: #48bb78;
-    }
-
-    .card-button:hover {
-      background-color: #2f855a;
-    }
-
-    /* Roll button styles */
-    .roll-button {
-      background-color: #ecc94b;
-    }
-
-    .roll-button:hover {
-      background-color: #d69e2e;
-    }
-
-    .result-text {
-      margin-top: 16px;
-      font-size: 1.25rem;
-    }
-
-    .result-text p {
-      margin: 8px 0;
-    }
-
-    .result-text .bold {
-      font-weight: bold;
-      margin-top: 8px;
-    }
-
-    </style>
-    <div class="jail-container">
-      <h1 class="jail-header">Jail Screen</h1>
-
-      <div class="jail-image">
-        <img src="/images/jail_scene.png" alt="Jail scene" class="jail-scene-img" />
-      </div>
-      <p class="jail-description">Turns remaining in jail: <%= @turns_remaining %></p>
-
-      <div class="button-group">
-        <button phx-click="pay" class="jail-button pay-button">
-          Pay $50
-        </button>
-        <button phx-click="card" class="jail-button card-button">
-          Use Get Out of Jail Free Card
-        </button>
-        <button phx-click="roll" class="jail-button roll-button">
-          Roll Doubles
-        </button>
-      </div>
-
-      <div class="result-text">
-        <%= if @dice do %>
-          <p>You rolled: <%= Enum.join(@dice, ", ") %></p>
-          <p class="bold"><%= @result %></p>
-        <% end %>
-      </div>
+    <div class="mt-4 text-xl">
+      <%= if @dice do %>
+        <p class="my-2">You rolled: <%= Enum.join(@dice, ", ") %></p>
+        <p class="font-bold mt-2"><%= @result %></p>
+      <% end %>
     </div>
     """
   end
@@ -124,15 +48,11 @@ defmodule MonopolyWeb.JailLive do
     {:noreply, assign(socket, turns_remaining: 0, result: "You paid $50 and are now free!")}
   end
 
-  # Handle the "Use Get Out of Jail Free Card" event
-  def handle_event("card", _params, socket) do
-    {:noreply, assign(socket, turns_remaining: 0, result: "You used a Get Out of Jail Free card and are now free!")}
-  end
-
   # Handle the "Roll Doubles" event
-  def handle_event("roll", _params, socket) do
-    dice = [roll_die(), roll_die()]
-    is_doubles = Enum.uniq(dice) |> length() == 1
+  def handle_event("roll_dice", _params, socket) do
+
+    {:ok, {_dice, _sum, is_doubles}, _new_pos, _new_loc, _new_game } =
+      Game.roll_dice(socket.assign.player_id)
 
     result =
       if is_doubles do
@@ -142,10 +62,6 @@ defmodule MonopolyWeb.JailLive do
       end
 
     new_turns = if is_doubles, do: 0, else: max(socket.assigns.turns_remaining - 1, 0)
-    {:noreply, assign(socket, dice: dice, result: result, turns_remaining: new_turns)}
-  end
-
-  defp roll_die do
-    :rand.uniform(6)
+    {:noreply, assign(socket, result: result, turns_remaining: new_turns)}
   end
 end
