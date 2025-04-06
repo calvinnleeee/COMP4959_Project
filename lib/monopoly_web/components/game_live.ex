@@ -1,8 +1,13 @@
 defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
+<<<<<<< HEAD
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.BuyModal
+=======
+  import MonopolyWeb.Components.PlayerDashboard
+  import MonopolyWeb.Components.JailScreen
+>>>>>>> 32a6845 (convert LiveServe to Component)
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
@@ -24,9 +29,13 @@ defmodule MonopolyWeb.GameLive do
       is_doubles: false,
       doubles_count: 0,
       doubles_notification: nil,
+<<<<<<< HEAD
       jail_notification: nil,
       show_buy_modal: false,
       current_property: nil
+=======
+      jail_notification: nil
+>>>>>>> 32a6845 (convert LiveServe to Component)
     )}
   end
 
@@ -105,6 +114,7 @@ defmodule MonopolyWeb.GameLive do
     })}
   end
 
+
   # event handler for buy modal
   def handle_event("buy_property", _params, socket) do
     property = socket.assigns.current_property
@@ -126,7 +136,6 @@ defmodule MonopolyWeb.GameLive do
   def handle_event("cancel_buying", _params, socket) do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
-
 
   def render(assigns) do
     ~H"""
@@ -170,7 +179,6 @@ defmodule MonopolyWeb.GameLive do
               on_cancel={hide_modal("buy-modal")}/>
           <% end %>
         <% end %>
-
     </div>
     """
   end
