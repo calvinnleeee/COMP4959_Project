@@ -1013,8 +1013,12 @@ defmodule GameObjects.Game do
                 # updated_player = Player.add_money(current_player, cost)
                 # player_updated_game = update_player(game, updated_player)
                 # updated_property = Property.inc_upgrade(property)
+                updated_player =
+                  current_player
+                  |> Player.add_money(cost)
+
                 updated_player_properties =
-                  current_player.properties
+                  updated_player.properties
                   |> Enum.map(fn property ->
                     if property.id == updated_property.id do
                       updated_property
@@ -1023,10 +1027,10 @@ defmodule GameObjects.Game do
                     end
                   end)
 
-                updated_player =
-                  current_player
-                  |> Player.add_money(cost)
-                  |> Map.put(:properties, updated_player_properties)
+                updated_player = %{
+                  updated_player
+                  | properties: updated_player_properties
+                }
 
                 player_updated_game = update_player(game, updated_player)
                 prop_updated_game = update_property(player_updated_game, updated_property)
@@ -1036,7 +1040,7 @@ defmodule GameObjects.Game do
                 MonopolyWeb.Endpoint.broadcast(
                   "game_state",
                   "property_downgraded",
-                  prop_updated_game
+                  player_updated_game
                 )
 
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
