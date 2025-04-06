@@ -426,11 +426,6 @@ defmodule GameObjects.Game do
   #   GameObjects.Board.get_tile_at_position(game.board, position)
   # end
 
-  # Helper function for Step 5: Update the player state in the game
-  defp update_player(game, current_player) do
-    %{game | current_player: current_player}
-  end
-
   # Helper function for Step 6a: Handle the case when the player lands on a card
   defp handle_card_landing(updated_game, current_tile) do
     case Deck.draw_card(updated_game.deck, current_tile.type) do
@@ -892,7 +887,7 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Not your turn"}, state}
         else
           # check with abdu if we assign owners with id
-          if property.owner.id == current_player.id do
+          if property.owner.id == current_player.id || property.owner === nil do
             {updated_property, cost} = Property.sell_upgrade(property)
 
             cond do
@@ -909,8 +904,7 @@ defmodule GameObjects.Game do
                 updated_properties =
                   Enum.map(game.properties, fn property ->
                     # only update owned as non-owned can still be upgraded
-                    if property.type == updated_property.type &&
-                         property.owner.id == current_player.id do
+                    if property.type == updated_property.type do
                       modified_property = Property.set_upgrade(property, upgrade_level)
 
                       if modified_property.id == updated_property.id do
@@ -925,8 +919,24 @@ defmodule GameObjects.Game do
                     end
                   end)
 
+                updated_player_properties =
+                  current_player.properties
+                  |> Enum.reject(fn property -> property.id == updated_property.id end)
+                  |> Enum.map(fn property ->
+                    if property.type == updated_property.type do
+                      Property.set_upgrade(property, 0)
+                    else
+                      property
+                    end
+                  end)
+
+                updated_player = %{
+                  current_player
+                  | properties: updated_player_properties
+                }
+
                 prop_updated_game = %{game | properties: updated_properties}
-                updated_player = Player.add_money(current_player, updated_property.buy_cost)
+                updated_player = Player.add_money(updated_player, updated_property.buy_cost)
 
                 # update player props list
                 # updated_player = %{
@@ -974,10 +984,6 @@ defmodule GameObjects.Game do
                     end
                   end)
 
-                IO.inspect(updated_player_properties, label: "updated_player_properties sell")
-                IO.inspect(current_player, label: "current_player sell")
-                IO.inspect(updated_property, lavel: "updated_property sell")
-                # updated_player = Player.add_money(current_player, property.buy_cost)
                 updated_player =
                   current_player
                   |> Player.add_money(updated_property.buy_cost)
@@ -987,10 +993,7 @@ defmodule GameObjects.Game do
                   | properties: updated_player_properties
                 }
 
-                # |> Map.put(:properties, updated_player_properties)
-
                 prop_updated_game = %{game | properties: updated_properties}
-                # player_updated_game = update_player(prop_updated_game, updated_player)
 
                 player_updated_game = %{
                   prop_updated_game
