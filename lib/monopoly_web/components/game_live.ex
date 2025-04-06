@@ -1,13 +1,9 @@
 defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
-<<<<<<< HEAD
   import MonopolyWeb.CoreComponents
-  import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.BuyModal
-=======
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.JailScreen
->>>>>>> 32a6845 (convert LiveServe to Component)
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
@@ -29,13 +25,9 @@ defmodule MonopolyWeb.GameLive do
       is_doubles: false,
       doubles_count: 0,
       doubles_notification: nil,
-<<<<<<< HEAD
       jail_notification: nil,
       show_buy_modal: false,
       current_property: nil
-=======
-      jail_notification: nil
->>>>>>> 32a6845 (convert LiveServe to Component)
     )}
   end
 
@@ -147,31 +139,27 @@ defmodule MonopolyWeb.GameLive do
           dice={@dice_values}
           result={@dice_result} />
         <% else %>
+      <!-- Placeholder for game board -->
+        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+          Game board will be here
+        </div>
 
-          <!-- Placeholder for game board -->
-          <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-            Game board will be here
-            <%= if @current_player.in_jail do %>
-              <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-                IN JAIL (Turn <%= @current_player.jail_turns %>)
-              </div>
-            <% end %>
-          </div>
+        <!-- Player dashboard with dice results and all notifications -->
+        <.player_dashboard
+          player={@current_player}
+          current_player_id={@current_player.id}
+          properties={@player_properties}
+          on_roll_dice={JS.push("roll_dice")}
+          on_end_turn={JS.push("end_turn")}
+          dice_result={@dice_result}
+          dice_values={@dice_values}
+          is_doubles={@is_doubles}
+          doubles_notification={@doubles_notification}
+          doubles_count={@doubles_count}
+          jail_notification={@jail_notification}
+        />
 
-          <!-- Player dashboard with dice results and all notifications -->
-          <.player_dashboard
-            player={@current_player}
-            current_player_id={@current_player.id}
-            properties={@player_properties}
-            on_roll_dice={JS.push("roll_dice")}
-            on_end_turn={JS.push("end_turn")}
-            dice_result={@dice_result}
-            dice_values={@dice_values}
-            is_doubles={@is_doubles}
-            doubles_notification={@doubles_notification}
-            doubles_count={@doubles_count}
-            jail_notification={@jail_notification}
-          />
+      <% end %>
 
           <!-- Modal for buying property : @id or "buy-modal"-->
           <%= if @show_buy_modal && @current_property do %>
@@ -201,8 +189,8 @@ defmodule MonopolyWeb.GameLive do
           owned: true
         }
       ],
-      in_jail: false,
-      jail_turns: 0,
+      in_jail: true,
+      jail_turns: 3,
       has_rolled: false
     }
   end

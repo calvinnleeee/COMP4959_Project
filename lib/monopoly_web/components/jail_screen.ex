@@ -1,10 +1,18 @@
 defmodule MonopolyWeb.Components.JailScreen do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
+<<<<<<< HEAD
+=======
+  import MonopolyWeb.CoreComponents
+>>>>>>> bfda37e (changed jail_screen to be a component that renders based on in_jail status)
 
   attr :player, :map, required: true, doc: "The player data to display"
   attr :current_player_id, :string, default: nil, doc: "ID of the current active player"
   attr :on_roll_dice, JS, default: %JS{}, doc: "JS command for roll dice action"
+<<<<<<< HEAD
+=======
+  attr :on_pay_jail_fee, JS, default: %JS{}, doc: "JS command for pay jail fee action"
+>>>>>>> bfda37e (changed jail_screen to be a component that renders based on in_jail status)
   attr :dice, :list, default: nil, doc: "List of dice values rolled"
   attr :result, :string, default: nil, doc: "Result message after rolling dice"
 
