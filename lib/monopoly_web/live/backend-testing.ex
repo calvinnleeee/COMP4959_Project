@@ -302,7 +302,7 @@ defmodule MonopolyWeb.BackendTestingLive do
     <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
       <%= if @game.winner do %>
-        <h1>Winner: <%= @game.winner.name %></h1>
+        <h1>Winner: {@game.winner.name}</h1>
       <% end %>
       <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
@@ -461,7 +461,8 @@ defmodule MonopolyWeb.BackendTestingLive do
           <%= for prop <- @game.properties do %>
             <li>
               <h2 style="font-size: 30px; margin-top: 20px">{prop.id}: {prop.name} ({prop.type})</h2>
-              Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ /> Owner:
+              Upgrades: {prop.upgrades} <br \ /> Cost: ${prop.buy_cost} <br \ />
+              Rent: {inspect(prop.rent_cost)} <br \ /> Owner:
               <span style="font-weight: 800">{if prop.owner, do: prop.owner.name, else: "None"}</span>
               <span style="font-weight: 800">({if prop.owner, do: prop.owner.id, else: "None"})</span>
             </li>

@@ -837,7 +837,6 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-
           if property.owner === nil || property.owner.id != current_player.id do
             {:reply, {:err, "You don't own this property"}, state}
           else
@@ -1059,27 +1058,46 @@ defmodule GameObjects.Game do
           # updated_property = GameObjects.Property.set_owner(tile, player)
           # Charge the player if has money
           if player.money >= GameObjects.Property.get_buy_cost(tile) do
-            updated_property = GameObjects.Property.set_owner(tile, player)
+            updated_player_properties = GameObjects.Property.buy_property(tile, player)
+            # updated_property = GameObjects.Property.set_owner(tile, player)
 
             updated_player =
               GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
 
-            # add to player_props
             updated_player = %{
               updated_player
-              | properties:
-                  if Enum.any?(updated_player.properties, fn p -> p.id == updated_property.id end) do
-                    # No need to add if property already exists
-                    updated_player.properties
-                  else
-                    # Add to the front if not present
-                    [updated_property | updated_player.properties]
-                  end
+              | properties: updated_player_properties
             }
 
+            # add to player_props
+            # updated_player = %{
+            #   updated_player
+            #   | properties:
+            #       if Enum.any?(updated_player.properties, fn p -> p.id == updated_property.id end) do
+            #         # No need to add if property already exists
+            #         updated_player.properties
+            #       else
+            #         # Add to the front if not present
+            #         [updated_property | updated_player.properties]
+            #       end
+            # }
+
+            # updated_properties =
+            #   Enum.map(state.properties, fn property ->
+            #     if property.id == tile.id, do: updated_property, else: property
+            #   end)
             updated_properties =
               Enum.map(state.properties, fn property ->
-                if property.id == tile.id, do: updated_property, else: property
+                # If the property is part of the updated_player_properties, replace it
+                if property.id in Enum.map(updated_player_properties, & &1.id) do
+                  # Update property in state.properties if it matches one of the updated_player_properties
+                  updated_property =
+                    Enum.find(updated_player_properties, fn p -> p.id == property.id end)
+
+                  updated_property
+                else
+                  property
+                end
               end)
 
             updated_players =
