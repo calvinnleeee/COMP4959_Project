@@ -51,7 +51,7 @@ defmodule MonopolyWeb.JailLive do
   # Handle the "Roll Doubles" event
   def handle_event("roll_dice", _params, socket) do
 
-    {:ok, {_dice, _sum, is_doubles}, _new_pos, _new_loc, _new_game } =
+    {:ok, {dice, _sum, is_doubles}, _new_pos, _new_loc, _new_game } =
       Game.roll_dice(socket.assign.player_id)
 
     result =
@@ -62,6 +62,6 @@ defmodule MonopolyWeb.JailLive do
       end
 
     new_turns = if is_doubles, do: 0, else: max(socket.assigns.turns_remaining - 1, 0)
-    {:noreply, assign(socket, result: result, turns_remaining: new_turns)}
+    {:noreply, assign(socket, dice: dice, result: result, turns_remaining: new_turns)}
   end
 end
