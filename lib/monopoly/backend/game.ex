@@ -726,7 +726,6 @@ defmodule GameObjects.Game do
   def handle_call({:upgrade_property, session_id, property}, _from, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
-        {:reply, {:err, "No active game"}, state}
         current_player = game.current_player
 
         if current_player.id != session_id do
