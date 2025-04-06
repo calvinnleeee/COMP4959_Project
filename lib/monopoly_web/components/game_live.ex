@@ -21,10 +21,17 @@ defmodule MonopolyWeb.GameLive do
     {:ok, game} = Game.join_game(session_id)
     {:ok, game} = Game.join_game("player-2")
     {:ok, game} = Game.start_game()
+    # {:ok, game} = Game.get_state()
     player = Enum.find(game.players, fn player -> player.id == session_id end)
     property = Enum.at(game.properties, player.position)
-    # Enable this once player.active flag exists, handles refreshing
-    # game = if !player.active do Game.join_game(session_id) else game end
+
+    game =
+      if !player.active do
+        {:ok, new_game} = Game.join_game(session_id)
+        new_game
+      else
+        game
+      end
 
     # Subscribe to the backend game state updates
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
@@ -33,12 +40,11 @@ defmodule MonopolyWeb.GameLive do
       :ok,
       assign(socket,
         game: game,
-        player: player,
-        # TODO: Check implementation of player.rolled
-        roll: game.current_player.id == session_id && game.current_player.rolled,
+        id: session_id,
+        roll: game.current_player.id == session_id && !game.current_player.rolled,
         buy_prop: buyable(property, player),
         sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == session.id,
+        end_turn: game.current_player.id == session_id,
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
@@ -93,24 +99,21 @@ defmodule MonopolyWeb.GameLive do
   # When starting turn, player first clicks roll dice button
   def handle_event("roll_dice", _params, socket) do
     assigns = socket.assigns
-    player = assigns.player
+    id = assigns.id
+    player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can roll
-    if assigns.game.current_player.id == player.id && assigns.roll do
+    if player.id == id && assigns.roll do
       # Check if player is currently in jail
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
       {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
-        Game.roll_dice(player.id)
+        Game.roll_dice(id)
 
       # If player got an instant-play card, display it
       card = new_game.active_card
       if card != nil && card.effect[0] != "get_out_of_jail", do: display_card(card)
-
-      # TODO: this isn't in the dashboard, is it still necessary? Assuming no
-      # Get previous rolls for jail check or initialize to empty list
-      # previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
 
       # Prepare notifications
       player = new_game.current_player
@@ -133,10 +136,10 @@ defmodule MonopolyWeb.GameLive do
         :noreply,
         assign(
           socket,
-          player: player,
+          game: new_game,
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
-          roll: player.rolled && !player.in_jail,
+          roll: !player.rolled && !player.in_jail,
           buy_prop: buyable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: !player.rolled || player.in_jail,
@@ -159,16 +162,24 @@ defmodule MonopolyWeb.GameLive do
   # Player buys or upgrades property they are on
   def handle_event("buy_prop", _params, socket) do
     assigns = socket.assigns
-    player = assigns.player
+    id = assigns.id
+    player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can buy
-    if assigns.game.current_player.id == player.id && assigns.buy_prop do
-      property = Enum.at(assigns.game.properties, player.position)
-      # TODO: Call backend for property (not yet impl)
+    if player.id == id && assigns.buy_prop do
+      # Buy the property and get new game state
+      {:ok, game} =
+        Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
 
       {
         :noreply,
-        assign(socket, buy_prop: buyable(property, player), sell_prop: true)
+        assign(
+          socket,
+          game: game,
+          # Check if player can afford further upgrades
+          buy_prop: buyable(Enum.at(game.properties, player.position), player),
+          sell_prop: true
+        )
       }
     else
       {:noreply, socket}
@@ -178,19 +189,26 @@ defmodule MonopolyWeb.GameLive do
   # Player sells or downgrades property they are on
   def handle_event("sell_prop", _params, socket) do
     assigns = socket.assigns
-    player = assigns.player
+    id = assigns.id
+    player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can downgrade the prop
-    if assigns.game.current_player.id == player.id && assigns.downgrade_prop do
-      property = Enum.at(assigns.game.properties, player.position)
-      # TODO: call backend for property (not yet impl)
+    if player.id == id && assigns.downgrade_prop do
+      # Downgrade the property and get new game state
+      {:ok, game} =
+        Game.downgrade_property(
+          id,
+          Enum.at(assigns.game.properties, player.position)
+        )
 
       {
         :noreply,
         assign(
           socket,
-          buy_prop: buyable(property, player),
-          sell_prop: sellable(property, player)
+          game: game,
+          buy_prop: true,
+          # Check if property can be further downgraded
+          sell_prop: sellable(Enum.at(game.properties, player.position), player)
         )
       }
     else
@@ -201,16 +219,19 @@ defmodule MonopolyWeb.GameLive do
   # End the turn
   def handle_event("end_turn", _params, socket) do
     assigns = socket.assigns
+    id = assigns.id
 
     # Verify that it is the player's turn
-    if assigns.game.current_player.id == assigns.player.id do
-      # TODO: Call the backend end turn endpoint (not yet impl)
+    if assigns.game.current_player.id == id do
+      # Call backend to end the turn and get new game state
+      {:ok, game} = Game.end_turn(id)
 
       # Disable all buttons
       {
         :noreply,
         assign(
           socket,
+          game: game,
           roll: false,
           buy_prop: false,
           sell_prop: false,
@@ -252,6 +273,14 @@ defmodule MonopolyWeb.GameLive do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
 
+  def get_properties(players, id) do
+    Enum.find(players, fn player -> player.id == id end).properties
+  end
+
+  def get_doubles(players, id) do
+    Enum.find(players, fn player -> player.id == id end).turns_taken
+  end
+
   def render(assigns) do
     # TODO: buttons
     # - Roll dice
@@ -277,14 +306,14 @@ defmodule MonopolyWeb.GameLive do
       <.player_dashboard
         player={@game.current_player}
         current_player_id={@game.current_player.id}
-        properties={@player.properties}
+        properties={get_properties(@game.players, @id)}
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
         dice_result={@dice_result}
         dice_values={@dice_values}
         is_doubles={@is_doubles}
         doubles_notification={@doubles_notification}
-        doubles_count={@player.turns_taken}
+        doubles_count={get_doubles(@game.players, @id)}
         jail_notification={@jail_notification}
       />
 
@@ -303,7 +332,7 @@ defmodule MonopolyWeb.GameLive do
 
   # Remove user from game
   def terminate(_reason, socket) do
-    Game.disconnect_from_game(socket.assigns.player.id)
+    Game.set_player_inactive(socket.assigns.id)
     :ok
   end
 end
