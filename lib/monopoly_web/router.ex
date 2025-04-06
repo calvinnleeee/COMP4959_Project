@@ -19,6 +19,7 @@ defmodule MonopolyWeb.Router do
     # get "/", PageController, :home
     live "/", WelcomeLive, :index
 
+<<<<<<< HEAD
 
     live "/game-dummy", GameDummy, :index # dummy screen to redirect to after "Start Game" button is clicked
 
@@ -28,6 +29,11 @@ defmodule MonopolyWeb.Router do
     live "/testmodal", TestModalLive, :show
 
     live "/testing/backend", BackendTestingLive
+=======
+    get "/", PageController, :home
+    live "/jail", JailLive
+    live "/game", GameLive
+>>>>>>> 417f4aa (navigate back to GameLive after leaving jail)
   end
 
   # Other scopes may use custom stacks.
