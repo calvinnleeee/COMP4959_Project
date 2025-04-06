@@ -2,6 +2,7 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.JailScreen
+  import Phoenix.LiveView.Helpers
 
   def mount(_params, session, socket) do
     # For development/testing purpose, use sample data
@@ -107,10 +108,14 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
       <%= if @current_player.in_jail do %>
-        <.jail_screen
-            player={@current_player}
-            current_player_id={@current_player.id}
-          />
+      <.jail_screen
+        player={@current_player}
+        current_player_id={@current_player.id}
+        on_roll_dice={JS.push("roll_dice")}
+        on_pay_jail_fee={JS.push("pay_jail_fee")}
+        dice={@dice_values}
+        result={@dice_result}
+      />
       <% else %>
       <!-- Placeholder for game board -->
         <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
@@ -157,8 +162,8 @@ defmodule MonopolyWeb.GameLive do
           owned: true
         }
       ],
-      in_jail: false,
-      jail_turns: 0,
+      in_jail: true,
+      jail_turns: 3,
       has_rolled: false
     }
   end
