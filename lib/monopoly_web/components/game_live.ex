@@ -262,6 +262,7 @@ defmodule MonopolyWeb.GameLive do
       # Call backend to end the turn and get new game state
       {:ok, game} = Game.end_turn(id)
 
+
       # Disable all buttons
       {
         :noreply,
@@ -303,7 +304,6 @@ defmodule MonopolyWeb.GameLive do
       Enum.find(players, fn player -> player.id == id end).turns_taken
     end
   end
-
   def render(assigns) do
     # TODO: buttons
     # - Buy house
