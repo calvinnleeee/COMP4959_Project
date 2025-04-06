@@ -3,17 +3,9 @@ defmodule MonopolyWeb.JailLive do
   alias GameObject.Game
 
 
-  def mount(_params, %{"session_id" => player_id} = _session, socket) do
-    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state:#{player_id}")
-    # Initialize with 3 turns remaining, no dice roll result
-    {:ok, assign(socket, player_id: player_id, turns_remaining: 3, dice: nil, result: nil)}
-  end
+  attr :player, :map, required: true, doc: "The player data to display"
 
-  def handle_info({:game_update, game_state}, socket) do
-    # Extract jail-related info from the game_state
-    turns_remaining = game_state.jail_turns || 3
-    {:noreply, assign(socket, turns_remaining: turns_remaining)}
-  end
+
 
   def render(assigns) do
     ~L"""
@@ -23,7 +15,7 @@ defmodule MonopolyWeb.JailLive do
     <div class="jail-image">
       <img src="/images/jail_scene.png" alt="Jail scene" class="mx-auto" />
     </div>
-    <p class="text-lg mb-4">Turns remaining in jail: <%= @turns_remaining %></p>
+    <p class="text-lg mb-4">Turns remaining in jail: <%= @player.jail_turns %></p>
 
     <div class="flex justify-center gap-4 mb-6">
       <button phx-click="pay" class="px-4 py-2 font-bold text-white rounded cursor-pointer bg-blue-500 hover:bg-blue-700">
@@ -45,7 +37,8 @@ defmodule MonopolyWeb.JailLive do
 
   # Handle the "Pay $50" event
   def handle_event("pay", _params, socket) do
-    {:noreply, assign(socket, turns_remaining: 0, result: "You paid $50 and are now free!")}
+    updated_player = Map.put(socket.assigns.player, :jail_turns, 0)
+    {:noreply, assign(socket, result: "You paid $50 and are now free!", player: updated_player)}
   end
 
   # Handle the "Roll Doubles" event
@@ -54,6 +47,13 @@ defmodule MonopolyWeb.JailLive do
     {:ok, {dice, _sum, is_doubles}, _new_pos, _new_loc, _new_game } =
       Game.roll_dice(socket.assign.player_id)
 
+    new_turns =
+      if is_doubles do
+        0
+      else
+        max(socket.assigns.player.jail_turns - 1, 0)
+      end
+
     result =
       if is_doubles do
         "Doubles! You're free from jail!"
@@ -61,7 +61,8 @@ defmodule MonopolyWeb.JailLive do
         "Not doubles. Try again next turn."
       end
 
-    new_turns = if is_doubles, do: 0, else: max(socket.assigns.turns_remaining - 1, 0)
-    {:noreply, assign(socket, dice: dice, result: result, turns_remaining: new_turns)}
+    updated_player = Map.put(socket.assigns.player, :jail_turns, new_turns)
+
+    {:noreply, assign(socket, dice: dice, result: result, player: updated_player)}
   end
 end
