@@ -834,13 +834,18 @@ defmodule GameObjects.Game do
   def handle_call({:upgrade_property, session_id, property}, _from, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
+        {:reply, {:err, "No active game"}, state}
         current_player = game.current_player
 
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          # check with abdu if we assign owners with id
-          if property.owner.id == current_player.id do
+          IO.inspect("hello")
+          IO.inspect(property.owner === nil)
+
+          if property.owner === nil || property.owner.id != current_player.id do
+            {:reply, {:err, "You don't own this property"}, state}
+          else
             {updated_property, cost} = Property.build_upgrade(property)
 
             # money and player update
@@ -859,8 +864,6 @@ defmodule GameObjects.Game do
                 :ets.insert(@game_store, {:game, prop_updated_game})
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
             end
-          else
-            {:reply, {:err, "You don't own this property"}, state}
           end
         end
 

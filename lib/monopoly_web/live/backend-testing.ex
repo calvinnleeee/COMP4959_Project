@@ -106,7 +106,6 @@ defmodule MonopolyWeb.BackendTestingLive do
 
     current_player = current_game.current_player
     property = Enum.at(current_game.properties, current_player.position)
-
     case GameObjects.Game.upgrade_property(session_id, property) do
       {:ok, updated_game} ->
         {:noreply, assign(socket, game: updated_game)}
@@ -179,7 +178,7 @@ defmodule MonopolyWeb.BackendTestingLive do
          game: updated_game
        )}
     else
-      {:noreply, assign(socket, message: "New Game Created", game: updated_game)}
+      {:noreply, assign(socket, message: "New Player Joined", game: updated_game)}
     end
   end
 
@@ -196,7 +195,11 @@ defmodule MonopolyWeb.BackendTestingLive do
         %Phoenix.Socket.Broadcast{event: "unowned_property", payload: updated_game},
         socket
       ) do
-    {:noreply, assign(socket, message: "Landed on unowned property.", game: updated_game)}
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} landed on unowned property.",
+       game: updated_game
+     )}
   end
 
   @impl true
@@ -204,7 +207,11 @@ defmodule MonopolyWeb.BackendTestingLive do
         %Phoenix.Socket.Broadcast{event: "property_bought", payload: updated_game},
         socket
       ) do
-    {:noreply, assign(socket, message: "Bought a property.", game: updated_game)}
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} bought a property.",
+       game: updated_game
+     )}
   end
 
   @impl true
@@ -212,7 +219,11 @@ defmodule MonopolyWeb.BackendTestingLive do
         %Phoenix.Socket.Broadcast{event: "card_played", payload: updated_game},
         socket
       ) do
-    {:noreply, assign(socket, message: "Played get out of jail card.", game: updated_game)}
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} played get out of jail card.",
+       game: updated_game
+     )}
   end
 
   @impl true
@@ -391,15 +402,15 @@ defmodule MonopolyWeb.BackendTestingLive do
             Leave Game
           </button>
         </div>
-         <hr \ />
-        <h2 style="font-size: 40px; margin-top: 20px">Turn: {@game.turn}</h2>
-
-        <h4 style="font-size: 40px; margin-top: 20px">Current Player:</h4>
-        Session ID: {@game.current_player.id}
+         <hr style="margin-top: 20px" />
+        <h2 style="font-size: 40px">Turn: {@game.turn}</h2>
+         <hr />
+        <h4 style="font-size: 40px">Current Player:</h4>
+         <hr /> Session ID: {@game.current_player.id}
         <%= if @game.current_player.id == @session_id do %>
           ⬅️ <span style="font-weight: 800;"> My Turn </span>
         <% end %>
-         <br /> <hr />
+
         <div style="margin-bottom: 20px; display: flex; gap:100px">
           <div>
             Position: {@game.current_player.position} <br /> Money: {@game.current_player.money}
@@ -410,16 +421,26 @@ defmodule MonopolyWeb.BackendTestingLive do
             Double Count: {@game.current_player.turns_taken} <br />
             In Jail: {@game.current_player.in_jail} <br /> Active: {@game.current_player.active}
           </div>
+          Rolled: {@game.current_player.rolled}
         </div>
-
+         <hr />
+        <h4 style="font-size: 40px; margin-top: 20px">Active card:</h4>
+         <hr />
+        <%= if @game.active_card do %>
+          <span>{@game.active_card.name}</span> <br />
+          <span>{@game.active_card.type}</span> <br />
+          <span>{format_effect(@game.active_card.effect)}</span> <br />
+        <% end %>
+         <hr />
         <h4 style="font-size: 40px; margin-top: 20px">Properties:</h4>
-
+         <hr />
         <ul>
           <%= for prop <- @game.properties do %>
             <li>
-              {prop.name} - {prop.type} - Cost: ${prop.buy_cost},
-              Rent: {inspect(prop.rent_cost)},
-              Owner: {if prop.owner, do: inspect(prop.owner), else: "None"}
+              <h2 style="font-size: 30px; margin-top: 20px">{prop.id}: {prop.name} ({prop.type})</h2>
+              Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ /> Owner:
+              <span style="font-weight: 800">{if prop.owner, do: prop.owner.name, else: "None"}</span>
+              <span style="font-weight: 800">({if prop.owner, do: prop.owner.id, else: "None"})</span>
             </li>
           <% end %>
         </ul>
