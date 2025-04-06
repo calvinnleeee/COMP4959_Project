@@ -961,6 +961,7 @@ defmodule GameObjects.Game do
                     end
                   end)
 
+                IO.inspect(updated_properties, label: "updated_properties sell")
                 # 2. Update player: remove sold property, set same-type upgrades to 1
                 updated_player_properties =
                   current_player.properties
@@ -973,8 +974,10 @@ defmodule GameObjects.Game do
                     end
                   end)
 
+                IO.inspect(updated_player_properties, label: "updated_player_properties sell")
+                IO.inspect(current_player, label: "current_player sell")
+                IO.inspect(updated_property, lavel: "updated_property sell")
                 # updated_player = Player.add_money(current_player, property.buy_cost)
-
                 updated_player =
                   current_player
                   |> Player.add_money(updated_property.buy_cost)
@@ -984,15 +987,24 @@ defmodule GameObjects.Game do
                   | properties: updated_player_properties
                 }
 
-                IO.inspect(updated_player.properties, label: "sold property")
-
                 # |> Map.put(:properties, updated_player_properties)
 
                 prop_updated_game = %{game | properties: updated_properties}
-                player_updated_game = update_player(prop_updated_game, updated_player)
+                # player_updated_game = update_player(prop_updated_game, updated_player)
+
+                player_updated_game = %{
+                  prop_updated_game
+                  | players:
+                      Enum.map(prop_updated_game.players, fn p ->
+                        if p.id == updated_player.id, do: updated_player, else: p
+                      end)
+                }
+
+                player_updated_game = update_player(player_updated_game, updated_player)
+
                 # store the updated game state in ETS
                 :ets.insert(@game_store, {:game, player_updated_game})
-                MonopolyWeb.Endpoint.broadcast("game_state", "property_sold", prop_updated_game)
+                MonopolyWeb.Endpoint.broadcast("game_state", "property_sold", player_updated_game)
 
                 {:reply, {:ok, player_updated_game}, player_updated_game}
 
