@@ -59,8 +59,8 @@ defmodule MonopolyWeb.BackendTestingLive do
       {:ok, "No players, Game deleted.", _empty_state} ->
         {:noreply,
          socket
-         |> put_flash(
-           :info,
+         |> assign(
+           :message,
            "You left the game. The game was deleted because no players are left."
          )}
 
@@ -76,7 +76,7 @@ defmodule MonopolyWeb.BackendTestingLive do
         {:noreply, assign(socket, game: updated_game)}
 
       {:err, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
@@ -94,7 +94,25 @@ defmodule MonopolyWeb.BackendTestingLive do
         {:noreply, assign(socket, game: updated_game)}
 
       {:err, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        {:noreply, assign(socket, message: reason)}
+    end
+  end
+
+  @impl true
+  def handle_event("upgrade-property", _params, socket) do
+    session_id = socket.assigns.session_id
+    {:ok, current_game} = GameObjects.Game.get_state()
+    IO.inspect(current_game, label: "Current Game State")
+
+    current_player = current_game.current_player
+    property = Enum.at(current_game.properties, current_player.position)
+
+    case GameObjects.Game.upgrade_property(session_id, property) do
+      {:ok, updated_game} ->
+        {:noreply, assign(socket, game: updated_game)}
+
+      {:err, reason} ->
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
@@ -127,7 +145,7 @@ defmodule MonopolyWeb.BackendTestingLive do
          |> assign(:message, message)}
 
       {:err, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
@@ -138,16 +156,12 @@ defmodule MonopolyWeb.BackendTestingLive do
         {:noreply, assign(socket, :game_state, new_state)}
 
       {:err, reason} ->
-        {:noreply, put_flash(socket, :error, reason)}
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "turn_ended", payload: updated_state}, socket) do
-    roll_condition =
-      !(updated_state.current_player.id === socket.assigns.session_id) ||
-        updated_state.current_player.rolled
-
     {:noreply,
      assign(socket,
        game: updated_state
@@ -160,13 +174,8 @@ defmodule MonopolyWeb.BackendTestingLive do
         socket
       ) do
     if updated_game.current_player do
-      roll_condition =
-        !(updated_game.current_player.id === socket.assigns.session_id) ||
-          updated_game.current_player.rolled
-
       {:noreply,
        assign(socket,
-         message: "New Game Created",
          game: updated_game
        )}
     else
@@ -214,7 +223,9 @@ defmodule MonopolyWeb.BackendTestingLive do
     <div id="session-id-hook" phx-hook="SessionId"></div>
 
     <h2>Session ID: {@session_id}</h2>
-    <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
+
+    <h2 style="font-size: 20px">Message: {@message}</h2>
+     <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
     <h2 style="font-size: 40px">Lobby actions</h2>
 
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
@@ -257,7 +268,7 @@ defmodule MonopolyWeb.BackendTestingLive do
         Start Game
       </button>
     </div>
-    <hr style="margin-bottom: 30px; margin-top: 30px;" />
+     <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
       <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
@@ -275,12 +286,20 @@ defmodule MonopolyWeb.BackendTestingLive do
           <div style="margin-bottom: 20px; display: flex; gap:100px">
             <div>
               Position: {player.position} <br /> Money: {player.money} <br />
+              Card #: {length(player.cards)}
             </div>
 
             <div>
-              Double Count: {player.turns_taken} <br /> In Jail: {player.in_jail}
+              Double Count: {player.turns_taken} <br /> In Jail: {player.in_jail} <br />
+              Active: {player.active}
             </div>
           </div>
+
+          <%= for prop <- player.properties do %>
+            <li>
+              {prop.name} - {prop.type}
+            </li>
+          <% end %>
         <% end %>
       </ul>
 
@@ -317,7 +336,7 @@ defmodule MonopolyWeb.BackendTestingLive do
 
     <!-- Upgrade -->
           <button
-            phx-click="upgrade"
+            phx-click="upgrade-property"
             disabled={@button_states.upgrade}
             style={
         "padding: 10px 20px; " <>
@@ -372,20 +391,28 @@ defmodule MonopolyWeb.BackendTestingLive do
             Leave Game
           </button>
         </div>
-        <hr \ />
-        <h2 style="font-size: 30px;">Turn: {@game.turn}</h2>
+         <hr \ />
+        <h2 style="font-size: 40px; margin-top: 20px">Turn: {@game.turn}</h2>
 
-        <h4 style="font-size: 20px;">Players:</h4>
+        <h4 style="font-size: 40px; margin-top: 20px">Current Player:</h4>
+        Session ID: {@game.current_player.id}
+        <%= if @game.current_player.id == @session_id do %>
+          ⬅️ <span style="font-weight: 800;"> My Turn </span>
+        <% end %>
+         <br /> <hr />
+        <div style="margin-bottom: 20px; display: flex; gap:100px">
+          <div>
+            Position: {@game.current_player.position} <br /> Money: {@game.current_player.money}
+            <br /> Card #: {length(@game.current_player.cards)}
+          </div>
 
-        <h4 style="font-size: 20px;">Current Player:</h4>
+          <div>
+            Double Count: {@game.current_player.turns_taken} <br />
+            In Jail: {@game.current_player.in_jail} <br /> Active: {@game.current_player.active}
+          </div>
+        </div>
 
-        <p>
-          ID: {@game.current_player.id},
-          ${@game.current_player.money},
-          Position: {@game.current_player.position}
-        </p>
-
-        <h4 style="font-size: 20px;">Properties:</h4>
+        <h4 style="font-size: 40px; margin-top: 20px">Properties:</h4>
 
         <ul>
           <%= for prop <- @game.properties do %>
@@ -397,7 +424,9 @@ defmodule MonopolyWeb.BackendTestingLive do
           <% end %>
         </ul>
 
-        <h4 style="font-size: 20px;">Deck:</h4>
+        <h4 style="font-size: 40px; margin-top: 20px">Active Card:</h4>
+
+        <h4 style="font-size: 40px; margin-top: 20px">Deck:</h4>
 
         <ul>
           <%= for card <- @game.deck || [] do %>

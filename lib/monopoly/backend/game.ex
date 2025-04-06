@@ -830,7 +830,7 @@ defmodule GameObjects.Game do
   # Update game state with property upgrade and reduced player money
   # takes a whole property object
   @impl true
-  def handle_call(:upgrade_property, session_id, property, state) do
+  def handle_call({:upgrade_property, session_id, property}, _from, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
@@ -871,7 +871,7 @@ defmodule GameObjects.Game do
   # Update game state with property downgrade and increased player money
   # takes a whole property object
   @impl true
-  def handle_call(:downgrade_property, session_id, property, state) do
+  def handle_call({:downgrade_property, session_id, property}, _from, state) do
     case :ets.lookup(@game_store, :game) do
       [{:game, game}] ->
         current_player = game.current_player
