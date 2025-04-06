@@ -1,6 +1,8 @@
 defmodule MonopolyWeb.JailLive do
   use Phoenix.LiveView
   alias GameObject.Game
+  alias MonopolyWeb.Router.Helper, as: Routes
+
 
 
   def mount(_params, %{"session_id" => player_id} = _session, socket) do
@@ -71,6 +73,9 @@ defmodule MonopolyWeb.JailLive do
 
     updated_player = Map.put(socket.assigns.player, :jail_turns, new_turns)
 
+    if new_turns == 0 do
+      {:noreply, push_navigate(socket, to: Routes.live_path(socket, MonopolyWeb.GameLive))}
+    end
     {:noreply, assign(socket, dice: dice, result: result, player: updated_player)}
   end
 end

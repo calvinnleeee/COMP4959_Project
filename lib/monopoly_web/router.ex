@@ -19,6 +19,7 @@ defmodule MonopolyWeb.Router do
 
     get "/", PageController, :home
     live "/jail", JailLive
+    live "/game", GameLive
   end
 
   # Other scopes may use custom stacks.
