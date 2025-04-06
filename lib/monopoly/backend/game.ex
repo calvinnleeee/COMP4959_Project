@@ -538,7 +538,7 @@ defmodule GameObjects.Game do
         end
       end)
 
-    %{updated_game | players: updated_players}
+    %{updated_game | players: updated_players, current_player: player_minus_rent}
   end
 
   # Step 6: Store the updated game state in the ETS table
@@ -698,6 +698,7 @@ defmodule GameObjects.Game do
               state
               | players: updated_players,
                 current_player: next_player,
+                active_card: nil,
                 turn: state.turn + 1
             }
 
