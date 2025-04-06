@@ -679,6 +679,7 @@ defmodule GameObjects.Game do
             updated_players = List.replace_at(state.players, current_player_index, updated_player)
             winner = game_over_condition(updated_players)
             state = %{state | players: updated_players, winner: winner}
+            IO.inspect(updated_player.properties, label: "end_turn player.properties")
 
             # Get next player
             next_player = find_next_active_player(state.players, current_player_index)
@@ -856,6 +857,20 @@ defmodule GameObjects.Game do
 
               true ->
                 updated_player = Player.lose_money(current_player, cost)
+
+                # update property in player properties list
+                # updated_player = %{
+                #   updated_player
+                #   | properties:
+                #       Enum.map(updated_player.properties, fn property ->
+                #         if property.id == updated_property.id do
+                #           updated_property
+                #         else
+                #           property
+                #         end
+                #       end)
+                # }
+
                 player_updated_game = update_player(game, updated_player)
                 prop_updated_game = update_property(player_updated_game, updated_property)
 
@@ -917,6 +932,16 @@ defmodule GameObjects.Game do
 
                 prop_updated_game = %{game | properties: updated_properties}
                 updated_player = Player.add_money(current_player, updated_property.buy_cost)
+
+                # update player props list
+                # updated_player = %{
+                #   updated_player
+                #   | properties:
+                #       Enum.reject(updated_player.properties, fn property ->
+                #         property.id == updated_property.id
+                #       end)
+                # }
+
                 player_updated_game = update_player(prop_updated_game, updated_player)
                 :ets.insert(@game_store, {:game, player_updated_game})
                 {:reply, {:ok, player_updated_game}, player_updated_game}
@@ -939,8 +964,27 @@ defmodule GameObjects.Game do
                     end
                   end)
 
+                # 2. Update player: remove sold property, set same-type upgrades to 1
+                # updated_player_properties =
+                #   current_player.properties
+                #   |> Enum.reject(fn property -> property.id == updated_property.id end)
+                #   |> Enum.map(fn property ->
+                #     if property.type == updated_property.type do
+                #       Property.set_upgrade(property, 0)
+                #     else
+                #       property
+                #     end
+                #   end)
+
+                # updated_player = Player.add_money(current_player, property.buy_cost)
+
+                updated_player =
+                  current_player
+                  |> Player.add_money(updated_property.buy_cost)
+
+                # |> Map.put(:properties, updated_player_properties)
+
                 prop_updated_game = %{game | properties: updated_properties}
-                updated_player = Player.add_money(current_player, property.buy_cost)
                 player_updated_game = update_player(prop_updated_game, updated_player)
                 # store the updated game state in ETS
                 :ets.insert(@game_store, {:game, player_updated_game})
@@ -948,9 +992,25 @@ defmodule GameObjects.Game do
 
               # succeed in downgrading
               true ->
-                updated_player = Player.add_money(current_player, cost)
-                player_updated_game = update_player(game, updated_player)
+                # updated_player = Player.add_money(current_player, cost)
+                # player_updated_game = update_player(game, updated_player)
                 # updated_property = Property.inc_upgrade(property)
+                updated_player_properties =
+                  current_player.properties
+                  |> Enum.map(fn property ->
+                    if property.id == updated_property.id do
+                      updated_property
+                    else
+                      property
+                    end
+                  end)
+
+                updated_player =
+                  current_player
+                  |> Player.add_money(cost)
+                  |> Map.put(:properties, updated_player_properties)
+
+                player_updated_game = update_player(game, updated_player)
                 prop_updated_game = update_property(player_updated_game, updated_property)
                 # store the updated game state in ETS
                 :ets.insert(@game_store, {:game, prop_updated_game})
@@ -1000,11 +1060,26 @@ defmodule GameObjects.Game do
           {:reply, {:err, "Property already owned"}, state}
         else
           # updated_player_properties = GameObjects.Property.buy_property(tile, player)
-          updated_property = GameObjects.Property.set_owner(tile, player)
+          # updated_property = GameObjects.Property.set_owner(tile, player)
           # Charge the player if has money
           if player.money >= GameObjects.Property.get_buy_cost(tile) do
+            updated_property = GameObjects.Property.set_owner(tile, player)
+
             updated_player =
               GameObjects.Player.lose_money(player, GameObjects.Property.get_buy_cost(tile))
+
+            # add to player_props
+            updated_player = %{
+              updated_player
+              | properties:
+                  if Enum.any?(updated_player.properties, fn p -> p.id == updated_property.id end) do
+                    # No need to add if property already exists
+                    updated_player.properties
+                  else
+                    # Add to the front if not present
+                    [updated_property | updated_player.properties]
+                  end
+            }
 
             updated_properties =
               Enum.map(state.properties, fn property ->
