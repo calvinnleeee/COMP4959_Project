@@ -6,6 +6,7 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.BuyModal
   import MonopolyWeb.Components.JailScreen
+  import MonopolyWeb.Components.PlayerDashboard
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -362,57 +363,55 @@ defmodule MonopolyWeb.GameLive do
 
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
-      <%= if @current_player.in_jail do %>
-      <.jail_screen
+      <%= if @game.current_player.in_jail do %>
+        <.jail_screen
         player={@current_player}
         current_player_id={@current_player.id}
-<<<<<<< HEAD
-<<<<<<< HEAD
         on_roll_dice={JS.push("jail_roll")}
         dice={@dice_values}
         result={@jail_notification}
-=======
-        on_roll_dice={JS.push("roll_dice")}
-        on_pay_jail_fee={JS.push("pay_jail_fee")}
-        dice={@dice_values}
-        result={@dice_result}
->>>>>>> bfda37e (changed jail_screen to be a component that renders based on in_jail status)
-=======
-        on_roll_dice={JS.push("jail_roll")}
-        dice={@dice_values}
-        result={@jail_notification}
->>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
       />
-      <% else %>
-      <!-- Placeholder for game board -->
-        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-          Game board will be here
-        </div>
 
-        <!-- Player dashboard with dice results and all notifications -->
-        <.player_dashboard
-          player={@current_player}
-          current_player_id={@current_player.id}
-          properties={@player_properties}
-          on_roll_dice={JS.push("roll_dice")}
-          on_end_turn={JS.push("end_turn")}
-          dice_result={@dice_result}
-          dice_values={@dice_values}
-          is_doubles={@is_doubles}
-          doubles_notification={@doubles_notification}
-          doubles_count={@doubles_count}
-          jail_notification={@jail_notification}
-          roll={@roll}
-          end_turn={@end_turn}
+      <%else %>
+
+
+    <!-- Placeholder for game board -->
+      <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+        Game board will be here
+        <%= if @game.current_player.in_jail do %>
+          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+            IN JAIL (Turn {@game.current_player.jail_turns})
+          </div>
+        <% end %>
+      </div>
+
+    <!-- Player dashboard with dice results and all notifications -->
+      <.player_dashboard
+        player={@game.current_player}
+        current_player_id={@game.current_player.id}
+        properties={get_properties(@game.players, @id)}
+        on_roll_dice={JS.push("roll_dice")}
+        on_end_turn={JS.push("end_turn")}
+        dice_result={@dice_result}
+        dice_values={@dice_values}
+        is_doubles={@is_doubles}
+        doubles_notification={@doubles_notification}
+        doubles_count={get_doubles(@game.players, @id)}
+        jail_notification={@jail_notification}
+        roll={@roll}
+        end_turn={@end_turn}
+      />
+
+    <!-- Modal for buying property : @id or "buy-modal"-->
+      <%= if @show_buy_modal do %>
+        <.buy_modal
+          id="buy-modal"
+          show={@show_buy_modal}
+          property={Enum.at(@game.properties, @game.current_player.position)}
+          on_cancel={hide_modal("buy-modal")}
         />
-
       <% end %>
-
-          <!-- Modal for buying property : @id or "buy-modal"-->
-          <%= if @show_buy_modal && @current_property do %>
-            <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
-              on_cancel={hide_modal("buy-modal")}/>
-          <% end %>
+      <%end%>
     </div>
     """
   end
