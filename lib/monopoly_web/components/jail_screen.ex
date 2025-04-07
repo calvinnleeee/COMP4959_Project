@@ -1,7 +1,6 @@
 defmodule MonopolyWeb.Components.JailScreen do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
-  import MonopolyWeb.CoreComponents
 
   attr :player, :map, required: true, doc: "The player data to display"
   attr :current_player_id, :string, default: nil, doc: "ID of the current active player"
