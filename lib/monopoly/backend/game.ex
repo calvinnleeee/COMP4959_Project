@@ -38,10 +38,10 @@ defmodule GameObjects.Game do
 
   ##############################################################
   # Public API functions
-
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
+
 
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and web socket.
