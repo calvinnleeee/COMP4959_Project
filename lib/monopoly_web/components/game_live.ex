@@ -93,13 +93,30 @@ defmodule MonopolyWeb.GameLive do
     property.owner != nil && property.owner.id == player.id
   end
 
-  # Broadcasted by Game.roll_dice()
-  def handle_info(%{event: "game_update", payload: game}, socket) do
-    {:noreply, assign(socket, game: game)}
+  # If it is now the user's turn, enable necessary buttons
+  def handle_info(%{event: "turn_ended", payload: game}, socket) do
+    if game.current_player.id == socket.assigns.id do
+      player = game.current_player
+      property = Enum.at(game.properties, player.position)
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          roll: true,
+          buy_prop: buyable(property, player),
+          upgrade_prop: upgradeable(property, player),
+          sell_prop: sellable(property, player),
+        )
+      }
+    else
+      {:noreply, socket}
+    end
   end
 
-  # Broadcasted by Game.play_card()
-  def handle_info({:card_played, game}, socket) do
+  # All other events can be handled the same
+  def handle_info(%{event: _, payload: game}, socket) do
     {:noreply, assign(socket, game: game)}
   end
 
