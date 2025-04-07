@@ -110,7 +110,7 @@ defmodule MonopolyWeb.GameLive do
         )
       }
     else
-      {:noreply, socket}
+      {:noreply, assign(socket, game: game)}
     end
   end
 
@@ -170,7 +170,7 @@ defmodule MonopolyWeb.GameLive do
           roll: !player.rolled && !player.in_jail,
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
-          end_turn: !player.rolled || player.in_jail,
+          end_turn: player.rolled || player.in_jail,
 
           # Dice results for dashboard
           dice_result: sum,
