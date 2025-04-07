@@ -163,7 +163,7 @@ defmodule MonopolyWeb.GameLive do
       <!-- Modal for buying property : @id or "buy-modal"-->
       <%= if @show_buy_modal && @current_property do %>
         <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
-          on_cancel={hide_modal("buy-modal")}/>
+          class="buy" on_cancel={hide_modal("buy-modal")}/>
       <% end %>
 
     </div>

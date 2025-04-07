@@ -6,6 +6,7 @@ defmodule MonopolyWeb.Components.BuyModal do
   Renders a Buy Modal for confirming property purchase.
   """
   attr :id, :string, required: true
+  attr :class, :string, default: ""
   attr :show, :boolean, default: false
   attr :property, :map, required: true, doc: "Property info to display"
   attr :on_buy, :any, default: nil, doc: "JS command or event for buying"
@@ -14,7 +15,8 @@ defmodule MonopolyWeb.Components.BuyModal do
   def buy_modal(assigns) do
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
-      <div class="buy-modal-content p-6">
+      <%!-- comment out for design adjustment: <div class="buy-modal-content p-6"> --%>
+      <div class={"modal buy " <> @class}> 
         <h2 class="text-xl font-bold mb-4">Buy Property</h2>
         <p class="mb-6">
           <%= @property.name %> : <span class="font-semibold">$<%= @property.buy_cost %></span>
