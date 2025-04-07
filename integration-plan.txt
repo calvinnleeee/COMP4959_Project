@@ -11,6 +11,7 @@ open up 2~4 browsers to load up the players
 	(x) when a new player joins, all views update to show new players in lobby
 (x) a player can leave the lobby
 	(x) if a player leaves, all views are updated to remove that player's id
+	(x) next player in line becomes player 1 and can start game
 ( ) each player's piece is handled (currently automatically assigned)
 (x) game start (button), all players redirect to game page
 
@@ -21,6 +22,7 @@ open up 2~4 browsers to load up the players
 	(x) other players cannot act
 	( ) other players' dashboards don't update (only current player's)
 ( ) first player rolls
+	( ) frontend call for rolling dice calls the server's roll_dice
 	( ) all players see updated position of first player
 	( ) don't handle logic for landing on specific locations yet
 ( ) first player ends turn, game successfully updates to start the next player (loop back to turn start)
