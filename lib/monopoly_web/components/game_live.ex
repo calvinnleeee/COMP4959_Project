@@ -111,6 +111,7 @@ defmodule MonopolyWeb.GameLive do
     player = socket.assigns.game.current_player
     property = socket.assigns.current_property
 
+    
     if player.id == id do
       {:ok, updated_game} = Game.buy_property(id, property)
       {:noreply, assign(socket, %{

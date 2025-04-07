@@ -3,6 +3,8 @@ defmodule MonopolyWeb.TestModalLive do
   import MonopolyWeb.Components.BuyModal
   import MonopolyWeb.CoreComponents
 
+  # This file has no functionality; just for test == deletable if needed
+
   def mount(_params, _session, socket) do
     property = %{name: "Boardwalk", buy_cost: 400}
     {:ok, assign(socket, show_buy_modal: true, current_property: property)}
