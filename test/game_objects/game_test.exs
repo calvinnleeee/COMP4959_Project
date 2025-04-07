@@ -383,5 +383,29 @@ defmodule GameObjects.GameTest do
     end
   end
 
+  describe "jail mechanics" do
+    test "player must pay to get out after three failed rolls" do
+      game = create_test_game(1)
+      player = %{Enum.at(game.players, 0) |
+        in_jail: true,
+        position: 10,  # Jail position
+        jail_turns: 2,
+        money: 1500
+      }
+      game = %{game |
+        players: [player],
+        current_player: player
+      }
+      :ets.insert(Game.Store, {:game, game})
+
+      # Force non-doubles roll on third turn
+      :rand.seed(:exs1024, {1, 2, 3})
+      {:ok, _dice, new_pos, _tile, updated_game} = Game.roll_dice("player_1")
+
+      assert updated_game.current_player.in_jail == false
+      assert updated_game.current_player.position == new_pos
+      assert updated_game.current_player.money == 1450  # 1500 - 50 (jail fee)
+    end
+  end
 
 end
