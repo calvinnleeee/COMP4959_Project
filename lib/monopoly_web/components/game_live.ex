@@ -11,40 +11,18 @@ defmodule MonopolyWeb.GameLive do
   # Connect the player, sub to necessary PubSubs
   # State includes the game state, player's struct, which buttons are enabled,
   # and dice-related values
-  def mount(_params, session, socket) do
-    # For development/testing purpose, use sample data
-    # In production this would integrate with GameObjects.Game
-    # AKA do not default to player-1 in prod?
-    session_id = Map.get(session, "session_id", "player-1")
-
-    # Sample game for use until lobby is complete
-    {:ok, game} = Game.join_game(session_id)
-    {:ok, game} = Game.join_game("player-2")
-    {:ok, game} = Game.start_game()
-    # {:ok, game} = Game.get_state()
-    player = Enum.find(game.players, fn player -> player.id == session_id end)
-    property = Enum.at(game.properties, player.position)
-
-    game =
-      if !player.active do
-        {:ok, new_game} = Game.join_game(session_id)
-        new_game
-      else
-        game
-      end
-
+  def mount(_params, _session, socket) do
     # Subscribe to the backend game state updates
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
+    {:ok, game} = Game.get_state()
+    # IO.inspect(game)
 
     {
       :ok,
-      assign(socket,
+      assign(
+        socket,
         game: game,
-        id: session_id,
-        roll: game.current_player.id == session_id && !game.current_player.rolled,
-        buy_prop: buyable(property, player),
-        sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == session_id,
+        id: nil,
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
@@ -53,6 +31,35 @@ defmodule MonopolyWeb.GameLive do
         show_buy_modal: false,
         # TODO: integrate this with divergent changes
         current_property: nil
+      )
+    }
+  end
+
+  # Handle session_id coming from JS hook via pushEvent
+  def handle_event("set_session_id", %{"id" => session_id}, socket) do
+    game = socket.assigns.game
+    player = Enum.find(game.players, fn player -> player.id == session_id end)
+    property = Enum.at(game.properties, player.position)
+
+    # Re-activate player if they are reconnecting
+    game =
+      if !player.active do
+        {:ok, new_game} = Game.join_game(session_id)
+        new_game
+      else
+        game
+      end
+
+    {
+      :noreply,
+      assign(
+        socket,
+        game: game,
+        id: session_id,
+        roll: game.current_player.id == session_id && !game.current_player.rolled,
+        buy_prop: buyable(property, player),
+        sell_prop: sellable(property, player),
+        end_turn: game.current_player.id == session_id
       )
     }
   end
@@ -82,7 +89,7 @@ defmodule MonopolyWeb.GameLive do
   end
 
   # Broadcasted by Game.roll_dice()
-  def handle_info({:game_update, game}, socket) do
+  def handle_info(%{event: "game_update", payload: game}, socket) do
     {:noreply, assign(socket, game: game)}
   end
 
@@ -274,11 +281,19 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def get_properties(players, id) do
-    Enum.find(players, fn player -> player.id == id end).properties
+    if id == nil do
+      []
+    else
+      Enum.find(players, fn player -> player.id == id end).properties
+    end
   end
 
   def get_doubles(players, id) do
-    Enum.find(players, fn player -> player.id == id end).turns_taken
+    if id == nil do
+      []
+    else
+      Enum.find(players, fn player -> player.id == id end).turns_taken
+    end
   end
 
   def render(assigns) do
@@ -289,6 +304,8 @@ defmodule MonopolyWeb.GameLive do
     # - Sell house
     # - End turn
     ~H"""
+    <div id="session-id-hook" phx-hook="SessionId"></div>
+
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
