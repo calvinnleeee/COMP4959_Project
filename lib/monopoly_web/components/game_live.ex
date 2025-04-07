@@ -107,20 +107,22 @@ defmodule MonopolyWeb.GameLive do
 
   # event handler for buy modal
   def handle_event("buy_property", _params, socket) do
+    id = socket.assigns.id
+    player = socket.assigns.game.current_player
     property = socket.assigns.current_property
-    current_player = socket.assigns.current_player
-    update_player = Map.update!(current_player, :money, fn money -> money - property.buy_cost end)
-    {:noreply, assign(socket, %{
-      current_player: update_player,
-      player_properties: property,
-      dice_result: nil,
-      dice_values: nil,
-      is_doubles: false,
-      doubles_count: 0,
-      doubles_notification: nil,
-      jail_notification: nil,
-      show_buy_modal: false,
-      current_property: nil})}
+
+    if player.id == id do
+      {:ok, updated_game} = Game.buy_property(id, property)
+      {:noreply, assign(socket, %{
+          game: updated_game,
+          show_buy_modal: false,
+          current_property: nil,
+          buy_prop: buyable(Enum.at(updated_game.properties, player.position), player),
+          sell_prop: sellable(Enum.at(updated_game.properties, player.position), player),
+          })}
+      else
+        {:noreply, socket}
+    end
   end
 
   def handle_event("cancel_buying", _params, socket) do
