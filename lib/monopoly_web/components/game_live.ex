@@ -55,10 +55,10 @@ defmodule MonopolyWeb.GameLive do
     # Get previous rolls for jail check or initialize to empty list
     previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
 
-
     # Check if player goes to jail (3 consecutive doubles)
     # Using the backend's check_for_jail function
-    goes_to_jail = GameObjects.Dice.check_for_jail(previous_rolls, {{die1, die2}, sum, is_doubles})
+    goes_to_jail = new_doubles_count >= 3
+
 
     # Add current roll to the beginning of the list (most recent first)
     updated_rolls = [{{die1, die2}, sum, is_doubles} | previous_rolls]
@@ -70,11 +70,13 @@ defmodule MonopolyWeb.GameLive do
     updated_player = current_player
       |> Map.put(:has_rolled, !is_doubles || goes_to_jail) # Only mark as rolled if not doubles or going to jail
       |> Map.put(:in_jail, goes_to_jail || current_player.in_jail)
-      |> Map.put(:jail_turns, if(goes_to_jail, do: 1, else: current_player.jail_turns))
+      |> Map.put(:jail_turns, if(goes_to_jail, do: 3, else: current_player.jail_turns))
 
     # Prepare notifications
     jail_notification = if goes_to_jail, do: "You rolled doubles 3 times in a row! Go to jail!", else: nil
     doubles_notification = if is_doubles && !goes_to_jail, do: "You rolled doubles! Roll again.", else: nil
+
+    final_doubles_count = if goes_to_jail, do: 0, else: new_doubles_count
 
     # Create updated socket with all assigns explicitly defined
     {:noreply, assign(socket, %{
@@ -82,7 +84,7 @@ defmodule MonopolyWeb.GameLive do
       dice_result: sum,
       dice_values: {die1, die2},
       is_doubles: is_doubles,
-      doubles_count: new_doubles_count,
+      doubles_count: final_doubles_count,
       previous_rolls: updated_rolls,
       jail_notification: jail_notification,
       doubles_notification: doubles_notification
@@ -135,8 +137,6 @@ defmodule MonopolyWeb.GameLive do
       doubles_notification: nil
     })}
   end
-
-
 
 
   def handle_event("end_turn", _params, socket) do
