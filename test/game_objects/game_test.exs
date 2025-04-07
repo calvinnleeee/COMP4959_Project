@@ -47,22 +47,6 @@ defmodule GameObjects.GameTest do
     end
   end
 
-  # describe "join_game/1" do
-  #   test "creates a new game when one doesn't exist" do
-  #     session_id = "new_player_session"
-  #     :ets.delete(Game.Store, :game)
-  #     {:ok, game} = Game.join_game(session_id)
-  #     assert length(game.players) == 1
-  #   end
-
-  #   test "adds player to existing game" do
-  #     game = create_test_game(1)
-  #     :ets.insert(Game.Store, {:game, game})
-  #     {:ok, updated_game} = Game.join_game("player_2")
-  #     assert length(updated_game.players) == 2
-  #   end
-  # end
-
   describe "roll_dice/1" do
     test "returns error when not player's turn" do
       game = create_test_game(2)
@@ -141,43 +125,6 @@ defmodule GameObjects.GameTest do
       assert :ets.lookup(Game.Store, :game) == []
     end
   end
-
-
-  # describe "take_turn/2" do
-  #   setup do
-  #     # Clean ETS and reset state only
-  #     :ets.delete(Game.Store, :game)
-
-  #     :ok
-  #   end
-
-  #   test "player pays rent on owned property" do
-  #     player = create_test_player("renter", "Renter", 1)
-  #     owner = create_test_player("owner", "Owner", 0)
-
-  #     property = create_test_property(5, "Rent Tile", "brown", 60)
-  #     property = %{property | owner: owner}
-
-  #     game = %Game{
-  #       players: [player, owner],
-  #       properties: [property],
-  #       current_player: player,
-  #       deck: [],
-  #       turn: 0
-  #     }
-
-  #     :ets.insert(Game.Store, {:game, game})
-  #     :sys.replace_state(Game, fn _ -> game end)
-
-  #     {:ok, updated_game} = Game.take_turn("renter", property)
-
-  #     updated_player = Enum.find(updated_game.players, &(&1.id == "renter"))
-  #     updated_owner = Enum.find(updated_game.players, &(&1.id == "owner"))
-
-  #     assert updated_player.money < 1500
-  #     assert updated_owner.money > 1500
-  #   end
-  # end
 
 
   describe "game state operations" do
@@ -405,6 +352,91 @@ defmodule GameObjects.GameTest do
       assert updated_game.current_player.in_jail == false
       assert updated_game.current_player.position == new_pos
       assert updated_game.current_player.money == 1450  # 1500 - 50 (jail fee)
+    end
+  end
+
+
+  describe "property upgrade limits" do
+    test "property cannot upgrade beyond hotel (level 6)" do
+      prop = create_test_property(1, "Boardwalk", "blue", 400)
+      prop = %{prop | upgrades: 6}
+      {new_prop, cost} = Property.build_upgrade(prop)
+
+      assert cost == 0
+      assert new_prop.upgrades == 6
+    end
+
+    test "property downgrades from hotel to 5 houses and refunds hotel price" do
+      prop = create_test_property(1, "Boardwalk", "blue", 400)
+      prop = %{prop | upgrades: 6}
+      {new_prop, refund} = Property.sell_upgrade(prop)
+
+      assert new_prop.upgrades == 5
+      assert refund == prop.hotel_price
+    end
+  end
+
+  describe "player bankruptcy and status" do
+    test "player becomes inactive after going bankrupt" do
+      game = create_test_game(1)
+      player = %{Enum.at(game.players, 0) | money: -10}
+      game = %{game | players: [player], current_player: player}
+      :ets.insert(Game.Store, {:game, game})
+
+      :rand.seed(:exsplus, {123, 456, 789})
+      {:ok, _dice, _pos, _tile, updated_game} = Game.roll_dice("player_1")
+
+      assert updated_game.current_player.active == false
+    end
+
+    test "set_player_active revives eligible player" do
+      player = %{create_test_player("p1", "P1", 0) | active: false, money: 100}
+      game = %Game{
+        players: [player],
+        current_player: player,
+        properties: [],
+        deck: [],
+        turn: 0,
+        active_card: nil,
+        winner: nil
+      }
+
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      {:ok, updated_game} = Game.set_player_active("p1")
+      assert Enum.at(updated_game.players, 0).active == true
+    end
+  end
+
+  describe "turn mechanics and skipping" do
+    test "end_turn skips inactive player" do
+      players = [
+        create_test_player("p1", "P1", 0),
+        %{create_test_player("p2", "P2", 1) | active: false},
+        create_test_player("p3", "P3", 2)
+      ]
+
+      game = %Game{
+        players: players,
+        properties: [],
+        deck: [],
+        current_player: Enum.at(players, 0),
+        turn: 0,
+        active_card: nil,
+        winner: nil
+      }
+
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      updated_p1 = %{Enum.at(players, 0) | rolled: true}
+      updated_players = [updated_p1, Enum.at(players, 1), Enum.at(players, 2)]
+      :ets.insert(Game.Store, {:game, %{game | players: updated_players, current_player: updated_p1}})
+
+      {:ok, updated_game} = Game.end_turn("p1")
+
+      assert updated_game.current_player.id == "p3"
     end
   end
 
