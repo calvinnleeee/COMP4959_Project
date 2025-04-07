@@ -22,8 +22,7 @@ defmodule MonopolyWeb.Router do
 
     # live "/game-dummy", GameDummy, :index # dummy screen to redirect to after "Start Game" button is clicked
 
-    live "/game", GameLive, :index
-    live "/game/:id", GameLive, :show
+    live "/game", GameLive
 
     live "/testmodal", TestModalLive, :show
 
