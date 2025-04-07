@@ -141,7 +141,9 @@ defmodule MonopolyWeb.GameLive do
 
       # If player got an instant-play card, display it
       card = new_game.active_card
-      if card != nil && card.effect[0] != "get_out_of_jail", do: display_card(card)
+      if card != nil && Enum.at(card.effect, 0) != "get_out_of_jail" do
+        display_card(card)
+      end
 
       # Prepare notifications
       player = new_game.current_player
@@ -343,7 +345,7 @@ defmodule MonopolyWeb.GameLive do
         <.buy_modal
           id="buy-modal"
           show={@show_buy_modal}
-          property={Enum.at(@game.properties, @game.current_player.location)}
+          property={Enum.at(@game.properties, @game.current_player.position)}
           on_cancel={hide_modal("buy-modal")}
         />
       <% end %>
