@@ -1,5 +1,6 @@
 defmodule GameObjects.Property do
   alias GameObjects.Player
+
   @moduledoc """
   This modules represents Properties. this module contains what a property can do and have
 
@@ -185,7 +186,7 @@ defmodule GameObjects.Property do
 
       count == 1 and get_type(property) == "blue" ->
         property = set_owner(property, player)
-       	player_properties = Player.get_properties(Player.add_property(player, property))
+        player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
 
       count == 1 and get_type(property) == "utility" ->
@@ -197,26 +198,29 @@ defmodule GameObjects.Property do
         updated_property = set_owner(property, player)
 
         # Adding the new property
-        railroad_count = count + 1
-		player_properties = Player.get_properties(Player.add_property(player, updated_property))
-        new_properties = Enum.map(player_properties, fn r ->
-        	if r.type == "railroad" do
-        		set_upgrade(r, railroad_count)
-        	else
-        		r
-        	end
-        	end
-       )
-    	new_properties
+        railroad_count = count
+        player_properties = Player.get_properties(Player.add_property(player, updated_property))
 
-      (count == 2) ->
+        new_properties =
+          Enum.map(player_properties, fn r ->
+            if r.type == "railroad" do
+              set_upgrade(r, railroad_count)
+            else
+              r
+            end
+          end)
+
+        new_properties
+
+      count == 2 ->
         property = set_owner(property, player)
         player_properties = Player.get_properties(Player.add_property(player, property))
         upgrade_set_list(property, player_properties)
+
       true ->
-          property = set_owner(property, player)
-          player = Player.add_property(player, property)
-          Player.get_properties(player)
+        property = set_owner(property, player)
+        player = Player.add_property(player, property)
+        Player.get_properties(player)
     end
   end
 
@@ -237,8 +241,8 @@ defmodule GameObjects.Property do
   end
 
   @doc """
-    function to take in a player and a property and upgrade all properties of that type to the next level. returns a list of properties
-    """
+  function to take in a player and a property and upgrade all properties of that type to the next level. returns a list of properties
+  """
   def upgrade_set(property, player) do
     player_properties = Player.get_properties(player)
 
@@ -275,9 +279,14 @@ defmodule GameObjects.Property do
   """
   def sell_upgrade(property) do
     cond do
-      property.upgrades == 0 || property.upgrades == 1 -> {property, 0}
-      property.upgrades == 6 -> {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
-      true -> {set_upgrade(property, property.upgrades - 1), get_house_price(property)}
+      property.upgrades == 0 || property.upgrades == 1 ->
+        {property, 0}
+
+      property.upgrades == 6 ->
+        {set_upgrade(property, property.upgrades - 1), get_hotel_price(property)}
+
+      true ->
+        {set_upgrade(property, property.upgrades - 1), get_house_price(property)}
     end
   end
 

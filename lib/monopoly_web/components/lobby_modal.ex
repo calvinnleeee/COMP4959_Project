@@ -36,16 +36,24 @@ defmodule MonopolyWeb.Components.LobbyModal do
           </table>
         </div>
 
-        <div class="mt-6">
-          <%= if @sprite_id == 0 do %>
+        <div class="mt-6 space-y-4">
+        <%= if @sprite_id == 0 do %>
+          <%= if length(@players || []) >= 2 do %>
             <button
               phx-click="start_game"
               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-lg">
               Start Game
             </button>
           <% else %>
-            <p class="text-gray-600 text-md italic">Waiting for Player 1 to start the game...</p>
+            <p class="text-gray-600 text-md">
+              Need at least 2 players to start the game.
+            </p>
           <% end %>
+        <% else %>
+          <p class="text-gray-600 text-md">
+            Waiting for Player 1 to start the game...
+          </p>
+        <% end %>
         </div>
 
         <button
