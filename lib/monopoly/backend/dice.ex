@@ -15,7 +15,7 @@ defmodule GameObjects.Dice do
 
   # check if a player should go to jail based on consecutive doubles
   def check_for_jail(turns_taken, is_doubles) do
-    is_doubles && turns_taken >= 2
+    is_doubles && turns_taken > 2
   end
 
   # Determine the outcome of a jail roll based on the dice values and the number of attempts

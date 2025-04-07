@@ -2,233 +2,320 @@ defmodule MonopolyWeb.BackendTestingLive do
   require Logger
   use MonopolyWeb, :live_view
 
+  @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, message: nil, game: nil, player_id: nil, active_card: nil)}
+    if connected?(socket), do: Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
+
+    button_states = %{
+      roll_dice: false,
+      buy_property: false,
+      upgrade: false,
+      downgrade: false,
+      end_turn: false,
+      leave_game: false
+    }
+
+    {:ok,
+     assign(socket,
+       message: nil,
+       game: nil,
+       session_id: nil,
+       button_states: button_states,
+       dice_roll: 0
+     )}
   end
 
-  def handle_event("join_game", _params, socket) do
-    GameObjects.Game.delete_game()
-    session_id = socket.id || UUID.uuid4()
-    dummy_id = "dummy_player"
+  def handle_event("set_session_id", %{"id" => id}, socket) do
+    {:ok, state} = GameObjects.Game.get_state()
 
-    with {:ok, _game1} <- GameObjects.Game.join_game(session_id),
-         {:ok, game} <- GameObjects.Game.join_game(dummy_id) do
-      {:noreply,
-       assign(socket, message: "Two players joined the game.", game: game, player_id: session_id)}
-    else
-      {:err, reason} ->
-        {:noreply, assign(socket, message: "Join failed: #{reason}")}
+    if state != %{} do
+      IO.puts("Ongoing game")
+    end
+
+    {:noreply, assign(socket, session_id: id)}
+  end
+
+  # Join Game Handle Event
+  @impl true
+  def handle_event("join_game", _params, socket) do
+    session_id = socket.assigns.session_id
+
+    case GameObjects.Game.join_game(session_id) do
+      {:ok, game} ->
+        # Update the LiveView assigns with the new game state
+        {:noreply, assign(socket, message: "Joined", game: game)}
+
+      {:err, message} ->
+        {:noreply, assign(socket, message: message)}
     end
   end
 
+  # Leave Game Handle Event
+  @impl true
   def handle_event("leave_game", _params, socket) do
-    case GameObjects.Game.leave_game(socket.assigns.player_id) do
-      {:ok, updated_game} ->
+    session_id = socket.assigns.session_id
+
+    case GenServer.call(GameObjects.Game, {:leave_game, session_id}) do
+      {:ok, "No players, Game deleted.", _empty_state} ->
         {:noreply,
-         assign(socket,
-           message: "Player left the game.",
-           game: updated_game
+         socket
+         |> assign(
+           :message,
+           "You left the game. The game was deleted because no players are left."
          )}
 
-      {:err, reason} ->
-        {:noreply, assign(socket, :message, "Leave failed: #{reason}")}
+      {:ok, updated_game} ->
+        {:noreply, assign(socket, message: "You left the game.", game: updated_game)}
     end
   end
 
+  # Start Game Handle Event
   def handle_event("start_game", _params, socket) do
     case GameObjects.Game.start_game() do
       {:ok, updated_game} ->
-        {:noreply,
-         assign(socket,
-           message: "Game started.",
-           game: updated_game
-         )}
+        {:noreply, assign(socket, game: updated_game)}
 
       {:err, reason} ->
-        {:noreply,
-         assign(socket,
-           message: "Start game failed: #{reason}"
-         )}
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
-  # Listend and handle the event when the current player ends their turn
-  def handle_event("end_turn", _params, socket) do
-    case GameObjects.Game.end_turn(socket.assigns.player_id) do
-      {:ok, updated_game_state} ->
-        Logger.info("Ended player turn,")
-        # TODO: What else needs to go here?? Are these noreplies even correct?
-        {:noreply, assign(socket, :message, "Turn ended.")}
+  @impl true
+  def handle_event("buy_property", _params, socket) do
+    session_id = socket.assigns.session_id
+    {:ok, current_game} = GameObjects.Game.get_state()
+    IO.inspect(current_game, label: "Current Game State")
+
+    current_player = current_game.current_player
+    property = Enum.at(current_game.properties, current_player.position)
+
+    case GameObjects.Game.buy_property(session_id, property) do
+      {:ok, updated_game} ->
+        IO.inspect(updated_game.current_player.properties, label: "Current Player Properties")
+        {:noreply, assign(socket, game: updated_game)}
 
       {:err, reason} ->
-        Logger.error("Error ending turn: #{reason}")
-        {:noreply, assign(socket, :message, "Couldn't end turn due to #{reason}")}
+        {:noreply, assign(socket, message: reason)}
     end
   end
 
+  @impl true
+  def handle_event("upgrade-property", _params, socket) do
+    session_id = socket.assigns.session_id
+    {:ok, current_game} = GameObjects.Game.get_state()
+    IO.inspect(current_game, label: "Current Game State")
+
+    current_player = current_game.current_player
+    property = Enum.at(current_game.properties, current_player.position)
+
+    case GameObjects.Game.upgrade_property(session_id, property) do
+      {:ok, updated_game} ->
+        {:noreply, assign(socket, game: updated_game)}
+
+      {:err, reason} ->
+        {:noreply, assign(socket, message: reason)}
+    end
+  end
+
+  @impl true
+  def handle_event("downgrade", _params, socket) do
+    session_id = socket.assigns.session_id
+    {:ok, current_game} = GameObjects.Game.get_state()
+    IO.inspect(current_game, label: "Current Game State")
+
+    current_player = current_game.current_player
+    property = Enum.at(current_game.properties, current_player.position)
+
+    case GameObjects.Game.downgrade_property(session_id, property) do
+      {:ok, updated_game} ->
+        {:noreply, assign(socket, game: updated_game)}
+
+      {:err, reason} ->
+        {:noreply, assign(socket, message: reason)}
+    end
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          event: "player_joined",
+          payload: %{game: updated_game, session_id: session_id}
+        },
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "New Player Joined: #{session_id}",
+       game: updated_game
+     )}
+  end
+
+  @impl true
   def handle_event("roll_dice", _params, socket) do
-    roll = Enum.random(1..6)
-    IO.puts("Rolled a #{roll}")
-    {:noreply, assign(socket, :message, "Dice rolled: #{roll}")}
+    session_id = socket.assigns.session_id
+
+    case GameObjects.Game.roll_dice(session_id) do
+      {:ok, dice_result, current_position, current_tile, updated_game} ->
+        message = "Landed on #{current_tile.name}"
+
+        {:noreply,
+         socket
+         |> assign(:game, updated_game)
+         |> assign(:message, message)}
+
+      {:err, reason} ->
+        {:noreply, assign(socket, message: reason)}
+    end
   end
 
-  def handle_event("pay_bank", _params, socket) do
-    IO.puts("Paid bank.")
-    {:noreply, assign(socket, :message, "Paid bank.")}
+  @impl true
+  def handle_event("end_turn", %{"session_id" => session_id}, socket) do
+    case GameObjects.Game.end_turn(session_id) do
+      {:ok, new_state} ->
+        {:noreply, assign(socket, :game_state, new_state)}
+
+      {:err, reason} ->
+        {:noreply, assign(socket, message: reason)}
+    end
   end
 
-  def handle_event("pay_rent", _params, socket) do
-    IO.puts("Paid rent.")
-    {:noreply, assign(socket, :message, "Paid rent.")}
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "turn_ended", payload: updated_state}, socket) do
+    {:noreply,
+     assign(socket,
+       game: updated_state
+     )}
   end
 
-  def handle_event("build_house", _params, socket) do
-    IO.puts("Built a house.")
-    {:noreply, assign(socket, :message, "Built a house.")}
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "updated_state", payload: updated_state},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       game: updated_state
+     )}
   end
 
-  def handle_event("purchase", _params, socket) do
-    IO.puts("Purchased property.")
-    {:noreply, assign(socket, :message, "Purchased property.")}
-  end
-
-  def handle_event("sell_house", _params, socket) do
-    IO.puts("Sold a house.")
-    {:noreply, assign(socket, :message, "Sold a house.")}
-  end
-
-  def handle_event("draw_community_card", _params, socket) do
-    draw_card_and_update("community", socket)
-  end
-
-  def handle_event("draw_chance_card", _params, socket) do
-    draw_card_and_update("chance", socket)
-  end
-
-  def handle_event("store_card", _params, socket) do
-    game = socket.assigns.game
-    player_id = socket.assigns.player_id
-    active_card = socket.assigns.active_card
-
-    with player when not is_nil(player) <- Enum.find(game.players, &(&1.id == player_id)),
-         card_from_deck when not is_nil(card_from_deck) <-
-           Enum.find(game.deck, &(&1.id == active_card.id)) do
-      owned_card = GameObjects.Card.mark_as_owned(card_from_deck)
-
-      updated_player = %{
-        player
-        | cards: [owned_card | player.cards]
-      }
-
-      updated_players =
-        Enum.map(game.players, fn
-          p when p.id == player_id -> updated_player
-          p -> p
-        end)
-
-      updated_deck = GameObjects.Deck.update_deck(game.deck, owned_card)
-
-      updated_game = %{
-        game
-        | players: updated_players,
-          deck: updated_deck
-      }
-
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "game_update", payload: updated_game},
+        socket
+      ) do
+    if updated_game.current_player do
       {:noreply,
        assign(socket,
-         game: updated_game,
-         message: "Stored card: #{owned_card.name}",
-         active_card: nil
+         game: updated_game
        )}
     else
-      nil ->
-        {:noreply, assign(socket, :message, "Failed to store card: player or card not found.")}
+      {:noreply, assign(socket, message: "New Player Joined", game: updated_game)}
     end
   end
 
-  def handle_event("use_stored_card", _params, socket) do
-    game = socket.assigns.game
-    player_id = socket.assigns.player_id
-
-    case Enum.find(game.players, &(&1.id == player_id)) do
-      nil ->
-        {:noreply, assign(socket, :message, "Player not found.")}
-
-      %{cards: []} ->
-        {:noreply, assign(socket, :message, "No cards to use.")}
-
-      player ->
-        [card | remaining_cards] = player.cards
-        updated_player = GameObjects.Card.apply_effect(card, %{player | cards: remaining_cards})
-
-        updated_players =
-          Enum.map(game.players, fn
-            p when p.id == player_id -> updated_player
-            p -> p
-          end)
-
-        updated_game = %{game | players: updated_players}
-
-        {:noreply,
-         assign(socket,
-           game: updated_game,
-           message: "Used card: #{card.name}"
-         )}
-    end
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "game_deleted", payload: updated_game},
+        socket
+      ) do
+    {:noreply, assign(socket, message: "Game Deleted", game: updated_game)}
   end
 
-  def handle_event("use_card", _params, socket) do
-    game = socket.assigns.game
-    player_id = socket.assigns.player_id
-    card = socket.assigns.active_card
-
-    case Enum.find(game.players, &(&1.id == player_id)) do
-      nil ->
-        {:noreply, assign(socket, :message, "Player not found.")}
-
-      player ->
-        updated_player = GameObjects.Card.apply_effect(card, player)
-
-        updated_players =
-          Enum.map(game.players, fn
-            p when p.id == player_id -> updated_player
-            p -> p
-          end)
-
-        updated_game = %{game | players: updated_players}
-
-        {:noreply,
-         assign(socket,
-           game: updated_game,
-           message: "Used card: #{card.name}",
-           active_card: nil
-         )}
-    end
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "unowned_property", payload: updated_game},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} landed on unowned property.",
+       game: updated_game
+     )}
   end
 
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "property_bought", payload: updated_game},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} bought a property.",
+       game: updated_game
+     )}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "property_sold", payload: updated_game},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} sold a property.",
+       game: updated_game
+     )}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "property_downgraded", payload: updated_game},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} downgraded a property.",
+       game: updated_game
+     )}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "card_played", payload: updated_game},
+        socket
+      ) do
+    {:noreply,
+     assign(socket,
+       message: "#{updated_game.current_player.name} played get out of jail card.",
+       game: updated_game
+     )}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
-    <h1 style="font-size:50px">Backend Integration Testing</h1>
+    <h1 style="font-size:50px">Backend Integration</h1>
 
-    <!-- Game Setup -->
-    <h3 style="text-align: center; margin-top: 10px; font-size: 24px; color: #1E88E5;">Game Setup</h3>
+    <div id="session-id-hook" phx-hook="SessionId"></div>
+
+    <h2>Session ID: {@session_id}</h2>
+
+    <h2 style="font-size: 20px">Message: {@message}</h2>
+    <hr style="margin-bottom: 30px; margin-top: 30px;" \ />
+    <h2 style="font-size: 40px">Lobby actions</h2>
 
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
       <button
         phx-click="join_game"
-        style="padding: 10px 20px; background-color: #43A047; color: white; border: none; border-radius: 5px; cursor: pointer;"
+        disabled={is_nil(@session_id)}
+        style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if is_nil(@session_id), do: "#aaa", else: "#43A047"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if is_nil(@session_id), do: "not-allowed", else: "pointer"};"
+        }
       >
         Join Game
       </button>
 
       <button
         phx-click="leave_game"
-        disabled={is_nil(@game)}
+        disabled={is_nil(@game) || !is_nil(@game.current_player)}
         style={
         "padding: 10px 20px; " <>
-        "background-color: #{if is_nil(@game), do: "#aaa", else: "#E53935"}; " <>
+        "background-color: #{if is_nil(@game) || not is_nil(@game.current_player), do: "#aaa", else: "#E53935"}; " <>
         "color: white; border: none; border-radius: 5px; " <>
-        "cursor: #{if is_nil(@game), do: "not-allowed", else: "pointer"};"
+        "cursor: #{if is_nil(@game) || not is_nil(@game.current_player), do: "not-allowed", else: "pointer"};"
         }
       >
         Leave Game
@@ -236,177 +323,189 @@ defmodule MonopolyWeb.BackendTestingLive do
 
       <button
         phx-click="start_game"
-        style="padding: 10px 20px; background-color: #FB8C00; color: white; border: none; border-radius: 5px; cursor: pointer;"
+        disabled={is_nil(@game) || !is_nil(@game.current_player)}
+        style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if is_nil(@game) || not is_nil(@game.current_player), do: "#aaa", else: "#FC8C00"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if is_nil(@game) || not is_nil(@game.current_player), do: "not-allowed", else: "pointer"};"
+        }
       >
         Start Game
       </button>
     </div>
-
-    <!-- Turn Actions -->
-    <h3 style="text-align: center; margin-top: 10px; font-size: 24px; color: #8E24AA;">
-      Turn Actions
-    </h3>
-
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-      <button style="padding: 10px 20px; background-color: #8E24AA; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        End Turn
-      </button>
-
-      <button style="padding: 10px 20px; background-color: #3949AB; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Roll Dice
-      </button>
-    </div>
-
-    <!-- Payment Actions -->
-    <h3 style="text-align: center; margin-top: 10px; font-size: 24px; color: #D81B60;">
-      Payment Actions
-    </h3>
-
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-      <button style="padding: 10px 20px; background-color: #6D4C41; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Pay Bank
-      </button>
-
-      <button style="padding: 10px 20px; background-color: #D81B60; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Pay Rent
-      </button>
-    </div>
-
-    <!-- Property Actions -->
-    <h3 style="text-align: center; margin-top: 10px; font-size: 24px; color: #00ACC1;">
-      Property Actions
-    </h3>
-
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-      <button style="padding: 10px 20px; background-color: #00ACC1; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Build House
-      </button>
-
-      <button style="padding: 10px 20px; background-color: #7CB342; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Purchase
-      </button>
-
-      <button style="padding: 10px 20px; background-color: #5D4037; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Sell House
-      </button>
-    </div>
-
-    <!-- Card Actions -->
-    <h3 style="text-align: center; margin-top: 10px; font-size: 24px; color: #26C6DA;">
-      Card Actions
-    </h3>
-
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; margin-bottom: 40px;">
-      <button
-        phx-click="draw_community_card"
-        disabled={is_nil(@game)}
-        style={
-    "padding: 10px 20px; background-color: #26C6DA; color: white; border: none; border-radius: 5px; " <>
-    "cursor: #{if is_nil(@game), do: "not-allowed", else: "pointer"};"
-    }
-      >
-        Draw Community Card
-      </button>
-
-      <button
-        phx-click="draw_chance_card"
-        disabled={is_nil(@game)}
-        style={
-    "padding: 10px 20px; background-color: rgb(38, 218, 98); color: white; border: none; border-radius: 5px; " <>
-    "cursor: #{if is_nil(@game), do: "not-allowed", else: "pointer"};"
-    }
-      >
-        Draw Chance Card
-      </button>
-
-      <button
-        phx-click="store_card"
-        disabled={is_nil(@active_card)}
-        style={
-    "padding: 10px 20px; background-color: rgb(191, 218, 38); color: white; border: none; border-radius: 5px; " <>
-    "cursor: #{if is_nil(@active_card), do: "not-allowed", else: "pointer"};"
-    }
-      >
-        Store Card
-      </button>
-
-      <button
-        phx-click="use_stored_card"
-        disabled={is_nil(@game)}
-        style={
-    "padding: 10px 20px; background-color: rgb(218, 119, 38); color: white; border: none; border-radius: 5px; " <>
-    "cursor: #{if is_nil(@game), do: "not-allowed", else: "pointer"};"
-    }
-      >
-        Use Stored Card
-      </button>
-
-      <button
-        phx-click="use_card"
-        disabled={is_nil(@active_card)}
-        style={
-    "padding: 10px 20px; background-color: rgb(218, 170, 38); color: white; border: none; border-radius: 5px; " <>
-    "cursor: #{if is_nil(@active_card), do: "not-allowed", else: "pointer"};"
-    }
-      >
-        Use Card Effect
-      </button>
-    </div>
-
-    <p><strong>Simulation:</strong> {@message || "No simulation triggerd yet."}</p>
-     <hr style="margin-bottom: 10px;" />
+    <hr style="margin-bottom: 30px; margin-top: 30px;" />
     <%= if @game do %>
-      <h3 style="margin-top: 30px; font-size: 24px;">Game State</h3>
+      <%= if @game.winner do %>
+        <h1>Winner: {@game.winner.name}</h1>
+      <% end %>
 
-      <p><strong>Turn:</strong> {@game.turn}</p>
-
-      <h4 style="font-size: 20px;">Players:</h4>
+      <h1 style="font-size: 40px">Simulated Lobby - Player List:</h1>
 
       <ul>
         <%= for player <- @game.players do %>
           <li>
-            ID: {player.id},
-            ${player.money},
-            Position: {player.position},
-            In Jail: {player.in_jail},
-            Cards: {Enum.map(player.cards, & &1.name) |> Enum.join(", ")}
+            <strong>
+              {player.name} - Sprite: {player.sprite_id}
+              <%= if player.id == @session_id do %>
+                ⬅️ <span> Current Session </span>
+              <% end %>
+            </strong>
           </li>
+          Session ID: {player.id} <br /> <hr />
+          <div style="margin-bottom: 20px; display: flex; gap:100px">
+            <div>
+              Position: {player.position} <br /> Money: {player.money} <br />
+              Card #: {length(player.cards)}
+            </div>
+
+            <div>
+              Double Count: {player.turns_taken} <br /> In Jail: {player.in_jail} <br />
+              Active: {player.active}
+            </div>
+          </div>
+
+          <%= for prop <- player.properties do %>
+            <li>
+              {prop.name} - {prop.type}
+            </li>
+          <% end %>
         <% end %>
       </ul>
-
-      <h4 style="font-size: 20px;">Current Player:</h4>
 
       <%= if @game.current_player do %>
-        <p>
-          ID: {@game.current_player.id},
-          ${@game.current_player.money},
-          Position: {@game.current_player.position}
-        </p>
-      <% else %>
-        <p>None yet</p>
+        <hr \ />
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+          <!-- Roll Dice -->
+          <button
+            phx-click="roll_dice"
+            disabled={@button_states.roll_dice}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if @button_states.roll_dice, do: "#aaa", else: "#1E88E5"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if @button_states.roll_dice, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            Roll Dice
+          </button>
+
+    <!-- Buy Properties -->
+          <button
+            phx-click="buy_property"
+            disabled={@button_states.buy_property}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if @button_states.buy_property, do: "#aaa", else: "#F4511E"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if @button_states.buy_property, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            Buy Properties
+          </button>
+
+    <!-- Upgrade -->
+          <button
+            phx-click="upgrade-property"
+            disabled={@button_states.upgrade}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if @button_states.upgrade, do: "#aaa", else: "#6D4C41"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if @button_states.upgrade, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            Upgrade
+          </button>
+
+    <!-- Downgrade -->
+          <button
+            phx-click="downgrade"
+            disabled={@button_states.downgrade}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if @button_states.downgrade, do: "#aaa", else: "#8E24AA"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if @button_states.downgrade, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            Downgrade
+          </button>
+
+    <!-- End Turn -->
+          <button
+            phx-click="end_turn"
+            phx-value-session_id={@session_id}
+            disabled={@button_states.end_turn}
+            style={
+        "padding: 10px 20px; " <>
+        "background-color: #{if @button_states.end_turn, do: "#aaa", else: "#546E7A"}; " <>
+        "color: white; border: none; border-radius: 5px; " <>
+        "cursor: #{if @button_states.end_turn, do: "not-allowed", else: "pointer"};"
+        }
+          >
+            End Turn
+          </button>
+        </div>
+        <hr style="margin-top: 20px" />
+        <h2 style="font-size: 40px">Turn: {@game.turn}</h2>
+        <hr />
+        <h4 style="font-size: 40px">Current Player:</h4>
+        <hr /> Session ID: {@game.current_player.id}
+        <%= if @game.current_player.id == @session_id do %>
+          ⬅️ <span style="font-weight: 800;"> My Turn </span>
+        <% end %>
+
+        <div style="margin-bottom: 20px; display: flex; gap:100px">
+          <div>
+            Position: {@game.current_player.position} <br /> Money: {@game.current_player.money}
+            <br /> Card #: {length(@game.current_player.cards)}
+          </div>
+
+          <div>
+            Double Count: {@game.current_player.turns_taken} <br />
+            In Jail: {@game.current_player.in_jail} <br /> Active: {@game.current_player.active}
+          </div>
+          Rolled: {@game.current_player.rolled}
+        </div>
+
+        <%= for prop <- @game.current_player.properties do %>
+          {prop.name} - {prop.type}
+        <% end %>
+        <hr />
+        <h4 style="font-size: 40px; margin-top: 20px">Active card:</h4>
+        <hr />
+        <%= if @game.active_card do %>
+          <span>{@game.active_card.name}</span> <br /> <span>{@game.active_card.type}</span> <br />
+          <span>{format_effect(@game.active_card.effect)}</span> <br />
+        <% end %>
+        <hr />
+        <h4 style="font-size: 40px; margin-top: 20px">Properties:</h4>
+        <hr />
+        <ul>
+          <%= for prop <- @game.properties do %>
+            <li>
+              <h2 style="font-size: 30px; margin-top: 20px">{prop.id}: {prop.name} ({prop.type})</h2>
+              Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ />
+              Upgrade: {prop.upgrades} <br \ /> Owner:
+              <span style="font-weight: 800">{if prop.owner, do: prop.owner.name, else: "None"}</span>
+              <span style="font-weight: 800">({if prop.owner, do: prop.owner.id, else: "None"})</span>
+            </li>
+          <% end %>
+        </ul>
+
+        <h4 style="font-size: 40px; margin-top: 20px">Active Card:</h4>
+
+        <h4 style="font-size: 40px; margin-top: 20px">Deck:</h4>
+
+        <ul>
+          <%= for card <- @game.deck || [] do %>
+            <li>
+              {card.name} - {card.type} - {format_effect(card.effect)}
+            </li>
+          <% end %>
+        </ul>
       <% end %>
-
-      <h4 style="font-size: 20px;">Properties:</h4>
-
-      <ul>
-        <%= for prop <- @game.properties do %>
-          <li>
-            {prop.name} - {prop.type} - Cost: ${prop.buy_cost},
-            Rent: {inspect(prop.rent_cost)},
-            Owner: {if prop.owner, do: inspect(prop.owner), else: "None"}
-          </li>
-        <% end %>
-      </ul>
-
-      <h4 style="font-size: 20px;">Deck:</h4>
-
-      <ul>
-        <%= for card <- @game.deck || [] do %>
-          <li>
-            {card.name} - {card.type} - {format_effect(card.effect)}
-          </li>
-        <% end %>
-      </ul>
     <% end %>
     """
   end
