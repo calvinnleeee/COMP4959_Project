@@ -1,5 +1,6 @@
 defmodule GameObjects.Game do
   @moduledoc """
+<<<<<<< HEAD
   This module represents the Game object, which holds vital state information and defines
   the methods for handling game logic.
   """
@@ -38,13 +39,39 @@ defmodule GameObjects.Game do
 
   ##############################################################
   # Public API functions
+=======
+  This module represents the Game object, which contains vital data and methods to run it.
+
+  `players` is a list of GameObjects.Player structs.
+  """
+  require Logger
+  use GenServer
+  alias GameObjects.{Deck, Player, Property}
+
+  # CONSTANTS HERE
+  # ETS table defined in application.ex
+  @game_store Game.Store
+  @max_player 6
+
+  # Game struct definition
+  # properties and players are both lists of their respective structs
+  defstruct [:state, :players, :properties, :deck, :current_player, :active_card, :turn]
+
+  # ---- Public API functions ----
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
+<<<<<<< HEAD
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and web socket.
+=======
+
+  # Initialize a new Player instance and add it to the Game.
+  # Assumes the player's client will have a PID and Web socket.
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   def join_game(session_id) do
     GenServer.call(__MODULE__, {:join_game, session_id})
   end
@@ -59,7 +86,10 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :start_game)
   end
 
+<<<<<<< HEAD
   # Delete the active game instance from the ETS table.
+=======
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   def delete_game() do
     GenServer.call(__MODULE__, :delete_game)
   end
@@ -69,6 +99,7 @@ defmodule GameObjects.Game do
     GenServer.call(__MODULE__, :get_state)
   end
 
+<<<<<<< HEAD
   # End the current player's turn.
   def end_turn(session_id) do
     GenServer.call(__MODULE__, {:end_turn, session_id})
@@ -105,6 +136,11 @@ defmodule GameObjects.Game do
   end
 
   # Initialization implementation for the GenServer.
+=======
+  # ---- Private functions & GenServer Callbacks ----
+
+
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   @impl true
   def init(_) do
     unless :ets.whereis(@game_store) != :undefined do
@@ -114,6 +150,7 @@ defmodule GameObjects.Game do
     {:ok, %{}}
   end
 
+<<<<<<< HEAD
   ##############################################################
   # Player-related handlers
 
@@ -160,30 +197,65 @@ defmodule GameObjects.Game do
               {:reply, {:err, "Game has already started"}, existing_game}
             end
           end
+=======
+  # Create game if it does not exist. Join if it already exists
+  @impl true
+  def handle_call({:join_game, session_id}, _from, state) do
+    new_player = %Player{
+      id: session_id,
+      money: 200,
+      position: 0,
+      sprite_id: 0, # TODO: Randomly assign value
+      cards: [],
+      in_jail: false,
+      jail_turns: 0
+    }
+
+    case :ets.lookup(@game_store, :game) do
+      # If the game already exists
+      [{:game, existing_game}] ->
+        if length(existing_game.players) >= @max_player do
+          {:reply, {:err, "Maximum 6 Players"}, state}
+        else
+          # Add player to the existing game
+          updated_game = update_in(existing_game.players, &[new_player | &1])
+          :ets.insert(@game_store, {:game, updated_game})
+          {:reply, {:ok, updated_game}, updated_game}
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
         end
 
       # If the game doesn't exist
       [] ->
+<<<<<<< HEAD
         name = "Player 1"
         sprite_id = 0
         new_player = GameObjects.Player.new(session_id, name, sprite_id)
 
+=======
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
         new_game = %__MODULE__{
           players: [new_player],
           properties: [],
           deck: nil,
           current_player: nil,
           active_card: nil,
+<<<<<<< HEAD
           winner: nil,
+=======
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
           turn: 0
         }
 
         :ets.insert(@game_store, {:game, new_game})
+<<<<<<< HEAD
         MonopolyWeb.Endpoint.broadcast("game_state", "game_update", new_game)
+=======
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
         {:reply, {:ok, new_game}, new_game}
     end
   end
 
+<<<<<<< HEAD
   @doc """
     Rolls the dice for the current player, defers the handling logic to another
     function depending on the player's current position (whether in jail or not).
@@ -677,17 +749,38 @@ defmodule GameObjects.Game do
 
     Replies with :ok and the current game.
   """
+=======
+
+  # Remove player from the game.
+  # Updates the state in ETS
+  @impl true
+  def handle_call({:leave_game, session_id}, _from, state) do
+    updated_state =
+      update_in(state.players, fn players ->
+        Enum.reject(players, fn player -> player.id == session_id end)
+      end)
+
+    :ets.insert(@game_store, {:game, updated_state})
+    {:reply, {:ok, updated_state}, updated_state}
+  end
+
+  # Get current game state.
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   @impl true
   def handle_call(:get_state, _from, state) do
     {:reply, {:ok, state}, state}
   end
 
+<<<<<<< HEAD
   @doc """
     Starts the game if there are enough players. Initializes the struct's missing
     values.
 
     Replies with :ok and the updated game state if successful, else :err with the reason.
   """
+=======
+  # Start the game
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   @impl true
   def handle_call(:start_game, _from, state) do
     if length(state.players) > 1 do
@@ -695,18 +788,25 @@ defmodule GameObjects.Game do
       updated_cards = put_in(updated_players.deck, Deck.init_deck())
       updated_state = put_in(updated_cards.properties, Property.init_property_list())
       :ets.insert(@game_store, {:game, updated_state})
+<<<<<<< HEAD
       MonopolyWeb.Endpoint.broadcast("game_state", "game_update", updated_state)
+=======
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
       {:reply, {:ok, updated_state}, updated_state}
     else
       {:reply, {:err, "Need at least 2 players"}, state}
     end
   end
 
+<<<<<<< HEAD
   @doc """
     Deletes the game from the ETS table if it exists.
 
     Replies with :ok and an empty game if successful, else :err with a reason.
   """
+=======
+  # Delete the game
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   @impl true
   def handle_call(:delete_game, _from, _state) do
     case :ets.lookup(@game_store, :game) do
@@ -721,6 +821,7 @@ defmodule GameObjects.Game do
     end
   end
 
+<<<<<<< HEAD
   # Update game state with property upgrade and reduced player money
   # takes a whole property object
   @impl true
@@ -1075,6 +1176,9 @@ defmodule GameObjects.Game do
   @doc """
     Saves the current game state in the event the server crashes or terminates.
   """
+=======
+  # Terminate and save state on failure.
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
   @impl true
   def terminate(_reason, state) do
     :ets.insert(@game_store, {:game, state})
