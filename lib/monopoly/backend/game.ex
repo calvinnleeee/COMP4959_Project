@@ -111,6 +111,7 @@ defmodule GameObjects.Game do
 
   # Initialization implementation for the GenServer.
 
+
   @impl true
   def init(_) do
     unless :ets.whereis(@game_store) != :undefined do
@@ -170,7 +171,6 @@ defmodule GameObjects.Game do
 
       # If the game doesn't exist
       [] ->
-
         name = "Player 1"
         sprite_id = 0
         new_player = GameObjects.Player.new(session_id, name, sprite_id)
@@ -707,7 +707,7 @@ defmodule GameObjects.Game do
     else
       {:reply, {:err, "Need at least 2 players"}, state}
     end
-  end
+end
 
   @doc """
     Deletes the game from the ETS table if it exists.

@@ -155,7 +155,6 @@ defmodule MonopolyWeb.GameLive do
     })}
   end
 
-
   # event handler for buy modal
   def handle_event("buy_property", _params, socket) do
     property = socket.assigns.current_property
@@ -177,7 +176,6 @@ defmodule MonopolyWeb.GameLive do
   def handle_event("cancel_buying", _params, socket) do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
-
   def render(assigns) do
     ~H"""
     <div class="game-container">
@@ -191,7 +189,6 @@ defmodule MonopolyWeb.GameLive do
         result={@jail_notification}
       />
       <% else %>
-
       <!-- Placeholder for game board -->
         <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
           Game board will be here
@@ -213,7 +210,6 @@ defmodule MonopolyWeb.GameLive do
         />
 
       <% end %>
-
           <!-- Modal for buying property : @id or "buy-modal"-->
           <%= if @show_buy_modal && @current_property do %>
             <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}

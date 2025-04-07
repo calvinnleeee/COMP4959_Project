@@ -30,6 +30,15 @@ defmodule MonopolyWeb.Router do
 
     live "/testing/backend", BackendTestingLive
 
+<<<<<<< HEAD
+=======
+    get "/", PageController, :home
+
+    live "/game", GameLive, :index
+    live "/game/:id", GameLive, :show
+
+
+>>>>>>> 0d9b4702e5c9d9c1f2bb954d57a740659d7572a4
   end
 
   # Other scopes may use custom stacks.
