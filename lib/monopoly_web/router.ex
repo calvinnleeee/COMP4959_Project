@@ -17,15 +17,14 @@ defmodule MonopolyWeb.Router do
   scope "/", MonopolyWeb do
     pipe_through :browser
 
+    # get "/", PageController, :home
     live "/", WelcomeLive, :index
 
     live "/game-dummy", GameDummy, :index # dummy screen to redirect to after "Start Game" button is clicked
 
-    live "/game", GameLive, :index
-    live "/game/:id", GameLive, :show
+    live "/game", GameLive
 
     live "/testmodal", TestModalLive, :show
-
 
     live "/testing/backend", BackendTestingLive
   end

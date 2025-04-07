@@ -23,7 +23,7 @@ defmodule MonopolyWeb.Components.BuyModal do
         </p>
         <!-- property image -->
         <div class="flex gap-4">
-          <button phx-click="buy_property" class="btn btn-primary">
+          <button phx-click="buy_prop" class="btn btn-primary">
             Buy
           </button>
           <button phx-click="cancel_buying" class="btn btn-secondary">

@@ -49,7 +49,7 @@ defmodule MonopolyWeb.WelcomeLive do
     # Otherwise, do nothing and keep the user on the current page.
     socket =
       if state.current_player != nil do
-        push_navigate(socket, to: "/game-dummy")
+        push_navigate(socket, to: "/game")
       else
         socket
       end

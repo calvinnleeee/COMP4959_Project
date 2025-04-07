@@ -1,128 +1,285 @@
 defmodule MonopolyWeb.GameLive do
+  @moduledoc """
+  The VHM board which communicates with the backend Game server.
+  """
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.BuyModal
+  alias GameObjects.Game
 
-  def mount(_params, session, socket) do
-    # For development/testing purpose, use sample data
-    # In production this would integrate with GameObjects.Game
-    session_id = Map.get(session, "session_id", "player-1")
+  # Connect the player, sub to necessary PubSubs
+  # State includes the game state, player's struct, which buttons are enabled,
+  # and dice-related values
+  def mount(_params, _session, socket) do
+    # Subscribe to the backend game state updates
+    Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
+    {:ok, game} = Game.get_state()
 
-    # Create sample player and game data
-    sample_player = create_sample_player(session_id)
-    sample_game = create_sample_game(sample_player)
-    sample_properties = create_sample_properties()
-
-    {:ok, assign(socket,
-      game: sample_game,
-      current_player: sample_player,
-      player_properties: sample_properties,
-      session_id: session_id,
-      dice_result: nil,
-      dice_values: nil,
-      is_doubles: false,
-      doubles_count: 0,
-      doubles_notification: nil,
-      jail_notification: nil,
-      show_buy_modal: false,
-      current_property: nil
-    )}
+    {
+      :ok,
+      assign(
+        socket,
+        game: game,
+        id: nil,
+        roll: false,
+        end_turn: false,
+        dice_result: nil,
+        dice_values: nil,
+        is_doubles: false,
+        doubles_notification: nil,
+        jail_notification: nil,
+        show_buy_modal: false
+      )
+    }
   end
 
-  def handle_params(%{"id" => _id}, _uri, socket) do
-    # In a real app, fetch the specific game by ID
-    # For now just use the sample game from mount
-    {:noreply, socket}
-  end
+  # Handle session_id coming from JS hook via pushEvent
+  def handle_event("set_session_id", %{"id" => id}, socket) do
+    game = socket.assigns.game
+    player = Enum.find(game.players, fn player -> player.id == id end)
+    property = Enum.at(game.properties, player.position)
 
-  def handle_params(_params, _uri, socket) do
-    # Index route with no ID
-    {:noreply, socket}
-  end
-
-  def handle_event("roll_dice", _params, socket) do
-    # Use backend's Dice module to roll the dice
-    {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
-
-    # Get current doubles count or initialize to 0
-    current_doubles_count = Map.get(socket.assigns, :doubles_count, 0)
-
-    # Calculate new doubles count
-    new_doubles_count = if is_doubles, do: current_doubles_count + 1, else: 0
-
-    # Get previous rolls for jail check or initialize to empty list
-    previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
-
-
-    # Check if player goes to jail (3 consecutive doubles)
-    # Using the backend's check_for_jail function
-    goes_to_jail = GameObjects.Dice.check_for_jail(previous_rolls, {{die1, die2}, sum, is_doubles})
-
-    # Add current roll to the beginning of the list (most recent first)
-    updated_rolls = [{{die1, die2}, sum, is_doubles} | previous_rolls]
-
-    # Get current player
-    current_player = socket.assigns.current_player
-
-    # Update player state
-    updated_player = current_player
-      |> Map.put(:has_rolled, !is_doubles || goes_to_jail) # Only mark as rolled if not doubles or going to jail
-      |> Map.put(:in_jail, goes_to_jail || current_player.in_jail)
-      |> Map.put(:jail_turns, if(goes_to_jail, do: 1, else: current_player.jail_turns))
-
-    # Prepare notifications
-    jail_notification = if goes_to_jail, do: "You rolled doubles 3 times in a row! Go to jail!", else: nil
-    doubles_notification = if is_doubles && !goes_to_jail, do: "You rolled doubles! Roll again.", else: nil
-
-    # Create updated socket with all assigns explicitly defined
-    {:noreply, assign(socket, %{
-      current_player: updated_player,
-      dice_result: sum,
-      dice_values: {die1, die2},
-      is_doubles: is_doubles,
-      doubles_count: new_doubles_count,
-      previous_rolls: updated_rolls,
-      jail_notification: jail_notification,
-      doubles_notification: doubles_notification
-    })}
-  end
-
-
-  def handle_event("end_turn", _params, socket) do
-    # Reset the has_rolled status and clear dice results
-    updated_player = Map.put(socket.assigns.current_player, :has_rolled, false)
-
-    # Use explicit assign with a map to ensure all values are properly set
-    {:noreply, assign(socket, %{
-      current_player: updated_player,
-      dice_result: nil,
-      dice_values: nil,
-      is_doubles: false,
-      doubles_count: 0,
-      doubles_notification: nil,
-      jail_notification: nil
-    })}
-  end
-
-  # event handler for buy modal
-  def handle_event("buy_property", _params, socket) do
-    id = socket.assigns.id
-    player = socket.assigns.game.current_player
-    property = socket.assigns.current_property
-
-    
-    if player.id == id do
-      {:ok, updated_game} = Game.buy_property(id, property)
-      {:noreply, assign(socket, %{
-          game: updated_game,
-          show_buy_modal: false,
-          current_property: nil,
-          buy_prop: buyable(Enum.at(updated_game.properties, player.position), player),
-          sell_prop: sellable(Enum.at(updated_game.properties, player.position), player),
-          })}
+    # Re-activate player if they are reconnecting
+    game =
+      if !player.active do
+        {:ok, new_game} = Game.join_game(id)
+        new_game
       else
-        {:noreply, socket}
+        game
+      end
+
+    {
+      :noreply,
+      assign(
+        socket,
+        game: game,
+        id: id,
+        roll: game.current_player.id == id && !game.current_player.rolled,
+        upgrade_prop: upgradeable(property, player),
+        sell_prop: sellable(property, player),
+        end_turn: game.current_player.id == id
+      )
+    }
+  end
+
+  # Check if property is unowned
+  defp buyable(property, player) do
+    property.owner == nil &&
+      property.buy_cost != nil &&
+      property.buy_cost <= player.money
+  end
+
+  # Check if property owned by player and upgradeable
+  defp upgradeable(property, player) do
+    property.owner != nil &&
+      property.owner.id == player.id &&
+      property.house_price != nil &&
+      cond do
+        0 < property.upgrades < length(property.rent_cost) - 2 ->
+          property.house_price < player.money
+
+        property.upgrades == length(property.rent_cost) - 2 ->
+          property.hotel_price < player.money
+
+        true ->
+          false
+      end
+  end
+
+  # Check if property is owned by player
+  defp sellable(property, player) do
+    property.owner != nil && property.owner.id == player.id
+  end
+
+  # If it is now the user's turn, enable necessary buttons
+  def handle_info(%{event: "turn_ended", payload: game}, socket) do
+    if game.current_player.id == socket.assigns.id do
+      player = game.current_player
+      property = Enum.at(game.properties, player.position)
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          roll: true,
+          upgrade_prop: upgradeable(property, player),
+          sell_prop: sellable(property, player),
+          end_turn: true
+        )
+      }
+    else
+      {:noreply, assign(socket, game: game)}
+    end
+  end
+
+  # All other events can be handled the same
+  def handle_info(%{event: _, payload: game}, socket) do
+    {:noreply, assign(socket, game: game)}
+  end
+
+  # TODO: display acquired card on screen
+  defp display_card(card) do
+    nil
+  end
+
+  # When starting turn, player first clicks roll dice button
+  def handle_event("roll_dice", _params, socket) do
+    assigns = socket.assigns
+    id = assigns.id
+    player = assigns.game.current_player
+
+    # Verify that it is the player's turn and they can roll
+    if player.id == id && assigns.roll do
+      # Check if player is currently in jail
+      was_jailed = player.in_jail
+
+      # Call the backend roll_dice endpoint
+      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
+        Game.roll_dice(id)
+
+      # If player got an instant-play card, display it
+      card = new_game.active_card
+      if card != nil && Enum.at(card.effect, 0) != "get_out_of_jail" do
+        display_card(card)
+      end
+
+      # Prepare notifications
+      player = new_game.current_player
+
+      jail_notification =
+        if player.turns_taken == 3 do
+          "You rolled doubles 3 times in a row! Go to jail!"
+        else
+          nil
+        end
+
+      doubles_notification =
+        if double && !player.in_jail && !was_jailed do
+          "You rolled doubles! Roll again."
+        else
+          nil
+        end
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: new_game,
+
+          # If player did not roll doubles, or is/was in jail, disable rolling dice
+          roll: !player.rolled && !player.in_jail,
+          upgrade_prop: upgradeable(new_loc, player),
+          sell_prop: sellable(new_loc, player),
+          end_turn: player.rolled || player.in_jail,
+
+          # Dice results for dashboard
+          dice_result: sum,
+          dice_values: dice,
+          is_doubles: double,
+
+          # Notifications for dashboard
+          jail_notification: jail_notification,
+          doubles_notification: doubles_notification,
+
+          show_buy_modal: buyable(new_loc, player)
+        )
+      }
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Player buys or upgrades property they are on
+  def handle_event("buy_prop", _params, socket) do
+    assigns = socket.assigns
+    id = assigns.id
+    player = assigns.game.current_player
+
+    # Verify that it is the player's turn and they can buy
+    if player.id == id && assigns.show_buy_modal do
+      # Buy the property and get new game state
+      {:ok, game} =
+        Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          # Check if player can afford further upgrades
+          upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
+          sell_prop: true,
+          show_buy_modal: false
+        )
+      }
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Player sells or downgrades property they are on
+  def handle_event("sell_prop", _params, socket) do
+    assigns = socket.assigns
+    id = assigns.id
+    player = assigns.game.current_player
+
+    # Verify that it is the player's turn and they can downgrade the prop
+    if player.id == id && assigns.downgrade_prop do
+      # Downgrade the property and get new game state
+      {:ok, game} =
+        Game.downgrade_property(
+          id,
+          Enum.at(assigns.game.properties, player.position)
+        )
+
+      property = Enum.at(assigns.game.properties, player.position)
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          upgrade_prop: upgradeable(property, player),
+          # Check if property can be further downgraded
+          sell_prop: sellable(property, player)
+        )
+      }
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # End the turn
+  def handle_event("end_turn", _params, socket) do
+    assigns = socket.assigns
+    id = assigns.id
+
+    # Verify that it is the player's turn
+    if assigns.game.current_player.id == id do
+      # Call backend to end the turn and get new game state
+      {:ok, game} = Game.end_turn(id)
+
+      # Disable all buttons
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          roll: false,
+          upgrade_prop: false,
+          sell_prop: false,
+          end_turn: false,
+          dice_result: nil,
+          dice_values: nil,
+          is_doubles: false,
+          doubles_notification: nil,
+          jail_notification: nil
+        )
+      }
+    else
+      {:noreply, socket}
     end
   end
 
@@ -130,105 +287,75 @@ defmodule MonopolyWeb.GameLive do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
 
+  def get_properties(players, id) do
+    if id == nil do
+      []
+    else
+      Enum.find(players, fn player -> player.id == id end).properties
+    end
+  end
+
+  def get_doubles(players, id) do
+    if id == nil do
+      []
+    else
+      Enum.find(players, fn player -> player.id == id end).turns_taken
+    end
+  end
 
   def render(assigns) do
+    # TODO: buttons
+    # - Buy house
+    # - Sell house
     ~H"""
+    <div id="session-id-hook" phx-hook="SessionId"></div>
+
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-      <!-- Placeholder for game board -->
+    <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
-        <%= if @current_player.in_jail do %>
+        <%= if @game.current_player.in_jail do %>
           <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            IN JAIL (Turn <%= @current_player.jail_turns %>)
+            IN JAIL (Turn {@game.current_player.jail_turns})
           </div>
         <% end %>
       </div>
 
-      <!-- Player dashboard with dice results and all notifications -->
+    <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
-        player={@current_player}
-        current_player_id={@current_player.id}
-        properties={@player_properties}
+        player={@game.current_player}
+        current_player_id={@game.current_player.id}
+        properties={get_properties(@game.players, @id)}
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
         dice_result={@dice_result}
         dice_values={@dice_values}
         is_doubles={@is_doubles}
         doubles_notification={@doubles_notification}
-        doubles_count={@doubles_count}
+        doubles_count={get_doubles(@game.players, @id)}
         jail_notification={@jail_notification}
+        roll={@roll}
+        end_turn={@end_turn}
       />
 
-      <!-- Modal for buying property : @id or "buy-modal"-->
-      <%= if @show_buy_modal && @current_property do %>
-        <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
-          class="buy" on_cancel={hide_modal("buy-modal")}/>
+    <!-- Modal for buying property : @id or "buy-modal"-->
+      <%= if @show_buy_modal do %>
+        <.buy_modal
+          id="buy-modal"
+          show={@show_buy_modal}
+          property={Enum.at(@game.properties, @game.current_player.position)}
+          on_cancel={hide_modal("buy-modal")}
+        />
       <% end %>
-
     </div>
     """
   end
 
-  # Sample data generation for testing UI
-
-  def create_sample_player(id) do
-    %{
-      id: id,
-      name: "Player #{String.last(id)}",
-      sprite_id: 0,
-      money: 1500,
-      position: 0,
-      cards: [
-        %{
-          id: "get-out-of-jail-1",
-          name: "Get Out of Jail Free",
-          type: "chance",
-          effect: {:get_out_of_jail, true},
-          owned: true
-        }
-      ],
-      in_jail: false,
-      jail_turns: 0,
-      has_rolled: false
-    }
-  end
-
-  def create_sample_game(current_player) do
-    %{
-      players: [current_player],
-      current_player: current_player,
-      properties: [],
-      deck: nil,
-      turn: 0
-    }
-  end
-
-  def create_sample_properties do
-    [
-      %{
-        id: 1,
-        name: "Boardwalk",
-        type: "dark_blue",
-        buy_cost: 400,
-        rent_cost: [50, 200, 600, 1400, 1700, 2000],
-        upgrades: 0,
-        house_price: 200,
-        hotel_price: 200,
-        owner: "player-1"
-      },
-      %{
-        id: 2,
-        name: "Park Place",
-        type: "dark_blue",
-        buy_cost: 350,
-        rent_cost: [35, 175, 500, 1100, 1300, 1500],
-        upgrades: 3,
-        house_price: 200,
-        hotel_price: 200,
-        owner: "player-1"
-      }
-    ]
+  # Remove user from game
+  def terminate(_reason, socket) do
+    Game.set_player_inactive(socket.assigns.id)
+    :ok
   end
 end

@@ -15,6 +15,8 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   attr :doubles_notification, :string, default: nil, doc: "Notification for doubles"
   attr :doubles_count, :integer, default: 0, doc: "Count of consecutive doubles"
   attr :jail_notification, :string, default: nil, doc: "Notification for jail"
+  attr :roll, :boolean, default: false, doc: "Whether player can roll dice"
+  attr :end_turn, :boolean, default: false, doc: "Whether player can end their turn"
 
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
@@ -50,7 +52,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
         <div class="dashboard-actions">
           <button
             phx-click={@on_roll_dice}
-            disabled={@player.id != @current_player_id || Map.get(@player, :has_rolled, false) || @player.in_jail}
+            disabled={not @roll}
             class="roll-dice-btn">
             <.icon name="hero-cube" class="h-4 w-4" />
             Roll Dice
@@ -58,7 +60,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
 
           <button
             phx-click={@on_end_turn}
-            disabled={@player.id != @current_player_id || !Map.get(@player, :has_rolled, false)}
+            disabled={not @end_turn}
             class="end-turn-btn">
             <.icon name="hero-arrow-right" class="h-4 w-4" />
             End Turn
