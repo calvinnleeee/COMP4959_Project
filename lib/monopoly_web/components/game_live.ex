@@ -191,6 +191,7 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+
   # Player buys or upgrades property they are on
   def handle_event("buy_prop", _params, socket) do
     assigns = socket.assigns
@@ -313,11 +314,15 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
       <%= if @current_player.in_jail do %>
-        <.jail_screen player={@current_player} current_player_id={@current_player.id}
-          on_roll_dice={JS.push("jail_roll_dice")}
-          dice={@dice_values}
-          result={@dice_result} />
-        <% else %>
+      <.jail_screen
+        player={@current_player}
+        current_player_id={@current_player.id}
+        on_roll_dice={JS.push("jail_roll")}
+        dice={@dice_values}
+        result={@jail_notification}
+      />
+      <% else %>
+
       <!-- Placeholder for game board -->
         <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
           Game board will be here
@@ -336,6 +341,8 @@ defmodule MonopolyWeb.GameLive do
           doubles_notification={@doubles_notification}
           doubles_count={@doubles_count}
           jail_notification={@jail_notification}
+          roll={@roll}
+          end_turn={@end_turn}
         />
 
       <% end %>

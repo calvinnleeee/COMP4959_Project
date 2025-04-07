@@ -2,6 +2,7 @@ defmodule GameObjects.Player do
   @moduledoc """
   This module represents a player and their attributes.
 
+<<<<<<< HEAD
   id: session id of the player.
   name: name of the player.
   money: amount of money the player has.
