@@ -1,9 +1,5 @@
 defmodule GameObjects.Property do
-<<<<<<< HEAD
   alias GameObjects.Player
-
-=======
->>>>>>> 0d9b4702e5c9d9c1f2bb954d57a740659d7572a4
   @moduledoc """
   This modules represents Properties. this module contains what a property can do and have
 
