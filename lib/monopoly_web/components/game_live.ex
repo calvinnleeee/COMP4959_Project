@@ -29,9 +29,7 @@ defmodule MonopolyWeb.GameLive do
         is_doubles: false,
         doubles_notification: nil,
         jail_notification: nil,
-        show_buy_modal: false,
-        # TODO: integrate this with divergent changes
-        current_property: nil
+        show_buy_modal: false
       )
     }
   end
@@ -58,7 +56,6 @@ defmodule MonopolyWeb.GameLive do
         game: game,
         id: id,
         roll: game.current_player.id == id && !game.current_player.rolled,
-        buy_prop: buyable(property, player),
         upgrade_prop: upgradeable(property, player),
         sell_prop: sellable(property, player),
         end_turn: game.current_player.id == id
@@ -107,7 +104,6 @@ defmodule MonopolyWeb.GameLive do
           socket,
           game: game,
           roll: true,
-          buy_prop: buyable(property, player),
           upgrade_prop: upgradeable(property, player),
           sell_prop: sellable(property, player),
           end_turn: true
@@ -172,7 +168,6 @@ defmodule MonopolyWeb.GameLive do
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
-          buy_prop: buyable(new_loc, player),
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: !player.rolled || player.in_jail,
@@ -184,7 +179,9 @@ defmodule MonopolyWeb.GameLive do
 
           # Notifications for dashboard
           jail_notification: jail_notification,
-          doubles_notification: doubles_notification
+          doubles_notification: doubles_notification,
+
+          show_buy_modal: buyable(new_loc, player)
         )
       }
     else
@@ -199,7 +196,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can buy
-    if player.id == id && assigns.buy_prop do
+    if player.id == id && assigns.show_buy_modal do
       # Buy the property and get new game state
       {:ok, game} =
         Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
@@ -209,10 +206,10 @@ defmodule MonopolyWeb.GameLive do
         assign(
           socket,
           game: game,
-          buy_prop: false,
           # Check if player can afford further upgrades
           upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
-          sell_prop: true
+          sell_prop: true,
+          show_buy_modal: false
         )
       }
     else
@@ -242,7 +239,6 @@ defmodule MonopolyWeb.GameLive do
         assign(
           socket,
           game: game,
-          buy_prop: buyable(property, player),
           upgrade_prop: upgradeable(property, player),
           # Check if property can be further downgraded
           sell_prop: sellable(property, player)
@@ -270,7 +266,6 @@ defmodule MonopolyWeb.GameLive do
           socket,
           game: game,
           roll: false,
-          buy_prop: false,
           upgrade_prop: false,
           sell_prop: false,
           end_turn: false,
@@ -308,11 +303,8 @@ defmodule MonopolyWeb.GameLive do
 
   def render(assigns) do
     # TODO: buttons
-    # - Roll dice
-    # - Buy property
     # - Buy house
     # - Sell house
-    # - End turn
     ~H"""
     <div id="session-id-hook" phx-hook="SessionId"></div>
 
@@ -347,11 +339,11 @@ defmodule MonopolyWeb.GameLive do
       />
 
     <!-- Modal for buying property : @id or "buy-modal"-->
-      <%= if @show_buy_modal && @current_property do %>
+      <%= if @show_buy_modal do %>
         <.buy_modal
           id="buy-modal"
           show={@show_buy_modal}
-          property={@current_property}
+          property={Enum.at(@game.properties, @game.current_player.location)}
           on_cancel={hide_modal("buy-modal")}
         />
       <% end %>
