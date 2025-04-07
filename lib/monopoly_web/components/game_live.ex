@@ -15,7 +15,6 @@ defmodule MonopolyWeb.GameLive do
     # Subscribe to the backend game state updates
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     {:ok, game} = Game.get_state()
-    # IO.inspect(game)
 
     {
       :ok,
@@ -36,15 +35,15 @@ defmodule MonopolyWeb.GameLive do
   end
 
   # Handle session_id coming from JS hook via pushEvent
-  def handle_event("set_session_id", %{"id" => session_id}, socket) do
+  def handle_event("set_session_id", %{"id" => id}, socket) do
     game = socket.assigns.game
-    player = Enum.find(game.players, fn player -> player.id == session_id end)
+    player = Enum.find(game.players, fn player -> player.id == id end)
     property = Enum.at(game.properties, player.position)
 
     # Re-activate player if they are reconnecting
     game =
       if !player.active do
-        {:ok, new_game} = Game.join_game(session_id)
+        {:ok, new_game} = Game.join_game(id)
         new_game
       else
         game
@@ -55,32 +54,38 @@ defmodule MonopolyWeb.GameLive do
       assign(
         socket,
         game: game,
-        id: session_id,
-        roll: game.current_player.id == session_id && !game.current_player.rolled,
+        id: id,
+        roll: game.current_player.id == id && !game.current_player.rolled,
         buy_prop: buyable(property, player),
+        upgrade_prop: upgradeable(property, player),
         sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == session_id
+        end_turn: game.current_player.id == id
       )
     }
   end
 
-  # Check if property is unowned, or owned by player and upgradeable
+  # Check if property is unowned
   defp buyable(property, player) do
-    purchaseable = fn x, y ->
-      x.owner == nil && x.buy_cost != nil && x.buy_cost <= y.money
-    end
+    property.owner == nil &&
+      property.buy_cost != nil &&
+      property.buy_cost <= player.money
+  end
 
-    upgradeable = fn x, y ->
-      x.owner != nil && x.owner.id == y.id && x.house_price != nil &&
-        cond do
-          x.upgrades == 0 -> false
-          x.upgrades < length(x.rent_cost) - 2 -> x.house_price < y.money
-          x.upgrades == length(x.rent_cost) - 2 -> x.hotel_price < y.money
-          true -> false
-        end
-    end
+  # Check if property owned by player and upgradeable
+  defp upgradeable(property, player) do
+    property.owner != nil &&
+      property.owner.id == player.id &&
+      property.house_price != nil &&
+      cond do
+        0 < property.upgrades < length(property.rent_cost) - 2 ->
+          property.house_price < player.money
 
-    purchaseable.(property, player) || upgradeable.(property, player)
+        property.upgrades == length(property.rent_cost) - 2 ->
+          property.hotel_price < player.money
+
+        true ->
+          false
+      end
   end
 
   # Check if property is owned by player
@@ -148,6 +153,7 @@ defmodule MonopolyWeb.GameLive do
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
           buy_prop: buyable(new_loc, player),
+          upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: !player.rolled || player.in_jail,
 
@@ -183,8 +189,9 @@ defmodule MonopolyWeb.GameLive do
         assign(
           socket,
           game: game,
+          buy_prop: false,
           # Check if player can afford further upgrades
-          buy_prop: buyable(Enum.at(game.properties, player.position), player),
+          upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
           sell_prop: true
         )
       }
@@ -208,14 +215,17 @@ defmodule MonopolyWeb.GameLive do
           Enum.at(assigns.game.properties, player.position)
         )
 
+      property = Enum.at(assigns.game.properties, player.position)
+
       {
         :noreply,
         assign(
           socket,
           game: game,
-          buy_prop: true,
+          buy_prop: buyable(property, player),
+          upgrade_prop: upgradeable(property, player),
           # Check if property can be further downgraded
-          sell_prop: sellable(Enum.at(game.properties, player.position), player)
+          sell_prop: sellable(property, player)
         )
       }
     else
@@ -241,6 +251,7 @@ defmodule MonopolyWeb.GameLive do
           game: game,
           roll: false,
           buy_prop: false,
+          upgrade_prop: false,
           sell_prop: false,
           end_turn: false,
           dice_result: nil,
@@ -253,27 +264,6 @@ defmodule MonopolyWeb.GameLive do
     else
       {:noreply, socket}
     end
-  end
-
-  # event handler for buy modal
-  def handle_event("buy_property", _params, socket) do
-    property = socket.assigns.current_property
-    current_player = socket.assigns.current_player
-    update_player = Map.update!(current_player, :money, fn money -> money - property.buy_cost end)
-
-    {:noreply,
-     assign(socket, %{
-       current_player: update_player,
-       player_properties: property,
-       dice_result: nil,
-       dice_values: nil,
-       is_doubles: false,
-       doubles_count: 0,
-       doubles_notification: nil,
-       jail_notification: nil,
-       show_buy_modal: false,
-       current_property: nil
-     })}
   end
 
   def handle_event("cancel_buying", _params, socket) do
