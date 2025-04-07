@@ -191,6 +191,55 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+  def handle_event("jail_roll", _params, socket) do
+    # Use backend's Dice module to roll the dice
+    {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
+
+    # Get current player
+    current_player = socket.assigns.current_player
+
+    # Calculate new jail turns; if doubles then jail turns become 0,
+    # otherwise decrement jail_turns by 1
+    new_jail_turns = if is_doubles, do: 0, else: current_player.jail_turns - 1
+
+    # Determine if the player should remain in jail:
+    # If they rolled doubles or have exhausted their jail turns (i.e., new_jail_turns == 0),
+    # then they are no longer in jail.
+    in_jail = if is_doubles or new_jail_turns == 0, do: false, else: true
+
+    # Update player state
+    updated_player = current_player
+      |> Map.put(:has_rolled, true)
+      |> Map.put(:jail_turns, new_jail_turns)
+      |> Map.put(:in_jail, in_jail)
+
+
+      # Prepare notifications with an additional condition for served time
+      jail_notification =
+        cond do
+          is_doubles ->
+            "You rolled doubles! You're out of jail."
+          new_jail_turns == 0 ->
+            "You have served your time. You're out of jail."
+          true ->
+            "No doubles. Wait another turn."
+        end
+
+    # Create updated socket with all assigns explicitly defined
+    {:noreply, assign(socket, %{
+      current_player: updated_player,
+      dice_result: sum,
+      dice_values: {die1, die2},
+      is_doubles: is_doubles,
+      doubles_count: 0,
+      previous_rolls: [],
+      jail_notification: jail_notification,
+      doubles_notification: nil
+    })}
+  end
+
+
+
 
   # Player buys or upgrades property they are on
   def handle_event("buy_prop", _params, socket) do
@@ -318,6 +367,7 @@ defmodule MonopolyWeb.GameLive do
         player={@current_player}
         current_player_id={@current_player.id}
 <<<<<<< HEAD
+<<<<<<< HEAD
         on_roll_dice={JS.push("jail_roll")}
         dice={@dice_values}
         result={@jail_notification}
@@ -327,6 +377,11 @@ defmodule MonopolyWeb.GameLive do
         dice={@dice_values}
         result={@dice_result}
 >>>>>>> bfda37e (changed jail_screen to be a component that renders based on in_jail status)
+=======
+        on_roll_dice={JS.push("jail_roll")}
+        dice={@dice_values}
+        result={@jail_notification}
+>>>>>>> 0d9b470 (added jail_roll handle_event for jail logic and added backend code for testing)
       />
       <% else %>
       <!-- Placeholder for game board -->
