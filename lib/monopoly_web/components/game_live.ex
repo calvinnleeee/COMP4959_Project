@@ -219,7 +219,6 @@ defmodule MonopolyWeb.GameLive do
             <.buy_modal id="buy-modal" show={@show_buy_modal} property={@current_property}
               on_cancel={hide_modal("buy-modal")}/>
           <% end %>
-        <% end %>
     </div>
     """
   end
