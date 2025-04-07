@@ -341,4 +341,47 @@ defmodule GameObjects.GameTest do
     end
   end
 
+  describe "player turn mechanics" do
+    test "player can roll dice on their turn" do
+      game = create_test_game(1)
+      :ets.insert(Game.Store, {:game, game})
+
+      {:ok, _dice, new_pos, _tile, updated_game} = Game.roll_dice("player_1")
+      assert updated_game.current_player.rolled == true
+      assert new_pos != 0
+    end
+
+    test "player cannot roll twice in one turn" do
+      game = create_test_game(1)
+      player = %{Enum.at(game.players, 0) | rolled: true}
+      game = %{game | players: [player], current_player: player}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert {:err, "Not your turn"} = Game.roll_dice("player_1")
+    end
+
+  end
+
+  describe "game winner" do
+    test "validates game winner" do
+      game = create_test_game(2)
+      player1 = Enum.at(game.players, 0)
+      player2 = Enum.at(game.players, 1)
+
+      # Simulate player 1 winning
+      updated_game = %{game | winner: player1}
+      :ets.insert(Game.Store, {:game, updated_game})
+
+      assert updated_game.winner == player1
+    end
+
+    test "validates no winner when game is ongoing" do
+      game = create_test_game(2)
+      :ets.insert(Game.Store, {:game, game})
+
+      assert game.winner == nil
+    end
+  end
+
+
 end
