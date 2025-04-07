@@ -22,6 +22,8 @@ defmodule MonopolyWeb.GameLive do
         socket,
         game: game,
         id: nil,
+        roll: false,
+        end_turn: false,
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
@@ -108,6 +110,7 @@ defmodule MonopolyWeb.GameLive do
           buy_prop: buyable(property, player),
           upgrade_prop: upgradeable(property, player),
           sell_prop: sellable(property, player),
+          end_turn: true
         )
       }
     else
@@ -339,6 +342,8 @@ defmodule MonopolyWeb.GameLive do
         doubles_notification={@doubles_notification}
         doubles_count={get_doubles(@game.players, @id)}
         jail_notification={@jail_notification}
+        roll={@roll}
+        end_turn={@end_turn}
       />
 
     <!-- Modal for buying property : @id or "buy-modal"-->
