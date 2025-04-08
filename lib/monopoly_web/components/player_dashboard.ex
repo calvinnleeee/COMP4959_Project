@@ -216,14 +216,14 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   # Helper function to determine property color based on type
   defp property_color(property) do
     case property.type do
-      "brown" -> "#955436"
-      "light_blue" -> "#AAE0FA"
-      "pink" -> "#D93A96"
-      "orange" -> "#F7941D"
-      "red" -> "#ED1B24"
-      "yellow" -> "#FEF200"
-      "green" -> "#1FB25A"
-      "dark_blue" -> "#0072BB"
+      "brown" -> "#93572D"
+      "light blue" -> "#70ECF2"#6FECF2
+      "pink" -> "#FF66F2"
+      "orange" -> "#FE9B4F"
+      "red" -> "#FE5E51"
+      "yellow" -> "#FEDB62"
+      "green" -> "#4EC858"
+      "blue" -> "#5175E9"
       "railroad" -> "#000000"
       "utility" -> "#28A745"
       _ -> "#CCCCCC"
