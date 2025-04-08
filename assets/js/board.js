@@ -8,6 +8,8 @@ let texture;
 let players = [];
 let angleY = 0;
 let game;
+let eyeX, eyeZ;
+let cameraRadius = 1.5;
 
 // === Load glMatrix for 3D transformations ===
 function loadScript(url, callback) {
@@ -203,6 +205,7 @@ export function loadBoard(gameState) {
     });
 }
 
+
 function setupCamera() {
     // === Projection & Camera ===
     projectionMatrix = mat4.create();
@@ -212,23 +215,26 @@ function setupCamera() {
     mvpMatrix = mat4.create();
 
     mat4.perspective(projectionMatrix, Math.PI / 3, canvas.width / canvas.height, 0.1, 10);
-    mat4.lookAt(viewMatrix, [0, 1.5, 2.5], [0, 0, 0], [0, 1, 0]);
+    mat4.lookAt(viewMatrix, [0, 1.5, cameraRadius], [0, 0, 0], [0, 1, 0]);
 }
 
 function updateViewMatrix() {
-    let radius = 1.5; // Distance from the board
-    let eyeX = radius * Math.sin(angleY);
-    let eyeZ = radius * Math.cos(angleY);
+    eyeX = cameraRadius * Math.sin(angleY);
+    eyeZ = cameraRadius * Math.cos(angleY);
 
     mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
 
     requestAnimationFrame(drawScene); // Smoothly update view
 }
 
+let zoomSpeed = 0.1; // Controls zoom sensitivity
+let rotateSpeed = 0.15; // Controls rotation speed
+
 function setupControls() {
     let dragging = false;
     let lastX = 0;
 
+    // Mouse controls for rotation
     canvas.addEventListener("mousedown", (e) => {
         dragging = true;
         lastX = e.clientX;
@@ -242,7 +248,46 @@ function setupControls() {
         updateViewMatrix();
         drawScene();
     });
+
+    // Keyboard controls for rotation (A/D keys)
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "a" || e.key === "A") {
+            angleY -= rotateSpeed;  // Rotate left
+            updateViewMatrix();
+            drawScene();
+        }
+        if (e.key === "d" || e.key === "D") {
+            angleY += rotateSpeed;  // Rotate right
+            updateViewMatrix();
+            drawScene();
+        }
+
+        // Keyboard controls for zoom (W/S keys)
+        if (e.key === "w" || e.key === "W") {
+            zoomCamera(zoomSpeed);  // Zoom in
+            updateViewMatrix();
+            drawScene();
+        }
+        if (e.key === "s" || e.key === "S") {
+            zoomCamera(-zoomSpeed);  // Zoom out
+            updateViewMatrix();
+            drawScene();
+        }
+    });
 }
+
+function zoomCamera(amount) {
+    // Modify the radius for zooming in/out
+    cameraRadius += amount; // Change 1.5 to your initial zoom level
+    if (cameraRadius < 0.1) cameraRadius = 0.1; // Prevent zooming too far in
+    if (cameraRadius > 5) cameraRadius = 5; // Prevent zooming too far out
+
+    eyeX = cameraRadius * Math.sin(angleY);
+    eyeZ = cameraRadius * Math.cos(angleY);
+
+    mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
+}
+
 
 // === Monopoly Board Logic ===
 function getBoardPosition(pos) {
