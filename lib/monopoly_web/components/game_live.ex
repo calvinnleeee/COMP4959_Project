@@ -140,7 +140,7 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, double}, property, new_game} =
+      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
 
       IO.inspect(player.position, label: "New player position")
@@ -179,9 +179,8 @@ defmodule MonopolyWeb.GameLive do
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
-          buy_prop: buyable(property, player),
-          upgrade_prop: upgradeable(property, player),
-          sell_prop: sellable(property, player),
+          upgrade_prop: upgradeable(new_loc, player),
+          sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
           show_property_modal: true,
           property: property,
@@ -193,7 +192,9 @@ defmodule MonopolyWeb.GameLive do
 
           # Notifications for dashboard
           jail_notification: jail_notification,
-          doubles_notification: doubles_notification
+          doubles_notification: doubles_notification,
+
+          show_property_modal: buyable(new_loc, player)
         )
       }
     else
