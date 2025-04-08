@@ -41,6 +41,7 @@ Hooks.BoardCanvas = {
   },
 
   updated() {
+    loadBoard(this.el.dataset.game);
     // Optionally, handle updates (if the element might be changed by LiveView)
   }
 }
