@@ -338,13 +338,20 @@ function drawScene() {
 
     let pos
     let positions = [];
+    let height = 0.0;
     // === Draw Players ===
     game.players.forEach(player => {
+        height = 0.0;
         // const actualPos = game.players[player.id - 1].position;
         const actualPos = player.position;
         console.log("positionss" + positions)
+        for (i = 0; i < positions.length; i++) {
+            if (positions[i] == actualPos) {
+                height += 0.1;
+            }
+        }
         if (positions.includes(actualPos)) {
-            pos = getBoardPosition(actualPos, positions.length * .1);
+            pos = getBoardPosition(actualPos, height);
         }
         else {
             pos = getBoardPosition(actualPos, 0.0);
