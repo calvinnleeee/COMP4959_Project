@@ -61,7 +61,7 @@ defmodule MonopolyWeb.GameLive do
         roll: game.current_player.id == id && !game.current_player.rolled,
         upgrade_prop: upgradeable(property, player),
         sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == id
+        end_turn: game.current_player.id == id && game.current_player.rolled
       )
     }
   end
@@ -139,12 +139,14 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
+      {:ok, {dice, sum, _}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
+
+      double = elem(dice, 0) == elem(dice, 1)
 
       # If player got an instant-play card, display it
       card = new_game.active_card
-      if card != nil && Enum.at(Tuple.to_list(card.effect), 0) != "get_out_of_jail" do
+      if card != nil && elem(card.effect, 0) != "get_out_of_jail" do
         display_card(card)
       end
 
@@ -306,6 +308,19 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+  # An empty player, for before the state is fetched.
+  def default_player() do
+    %{
+      sprite_id: nil,
+      name: nil,
+      id: nil,
+      in_jail: false,
+      jail_turns: 0,
+      money: 0,
+      cards: []
+    }
+  end
+
   def render(assigns) do
     # TODO: buttons
     # - Buy house
@@ -328,8 +343,10 @@ defmodule MonopolyWeb.GameLive do
 
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
-        player={@player}
-        current_player={@game.current_player}
+        player={@game.current_player}
+        player={Enum.find(@game.players, default_player(), fn player -> player.id == @id end)}
+        current_player_id={@game.current_player.id}
+        properties={get_properties(@game.players, @id)}
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
         dice_result={@dice_result}
