@@ -476,7 +476,7 @@
       "hotel_price": 150,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": "Prop"
+      "sprite_id": "PropertyTile_VictoriaFraserview.png"
     },
     {
       "id": 28,
@@ -488,7 +488,7 @@
       "hotel_price": null,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "UtilityTile_BCHydro.png"
     },
     {
       "id": 29,
@@ -508,7 +508,7 @@
       "hotel_price": 150,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Dunbar.png"
     },
     {
       "id": 30,
@@ -520,7 +520,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "CornerTile_GoToJail.png"
     },
     {
       "id": 31,
@@ -540,7 +540,7 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_ArbutusRidge.png"
     },
     {
       "id": 32,
@@ -560,7 +560,7 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_SouthGranville.png"
     },
     {
       "id": 33,
@@ -572,7 +572,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Tile_CommunityChest.png"
     },
     {
       "id": 34,
@@ -592,7 +592,7 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_PointGrey.png"
     },
     {
       "id": 35,
@@ -609,7 +609,7 @@
       "hotel_price": null,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Railroad_WestCoast.png"
     },
     {
       "id": 36,
@@ -641,7 +641,7 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_ShaughnessyHeights.png"
     },
     {
       "id": 38,
@@ -673,6 +673,6 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Southlands.png"
     }
   ]
