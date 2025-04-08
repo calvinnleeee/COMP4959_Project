@@ -13,7 +13,7 @@
     },
     {
       "id": 1,
-      "name": "East Hastings",
+      "name": "The Barge",
       "type": "brown",
       "buy_cost": 60,
       "rent_cost": [
@@ -29,7 +29,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": "PropertyTile_EastHastings.png"
+      "sprite_id": "PropertyTile_Barge.png"
     },
     {
       "id": 2,
@@ -625,7 +625,7 @@
     },
     {
       "id": 37,
-      "name": "Shaughnessy Heights",
+      "name": "Caulfield",
       "type": "blue",
       "buy_cost": 350,
       "rent_cost": [
@@ -641,7 +641,7 @@
       "hotel_price": 200,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": "PropertyTile_ShaughnessyHeights.png"
+      "sprite_id": "PropertyTile_Caulfield.png"
     },
     {
       "id": 38,
