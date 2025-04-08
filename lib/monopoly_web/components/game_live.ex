@@ -136,8 +136,10 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
+      {:ok, {dice, sum, _}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
+
+      double = elem.at(dice, 0) == elem.at(dice, 1)
 
       # If player got an instant-play card, display it
       card = new_game.active_card
