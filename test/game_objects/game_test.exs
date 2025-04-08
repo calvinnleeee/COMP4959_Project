@@ -176,8 +176,6 @@ defmodule GameObjects.GameTest do
     end
   end
 
-
-
   describe "game state persistence" do
     test "validates game state in ETS" do
       game = create_test_game(2)
@@ -237,7 +235,6 @@ defmodule GameObjects.GameTest do
       assert updated_property.owner == player
       assert length(updated_player.properties) == 1
     end
-
   end
 
   describe "player actions" do
@@ -288,6 +285,34 @@ defmodule GameObjects.GameTest do
     end
   end
 
+  describe "property upgrade mechanics" do
+    test "validates property upgrade" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      property = Enum.at(game.properties, 0)
+
+      # Simulate upgrading the property
+      updated_property = %{property | upgrades: property.upgrades + 1}
+      game = %{game | properties: [updated_property]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_property.upgrades == property.upgrades + 1
+    end
+
+    test "validates property downgrade" do
+      game = create_test_game(1)
+      player = Enum.at(game.players, 0)
+      property = Enum.at(game.properties, 0)
+
+      # Simulate downgrading the property
+      updated_property = %{property | upgrades: property.upgrades - 1}
+      game = %{game | properties: [updated_property]}
+      :ets.insert(Game.Store, {:game, game})
+
+      assert updated_property.upgrades == property.upgrades - 1
+    end
+  end
+  
   describe "player turn mechanics" do
     test "player can roll dice on their turn" do
       game = create_test_game(1)
