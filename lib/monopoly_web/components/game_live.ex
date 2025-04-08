@@ -179,7 +179,8 @@ defmodule MonopolyWeb.GameLive do
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
-          show_property_modal: buyable(new_loc, player),
+          show_property_modal: true,
+          buy_prop: buyable(new_loc, player),
           property: property,
 
           # Dice results for dashboard
