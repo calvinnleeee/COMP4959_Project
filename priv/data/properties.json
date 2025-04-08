@@ -9,7 +9,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "CornerTile_GO.png"
     },
     {
       "id": 1,
@@ -29,7 +29,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_EastHastings.png"
     },
     {
       "id": 2,
@@ -41,7 +41,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Tile_CommunityChest.png"
     },
     {
       "id": 3,
@@ -61,7 +61,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Chinatown.png"
     },
     {
       "id": 4,
@@ -73,7 +73,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Tile_IncomeTax.png"
     },
     {
       "id": 5,
@@ -90,7 +90,7 @@
       "hotel_price": null,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Railroad_Expo.png"
     },
     {
       "id": 6,
@@ -110,7 +110,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_RenfrewCollingwood.png"
     },
     {
       "id": 7,
@@ -122,7 +122,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_RenfrewCollingwood.png"
     },
     {
       "id": 8,
@@ -142,7 +142,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_HastingsSunrise.png"
     },
     {
       "id": 9,
@@ -162,7 +162,7 @@
       "hotel_price": 50,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_KensingtonCedarCottage.png"
     },
     {
       "id": 10,
@@ -174,7 +174,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "CornerTile_Jail_ALT.png"
     },
     {
       "id": 11,
@@ -194,7 +194,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Fairview.png"
     },
     {
       "id": 12,
@@ -206,7 +206,7 @@
       "hotel_price": null,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "UtilityTile_FortisBC.png"
     },
     {
       "id": 13,
@@ -226,7 +226,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Oakridge.png"
     },
     {
       "id": 14,
@@ -246,7 +246,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Marpole.png"
     },
     {
       "id": 15,
@@ -263,7 +263,7 @@
       "hotel_price": null,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Railroad_Millenium.png"
     },
     {
       "id": 16,
@@ -283,7 +283,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_MountPleasant.png"
     },
     {
       "id": 17,
@@ -295,7 +295,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "Tile_CommunityChest.png"
     },
     {
       "id": 18,
@@ -315,7 +315,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_CoalHarbour.png"
     },
     {
       "id": 19,
@@ -335,7 +335,7 @@
       "hotel_price": 100,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "PropertyTile_Killarney.png"
     },
     {
       "id": 20,
@@ -347,7 +347,7 @@
       "hotel_price": null,
       "upgrades": null,
       "owner": null,
-      "sprite_id": 0
+      "sprite_id": "CornerTile_FreeParking.png"
     },
     {
       "id": 21,
@@ -367,7 +367,7 @@
       "hotel_price": 150,
       "upgrades": 0,
       "owner": null,
-      "sprite_id": "Card_chance.png"
+      "sprite_id": "PropertyTile_Kitsilano.png"
     },
     {
       "id": 22,
