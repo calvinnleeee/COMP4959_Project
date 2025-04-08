@@ -2,7 +2,6 @@ defmodule MonopolyWeb.GameLive do
   @moduledoc """
   The VHM board which communicates with the backend Game server.
   """
-  require Logger
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
@@ -17,23 +16,27 @@ defmodule MonopolyWeb.GameLive do
     Phoenix.PubSub.subscribe(Monopoly.PubSub, "game_state")
     {:ok, game} = Game.get_state()
 
-    {
-      :ok,
-      assign(
-        socket,
-        game: game,
-        player: nil,
-        id: nil,
-        roll: false,
-        end_turn: false,
-        dice_result: nil,
-        dice_values: nil,
-        is_doubles: false,
-        doubles_notification: nil,
-        jail_notification: nil,
-        show_buy_modal: false
-      )
-    }
+    if game == %{} do
+      {:ok, push_navigate(socket, to: "/", replace: true)}
+    else
+      {
+        :ok,
+        assign(
+          socket,
+          game: game,
+          player: nil,
+          id: nil,
+          roll: false,
+          end_turn: false,
+          dice_result: nil,
+          dice_values: nil,
+          is_doubles: false,
+          doubles_notification: nil,
+          jail_notification: nil,
+          show_buy_modal: false
+        )
+      }
+    end
   end
 
   # Handle session_id coming from JS hook via pushEvent
@@ -211,6 +214,7 @@ defmodule MonopolyWeb.GameLive do
         assign(
           socket,
           game: game,
+          player: game.current_player,
           # Check if player can afford further upgrades
           upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
           sell_prop: true,

@@ -16,7 +16,7 @@ open up 2~4 browsers to load up the players
 ( ) each player's piece is handled (currently automatically assigned)
 (x) game start (button), all players redirect to game page
 
-( ) game page redirects to welcome/main if no game in session
+(x) game page redirects to welcome/main if no game in session
 ( ) user spectates or is kicked out if they are not a participant of the game
 
 (x) each player sees their own dashboard (currently shows current player's)
@@ -42,7 +42,8 @@ after above is done and checked:
 		( ) handle buy/auction
 		( ) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
-	( ) land on card
-	  ( ) card is added to player's list or immediately takes affect (movement, changes in money)
-	( ) land on tax/parking
-	  ( ) update money
+	(x) land on card
+	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
+		( ) need visual indication that a player has moved
+	(x) land on tax/parking
+	  (x) update money
