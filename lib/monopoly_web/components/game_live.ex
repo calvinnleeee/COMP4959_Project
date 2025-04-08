@@ -140,7 +140,7 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, double}, new_loc, new_game} =
+      {:ok, {dice, sum, double}, property, new_game} =
         Game.roll_dice(id)
 
       IO.inspect(player.position, label: "New player position")
@@ -180,8 +180,8 @@ defmodule MonopolyWeb.GameLive do
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
           buy_prop: buyable(property, player),
-          upgrade_prop: upgradeable(new_loc, player),
-          sell_prop: sellable(new_loc, player),
+          upgrade_prop: upgradeable(property, player),
+          sell_prop: sellable(property, player),
           end_turn: player.rolled || player.in_jail,
           show_property_modal: true,
           property: property,
@@ -208,7 +208,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can buy
-    if player.id == id && assigns.show_buy_modal do
+    if player.id == id && assigns.show_property_modal do
       # Buy the property and get new game state
       {:ok, game} =
         Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
@@ -221,7 +221,7 @@ defmodule MonopolyWeb.GameLive do
           # Check if player can afford further upgrades
           upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
           sell_prop: true,
-          show_buy_modal: false
+          show_property_modal: false
         )
       }
     else
@@ -296,9 +296,7 @@ defmodule MonopolyWeb.GameLive do
   def handle_event("cancel_buying", _params, socket) do
     {:noreply,
      assign(socket,
-       show_buy_modal: false,
-       show_upgrade_modal: false,
-       show_downgrade_modal: false
+       show_property_modal: false
      )}
   end
 
