@@ -64,7 +64,7 @@ defmodule MonopolyWeb.GameLive do
         roll: game.current_player.id == id && !game.current_player.rolled,
         upgrade_prop: upgradeable(property, player),
         sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == id
+        end_turn: (game.current_player.id == id) && game.current_player.rolled
       )
     }
   end
@@ -112,7 +112,7 @@ defmodule MonopolyWeb.GameLive do
           roll: true,
           upgrade_prop: upgradeable(property, player),
           sell_prop: sellable(property, player),
-          end_turn: true
+          end_turn: false
         )
       }
     else
@@ -122,6 +122,7 @@ defmodule MonopolyWeb.GameLive do
 
   # All other events can be handled the same
   def handle_info(%{event: _, payload: game}, socket) do
+    id = socket.assigns.id
     {:noreply, assign(socket, game: game)}
   end
 

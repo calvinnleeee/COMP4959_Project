@@ -30,7 +30,7 @@ open up 2~4 browsers to load up the players
 	( ) all players see updated position of first player (after graphics done)
 (x) first player ends turn, game successfully updates to start the next player (loop back to turn start)
 	!! this will crash sometimes when errors happen during turns
-( ) player turn cannot be ended (button disabled) if they have yet to roll
+(x) player turn cannot be ended (button disabled) if they have yet to roll
 (x) doubles allows extra roll
   ( ) if a player rolls double, roll dice and end turn should be disabled until the tile action is taken
 (x) 3 doubles sends a player to jail
