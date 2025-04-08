@@ -161,7 +161,7 @@ function setupScene() {
         gl.generateMipmap(gl.TEXTURE_2D);
         drawScene();
     };
-    image.src = '/images/board_image4.png';
+    image.src = '/images/board_image.png';
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
