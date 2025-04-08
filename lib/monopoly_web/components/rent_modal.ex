@@ -18,13 +18,29 @@ defmodule MonopolyWeb.Components.RentModal do
     else
       assigns.property.owner.name
     end
-    assigns = assign(assigns, owner_name: owner_name)
+    rent =
+      if assigns.property.type in [
+        "brown",
+        "light blue",
+        "utility", "railroad",
+        "pink",
+        "orange",
+        "red",
+        "yellow",
+        "green",
+        "blue"
+      ] do
+      Property.charge_rent(assigns.property, assigns.dice_result)
+      else
+        0
+      end
+    assigns = assign(assigns, owner_name: owner_name, rent: rent)
 
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
       <div class="card-modal-content p-6">
         <h3 class="text-lg font-bold mb-4">You landed on {@owner_name}'s {@property.name}!</h3>
-        <p class="mb-6">You need to pay ${Property.charge_rent(@property, @dice_result)} to {@owner_name}.</p>
+        <p class="mb-6">You need to pay ${@rent} to {@owner_name}.</p>
       </div>
     </.modal>
     """

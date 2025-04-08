@@ -9,7 +9,7 @@ open up 2~4 browsers to load up the players
 
 !! BUGS !! - delete if they are fixed
 - some rare instances where a community card modal is shown for all players ? (need double checking)
-- sending a player to jail should end their turn on the first turn (when they don't have card)
+- sending a player to jail should end their turn on the first turn (double check, rare bug somewhere?)
 - active_card only changed on ending turn -> if a player rolls doubles, lands on a card and then
 	a property, they will get the card popup twice
 - sometimes a player just randomly drops...?
@@ -50,10 +50,10 @@ after above is done and checked:
 		(x) handle buy
 		(x) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
-	( ) land on card
+	(x) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
 		(x) need visual indication that a player drew a card
-		( ) need visual indication that player obtained a get out of jail card
+		(x) need visual indication that player obtained a get out of jail card
 	(x) land on tax/parking
 	  (x) update money
 		(x) modal needs to be shown when landing on tax/parking
@@ -67,4 +67,8 @@ Jail things
 ( ) player moves to jail successfully (card or landing on go to jail)
 ( ) player cannot roll when entering the jail
 ( ) jail needs end turn button
+( ) jail roll dice result should be shown with the end turn button
 (x) jail card correctly applies
+
+Upgrades
+( ) upgrades properly handled?

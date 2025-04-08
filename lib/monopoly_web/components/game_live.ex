@@ -90,7 +90,6 @@ defmodule MonopolyWeb.GameLive do
           game: game,
           roll: true,
           upgrade_prop: upgradeable(property, player),
-          sell_prop: sellable(property, player),
           end_turn: false
         )
       }
@@ -133,7 +132,6 @@ defmodule MonopolyWeb.GameLive do
         id: id,
         roll: game.current_player.id == id && !game.current_player.rolled,
         upgrade_prop: upgradeable(property, player),
-        sell_prop: sellable(property, player),
         end_turn: (game.current_player.id == id) && game.current_player.rolled
       )
     }
@@ -182,7 +180,6 @@ defmodule MonopolyWeb.GameLive do
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
           upgrade_prop: upgradeable(new_loc, player),
-          sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
 
           # Dice results for dashboard
@@ -198,7 +195,7 @@ defmodule MonopolyWeb.GameLive do
             (new_loc.owner == nil || new_loc.owner.id == id) && new_game.current_player.id == id,
           # If player got an instant-play card, display it
           show_card_modal:
-            card != nil && elem(card.effect, 0) != :get_out_of_jail && new_game.current_player.id == id,
+            card != nil &&  new_game.current_player.id == id,
           # If player landed on another player's property, let them know
           show_rent_modal:
             card == nil && new_loc.owner != nil && new_loc.owner.id != id,
@@ -232,7 +229,6 @@ defmodule MonopolyWeb.GameLive do
           player: game.current_player,
           # Check if player can afford further upgrades
           upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
-          sell_prop: true,
           show_property_modal: false
         )
       }
@@ -265,8 +261,7 @@ defmodule MonopolyWeb.GameLive do
           socket,
           game: game,
           upgrade_prop: upgradeable(property, player),
-          # Check if property can be further downgraded
-          sell_prop: sellable(property, player)
+          show_property_modal: false
         )
       }
     else
@@ -292,7 +287,6 @@ defmodule MonopolyWeb.GameLive do
           game: game,
           roll: false,
           upgrade_prop: false,
-          sell_prop: false,
           end_turn: false,
           dice_result: nil,
           dice_values: nil,
