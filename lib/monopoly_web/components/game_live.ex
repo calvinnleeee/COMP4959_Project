@@ -7,6 +7,7 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.BuyModal
+  import MonopolyWeb.Components.JailScreen
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -316,14 +317,17 @@ defmodule MonopolyWeb.GameLive do
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
 
+      <%= if  @player != nil && @game.current_player.in_jail && @game.current_player.id == @id do %>
+        <.jail_screen
+        player={@game.current_player}
+        on_roll_dice={JS.push("roll_dice")}
+        on_end_turn={JS.push("end_turn")}
+        />
+      <%else %>
+
     <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
-        <%= if @game.current_player.in_jail do %>
-          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            IN JAIL (Turn {@game.current_player.jail_turns})
-          </div>
-        <% end %>
       </div>
 
     <!-- Player dashboard with dice results and all notifications -->
@@ -351,6 +355,7 @@ defmodule MonopolyWeb.GameLive do
           on_cancel={hide_modal("buy-modal")}
         />
       <% end %>
+      <%end%>
     </div>
     """
   end
