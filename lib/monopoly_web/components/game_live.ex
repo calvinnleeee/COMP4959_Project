@@ -29,7 +29,11 @@ defmodule MonopolyWeb.GameLive do
         is_doubles: false,
         doubles_notification: nil,
         jail_notification: nil,
-        show_property_modal: false
+        show_property_modal: false,
+        buy_prop: false,
+        upgrade_prop: false,
+        sell_prop: false,
+        property: nil
       )
     }
   end
@@ -138,6 +142,9 @@ defmodule MonopolyWeb.GameLive do
       # Call the backend roll_dice endpoint
       {:ok, {dice, sum, double}, new_loc, new_game} =
         Game.roll_dice(id)
+
+      IO.inspect(player.position, label: "New player position")
+      IO.inspect(Enum.at(new_game.properties, player.position), label: "Current tile")
 
       # If player got an instant-play card, display it
       card = new_game.active_card
@@ -333,7 +340,7 @@ defmodule MonopolyWeb.GameLive do
 
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
-        player={@game.current_player}
+        player={Enum.find(@game.players, fn p -> p.id == @id end) || @game.current_player}
         current_player_id={@game.current_player.id}
         properties={get_properties(@game.players, @id)}
         on_roll_dice={JS.push("roll_dice")}
