@@ -289,10 +289,11 @@ function zoomCamera(amount) {
 
 
 // === Monopoly Board Logic ===
-function getBoardPosition(pos) {
+function getBoardPosition(pos, height) {
     let step = 1.6 / 10;
     let half = 0.8;
-    let height = 0.00;
+    // let height = height;
+    console.log(height);
 
     if (pos >= 0 && pos <= 9) return [-half + (pos) * step, height, -half];
     if (pos >= 10 && pos <= 19) return [half, height, -half + (pos - 10) * step];
@@ -331,13 +332,20 @@ function drawScene() {
     gl.bindBuffer(gl.ARRAY_BUFFER, boardBuffer);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+    let pos
+    let positions = [];
     // === Draw Players ===
     game.players.forEach(player => {
         // const actualPos = game.players[player.id - 1].position;
         const actualPos = player.position;
-        console.log(actualPos);
-        let pos = getBoardPosition(actualPos);
-
+        console.log("positionss" + positions)
+        if (positions.includes(actualPos)) {
+            pos = getBoardPosition(actualPos, positions.length * .1);
+        }
+        else {
+            pos = getBoardPosition(actualPos, 0.0);
+        }
+        positions.push(actualPos);
         mat4.identity(modelMatrix);
         mat4.translate(modelMatrix, modelMatrix, pos);
         mat4.multiply(mvMatrix, viewMatrix, modelMatrix);
