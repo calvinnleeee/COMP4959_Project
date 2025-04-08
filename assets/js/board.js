@@ -10,6 +10,8 @@ let angleY = 0;
 let game;
 let eyeX, eyeZ;
 let cameraRadius = 1.5;
+let zoomSpeed = 0.05;
+let rotateSpeed = 0.05;
 
 // === Load glMatrix for 3D transformations ===
 function loadScript(url, callback) {
@@ -157,8 +159,9 @@ function setupScene() {
     image.onload = function () {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         gl.generateMipmap(gl.TEXTURE_2D);
+        drawScene();
     };
-    image.src = '/images/board_image4.png';  // Replace with the path to your texture
+    image.src = '/images/board_image4.png';
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -201,7 +204,7 @@ export function loadBoard(gameState) {
         setupControls();
         console.log("game: ");
         console.log(game.players)
-        drawScene();
+        
     });
 }
 
@@ -215,20 +218,17 @@ function setupCamera() {
     mvpMatrix = mat4.create();
 
     mat4.perspective(projectionMatrix, Math.PI / 3, canvas.width / canvas.height, 0.1, 10);
-    mat4.lookAt(viewMatrix, [0, 1.5, cameraRadius], [0, 0, 0], [0, 1, 0]);
+    mat4.lookAt(viewMatrix, [0, 1.7, cameraRadius], [0, 0, 0], [0, 1, 0]);
 }
 
 function updateViewMatrix() {
     eyeX = cameraRadius * Math.sin(angleY);
     eyeZ = cameraRadius * Math.cos(angleY);
 
-    mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
+    mat4.lookAt(viewMatrix, [eyeX, 1.7, eyeZ], [0, 0, 0], [0, 1, 0]);
 
     requestAnimationFrame(drawScene); // Smoothly update view
 }
-
-let zoomSpeed = 0.1; // Controls zoom sensitivity
-let rotateSpeed = 0.15; // Controls rotation speed
 
 function setupControls() {
     let dragging = false;
@@ -277,15 +277,14 @@ function setupControls() {
 }
 
 function zoomCamera(amount) {
-    // Modify the radius for zooming in/out
-    cameraRadius += amount; // Change 1.5 to your initial zoom level
-    if (cameraRadius < 0.1) cameraRadius = 0.1; // Prevent zooming too far in
-    if (cameraRadius > 5) cameraRadius = 5; // Prevent zooming too far out
+    cameraRadius += amount;
+    if (cameraRadius < 0.1) cameraRadius = 0.1; 
+    if (cameraRadius > 1.5) cameraRadius = 1.5;
 
     eyeX = cameraRadius * Math.sin(angleY);
     eyeZ = cameraRadius * Math.cos(angleY);
 
-    mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
+    mat4.lookAt(viewMatrix, [eyeX, 84.0, eyeZ], [0, 0, 0], [0, 1, 0]);
 }
 
 
