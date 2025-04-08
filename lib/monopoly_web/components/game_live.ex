@@ -375,7 +375,7 @@ defmodule MonopolyWeb.GameLive do
               id="buy-modal"
               show={@show_buy_modal}
               property={Enum.at(@game.properties, @game.current_player.position)}
-                />
+            />
           <% end %>
 
           <!-- Modal for displaying card effects : @id or "card-modal"-->

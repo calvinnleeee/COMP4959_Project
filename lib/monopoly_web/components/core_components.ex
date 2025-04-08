@@ -48,6 +48,7 @@ defmodule MonopolyWeb.CoreComponents do
       id={@id}
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
+      data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
       <div id={"#{@id}-bg"} class="fixed inset-0 bg-zinc-50/90 transition-opacity" aria-hidden="true" />
@@ -63,11 +64,21 @@ defmodule MonopolyWeb.CoreComponents do
           <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
-              phx-window-keydown={nil}
+              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={nil}
               class="hidden relative rounded-2xl bg-white p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
             >
+              <div class="absolute top-6 right-5">
+                <button
+                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
+                  type="button"
+                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  aria-label={gettext("close")}
+                >
+                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+                </button>
+              </div>
               <div class="absolute top-6 right-5"></div>
               <div id={"#{@id}-content"}>
                 <%= render_slot(@inner_block) %>
