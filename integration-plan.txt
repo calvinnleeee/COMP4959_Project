@@ -60,8 +60,8 @@ after above is done and checked:
 (x) handle landing on another player's property
 	(x) need indicator that you landed on someone's property, and rent paid needs to be shown
 	(x) money needs to update after rent paid
-( ) handle passing go
-	( ) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
+(x) handle passing go
+	(x) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
 
 Jail things
 (?) player moves to jail successfully (card or landing on go to jail)

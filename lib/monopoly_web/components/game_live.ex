@@ -10,6 +10,7 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.Components.RentModal
   import MonopolyWeb.Components.TaxModal
   import MonopolyWeb.Components.JailScreen
+  import MonopolyWeb.Components.GoModal
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -35,6 +36,7 @@ defmodule MonopolyWeb.GameLive do
           dice_result: nil,
           dice_values: nil,
           is_doubles: false,
+          passed_go: false,
           doubles_notification: nil,
           jail_notification: nil,
           upgrade_prop: false,
@@ -142,6 +144,8 @@ defmodule MonopolyWeb.GameLive do
     assigns = socket.assigns
     id = assigns.id
     player = assigns.game.current_player
+    old_position = player.position
+    passed_go = false
 
     # Verify that it is the player's turn and they can roll
     if player.id == id && assigns.roll do
@@ -171,6 +175,10 @@ defmodule MonopolyWeb.GameLive do
           nil
         end
 
+      # Check if go was passed
+      new_position = player.position
+      passed_go = old_position > new_position && !player.in_jail
+
       {
         :noreply,
         assign(
@@ -186,6 +194,7 @@ defmodule MonopolyWeb.GameLive do
           dice_result: sum,
           dice_values: dice,
           is_doubles: double,
+          passed_go: passed_go,
 
           # Notifications for dashboard
           jail_notification: jail_notification,
@@ -308,6 +317,10 @@ defmodule MonopolyWeb.GameLive do
     {:noreply, assign(socket, show_card_modal: false)}
   end
 
+  def handle_event("close_go", _params, socket) do
+    {:noreply, assign(socket, passed_go: false)}
+  end
+
   def handle_event("delete_game", _params, socket) do
     _ = Game.delete_game()
     {:noreply, push_navigate(socket, to: "/", replace: true)}
@@ -352,6 +365,57 @@ defmodule MonopolyWeb.GameLive do
     <%= if @game.winner == nil do %>
       <div class="game-container">
         <h1 class="text-xl mb-4">Monopoly Game</h1>
+
+        <!-- Modal for displaying property actions -->
+        <%= if @show_property_modal do %>
+          <.property_modal
+            id="property-modal"
+            player={@player}
+            show={@show_property_modal}
+            can_upgrade={@upgrade_prop}
+            property={Enum.at(@game.properties, @game.current_player.position)}
+          />
+        <% end %>
+
+        <!-- Modal for displaying card effects : @id or "card-modal"-->
+        <%= if @show_card_modal && @game.active_card do %>
+          <.card_modal
+            id="card-modal"
+            show={@show_card_modal}
+            card={@game.active_card}
+            on_cancel={JS.push("close_card")}
+          />
+        <% end %>
+
+        <!-- Modal for displaying rent payments : @id or "rent-modal"-->
+        <%= if @show_rent_modal do %>
+          <.rent_modal
+            id="rent_modal"
+            show={@show_rent_modal}
+            property={Enum.at(@game.properties, @game.current_player.position)}
+            dice_result={if @dice_result != nil do @dice_result else 0 end}
+          />
+        <% end %>
+
+        <!-- Modal for displaying tax/parking payments : @id or "tax-modal"-->
+        <%= if @show_tax_modal do %>
+          <.tax_modal
+            id="tax_modal"
+            show={@show_tax_modal}
+            tile={Enum.at(@game.properties, @game.current_player.position)}
+          />
+        <% end %>
+
+        <!-- Modal for passing go -->
+        <%= if @passed_go do %>
+          <.go_modal
+            id="go-modal"
+            show={@passed_go}
+            on_cancel={JS.push("close_go")}
+          />
+        <% end %>
+
+
         <%= if @player != nil && @game.current_player.in_jail && @game.current_player.id == @id do %>
           <.jail_screen
             player={@game.current_player}
@@ -381,46 +445,6 @@ defmodule MonopolyWeb.GameLive do
             roll={@roll}
             end_turn={@end_turn}
           />
-
-          <!-- Modal for displaying property actions -->
-          <%= if @show_property_modal do %>
-            <.property_modal
-              id="property-modal"
-              player={@player}
-              show={@show_property_modal}
-              can_upgrade={@upgrade_prop}
-              property={Enum.at(@game.properties, @game.current_player.position)}
-            />
-          <% end %>
-
-          <!-- Modal for displaying card effects : @id or "card-modal"-->
-          <%= if @show_card_modal && @game.active_card do %>
-            <.card_modal
-              id="card-modal"
-              show={@show_card_modal}
-              card={@game.active_card}
-              on_cancel={JS.push("close_card")}
-            />
-          <% end %>
-
-          <!-- Modal for displaying rent payments : @id or "rent-modal"-->
-          <%= if @show_rent_modal do %>
-            <.rent_modal
-              id="rent_modal"
-              show={@show_rent_modal}
-              property={Enum.at(@game.properties, @game.current_player.position)}
-              dice_result={@dice_result}
-            />
-          <% end %>
-
-          <!-- Modal for displaying tax/parking payments : @id or "tax-modal"-->
-          <%= if @show_tax_modal do %>
-            <.tax_modal
-              id="tax_modal"
-              show={@show_tax_modal}
-              tile={Enum.at(@game.properties, @game.current_player.position)}
-            />
-          <% end %>
         <% end %>
       </div>
 
