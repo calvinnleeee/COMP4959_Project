@@ -6,10 +6,10 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
 
   # Main player dashboard component
   attr :player, :map, required: true, doc: "The player data to display"
-  attr :current_player_id, :string, default: nil, doc: "ID of the current active player"
+  attr :current_player, :string, default: nil, doc: "Player object of the current active player"
   attr :on_roll_dice, JS, default: %JS{}, doc: "JS command for roll dice action"
   attr :on_end_turn, JS, default: %JS{}, doc: "JS command for end turn action"
-  attr :properties, :list, default: [], doc: "List of properties owned by player"
+  # attr :properties, :list, default: [], doc: "List of properties owned by player"
   attr :dice_result, :integer, default: nil, doc: "Result of the dice roll"
   attr :dice_values, :any, default: nil, doc: "Individual dice values as a tuple"
   attr :is_doubles, :boolean, default: false, doc: "Whether the roll was doubles"
@@ -22,25 +22,26 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
     color = if assigns.player != nil, do: get_player_color(Player.get_sprite_id(assigns.player)), else: "#FF0000"
-    assigns = assign(assigns, :color, color)
+    properties = if assigns.player != nil, do: Player.get_properties(assigns.player), else: []
+    assigns = assign(assigns, properties: properties, color: color)
 
     ~H"""
     <div id="player-dashboard" class="player-dashboard">
       <div class="dashboard-header">
-        <div class="player-name" style={"color: #{@color};"}>
+        <div :if={@player != nil} class="player-name" style={"color: #{@color};"} >
           <%= @player.name %>
         </div>
 
         <!-- Status indicators container with fixed height -->
         <div class="status-indicators">
           <!-- Current turn indicator on its own row -->
-          <div :if={@player.id == @current_player_id} class="turn-indicator mb-1 flex items-center justify-end">
+          <div :if={@player != nil && @player.id == @current_player.id} class="turn-indicator mb-1 flex items-center justify-end">
             <span>Current Turn</span>
             <.icon name="hero-play" class="h-4 w-4 ml-1" />
           </div>
 
           <!-- Jail status on its own row -->
-          <div :if={@player.in_jail} class="jail-status flex items-center justify-end">
+          <div :if={@player != nil && @player.in_jail} class="jail-status flex items-center justify-end">
             <span>In Jail (<%= @player.jail_turns %> turns)</span>
             <.icon name="hero-lock-closed" class="h-4 w-4 ml-1" />
           </div>
@@ -48,8 +49,13 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
       </div>
 
       <div class="dashboard-body">
-        <.money_display money={@player.money} />
-        <.total_worth money={@player.money} properties={@properties} />
+        <%= if @player != nil do %>
+          <.money_display money={@player.money} />
+          <.total_worth money={@player.money} properties={@properties} />
+        <% else %>
+          <.money_display money={0} />
+          <.total_worth money={0} properties={[]} />
+        <% end %>
 
         <div class="dashboard-actions">
           <button
@@ -69,8 +75,13 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
           </button>
         </div>
 
-        <.property_display properties={@properties} />
-        <.card_collection cards={@player.cards} />
+        <%= if @player != nil do %>
+          <.property_display properties={@properties} />
+          <.card_collection cards={@player.cards} />
+        <% else %>
+          <.property_display properties={[]} />
+          <.card_collection cards={[]} />
+        <% end %>
 
         <!-- Dice results and notifications in dashboard -->
         <%= if assigns[:dice_result] != nil do %>

@@ -14,7 +14,7 @@ defmodule MonopolyWeb.Components.BuyModal do
   def buy_modal(assigns) do
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
-      <div class="buy-modal-content p-6">
+      <div class="buy-modal-content p-6 z-10">
         <h2 class="text-xl font-bold mb-4">Buy Property</h2>
         <p class="mb-6">
           <%= @property.name %> : <span class="font-semibold">$<%= @property.buy_cost %></span>

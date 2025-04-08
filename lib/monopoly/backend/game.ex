@@ -3,7 +3,6 @@ defmodule GameObjects.Game do
   This module represents the Game object, which holds vital state information and defines
   the methods for handling game logic.
   """
-  require Logger
   use GenServer
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}

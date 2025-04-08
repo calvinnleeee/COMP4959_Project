@@ -19,26 +19,28 @@ open up 2~4 browsers to load up the players
 ( ) game page redirects to welcome/main if no game in session
 ( ) user spectates or is kicked out if they are not a participant of the game
 
-( ) each player sees their own dashboard (currently shows current player's)
+(x) each player sees their own dashboard (currently shows current player's)
 	(x) current player roll dice button enabled
 	(x) other players' buttons disabled
-	( ) indicator of which player the user is should be shown (currently shows the current player)
+	(x) indicator of which player the user is should be shown
 (x) turn start for first player
 	(x) other players cannot act
 	(x) other players' dashboards don't update (only current player's)
 (x) first player rolls
 	( ) all players see updated position of first player (after graphics done)
 (x) first player ends turn, game successfully updates to start the next player (loop back to turn start)
+	!! this will crash sometimes when errors happen during turns
 ( ) player turn cannot be ended (button disabled) if they have yet to roll
 (x) doubles allows extra roll
   ( ) if a player rolls double, roll dice and end turn should be disabled until the tile action is taken
-( ) 3 doubles sends a player to jail
+(x) 3 doubles sends a player to jail
 ( ) player loses and is notified when money < 0 (currently crashes)
 
 after above is done and checked:
 ( ) add handling of landing on tiles
 	( ) land on property/railroad/utility
 		( ) handle buy/auction
+		( ) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
 	( ) land on card
 	  ( ) card is added to player's list or immediately takes affect (movement, changes in money)

@@ -2,6 +2,7 @@ defmodule MonopolyWeb.GameLive do
   @moduledoc """
   The VHM board which communicates with the backend Game server.
   """
+  require Logger
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
@@ -21,6 +22,7 @@ defmodule MonopolyWeb.GameLive do
       assign(
         socket,
         game: game,
+        player: nil,
         id: nil,
         roll: false,
         end_turn: false,
@@ -54,6 +56,7 @@ defmodule MonopolyWeb.GameLive do
       assign(
         socket,
         game: game,
+        player: player,
         id: id,
         roll: game.current_player.id == id && !game.current_player.rolled,
         upgrade_prop: upgradeable(property, player),
@@ -141,7 +144,7 @@ defmodule MonopolyWeb.GameLive do
 
       # If player got an instant-play card, display it
       card = new_game.active_card
-      if card != nil && Enum.at(card.effect, 0) != "get_out_of_jail" do
+      if card != nil && Enum.at(Tuple.to_list(card.effect), 0) != "get_out_of_jail" do
         display_card(card)
       end
 
@@ -260,7 +263,7 @@ defmodule MonopolyWeb.GameLive do
     if assigns.game.current_player.id == id do
       # Call backend to end the turn and get new game state
       {:ok, game} = Game.end_turn(id)
-
+      Logger.info("Game ended turn: i crashed here -> #{inspect(game)}")
       # Disable all buttons
       {
         :noreply,
@@ -325,9 +328,8 @@ defmodule MonopolyWeb.GameLive do
 
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
-        player={@game.current_player}
-        current_player_id={@game.current_player.id}
-        properties={get_properties(@game.players, @id)}
+        player={@player}
+        current_player={@game.current_player}
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
         dice_result={@dice_result}
