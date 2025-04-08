@@ -13,6 +13,7 @@ defmodule GameObjects.Property do
   upgrades: an integer from 0-7 that represents the number of houses or hotels on the property. 0 is no houses, 1 is full set, 2,3,4,5 is house, 6 is a hotel.
   """
 
+  @derive Jason.Encoder
   defstruct [
     :id,
     :name,

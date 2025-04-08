@@ -37,7 +37,7 @@ Hooks.SessionId = {
 
 Hooks.BoardCanvas = {
   mounted() {
-    loadBoard();
+    loadBoard(this.el.dataset.game);
   },
 
   updated() {

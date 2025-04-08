@@ -7,6 +7,7 @@ defmodule GameObjects.Square do
   #TODO: ONLY FOR REFERENCE, Translate this into a static JSON file for ALL the tiles
   """
 
+  @derive Jason.Encoder
   defstruct [:id, :name, :type, :color_set, :properties]
 
 

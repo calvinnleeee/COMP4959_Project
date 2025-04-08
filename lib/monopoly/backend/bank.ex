@@ -5,5 +5,6 @@ defmodule GameObjects.Bank do
   properties field is a list of properites the player owns.
   """
 
+  @derive Jason.Encoder
   defstruct [:money_amount, :properties]
 end

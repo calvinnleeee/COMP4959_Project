@@ -15,6 +15,7 @@ defmodule GameObjects.Player do
   @initial_money 1500
   @board_size 40
 
+  @derive Jason.Encoder
   defstruct [
     :id,
     :name,

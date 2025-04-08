@@ -34,6 +34,7 @@ defmodule GameObjects.Game do
   # - current_player is the current player's struct, containing their state
   # - active_card tracks the current card being played by the current player
   # - turn is the current turn number
+  @derive Jason.Encoder
   defstruct [:players, :properties, :deck, :current_player, :active_card, :winner, :turn]
 
   ##############################################################
