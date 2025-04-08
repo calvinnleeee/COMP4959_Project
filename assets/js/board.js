@@ -25,7 +25,7 @@ function setupScene() {
             varying vec2 v_texCoord;
             void main() {
                 gl_Position = u_matrix * vec4(a_position, 1.0);
-                v_texCoord = a_texCoord;
+                v_texCoord = a_texCoord;  // Passing texture coordinates directly
             }
         `;
 
@@ -38,7 +38,8 @@ function setupScene() {
 
             void main() {
                 if (u_useTexture) {
-                    gl_FragColor = texture2D(u_texture, v_texCoord);
+                    vec2 rotatedTexCoord = vec2(1.0 - v_texCoord.x, 1.0 - v_texCoord.y);  // Swap and scale the coordinates
+                    gl_FragColor = texture2D(u_texture, rotatedTexCoord);
                 } else {
                     gl_FragColor = vec4(u_color, 1.0);
                 }
