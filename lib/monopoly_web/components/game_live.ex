@@ -201,8 +201,6 @@ defmodule MonopolyWeb.GameLive do
     # Use backend's Dice module to roll the dice
     {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
 
-<<<<<<< HEAD
-=======
     # Get current doubles count or initialize to 0
     current_doubles_count = Map.get(socket.assigns, :doubles_count, 0)
 
@@ -219,8 +217,6 @@ defmodule MonopolyWeb.GameLive do
 
     # Add current roll to the beginning of the list (most recent first)
     updated_rolls = [{{die1, die2}, sum, is_doubles} | previous_rolls]
-
->>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
     # Get current player
     current_player = socket.assigns.current_player
 
@@ -235,15 +231,9 @@ defmodule MonopolyWeb.GameLive do
 
     # Update player state
     updated_player = current_player
-<<<<<<< HEAD
       |> Map.put(:has_rolled, true)
       |> Map.put(:jail_turns, new_jail_turns)
       |> Map.put(:in_jail, in_jail)
-=======
-      |> Map.put(:has_rolled, !is_doubles || goes_to_jail) # Only mark as rolled if not doubles or going to jail
-      |> Map.put(:in_jail, goes_to_jail || current_player.in_jail)
-      |> Map.put(:jail_turns, if(goes_to_jail, do: 3, else: current_player.jail_turns))
->>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
 
 
       # Prepare notifications with an additional condition for served time
@@ -265,13 +255,8 @@ defmodule MonopolyWeb.GameLive do
       dice_result: sum,
       dice_values: {die1, die2},
       is_doubles: is_doubles,
-<<<<<<< HEAD
       doubles_count: 0,
       previous_rolls: [],
-=======
-      doubles_count: final_doubles_count,
-      previous_rolls: updated_rolls,
->>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
       jail_notification: jail_notification,
       doubles_notification: nil
     })}
