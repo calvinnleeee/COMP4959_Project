@@ -305,6 +305,19 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+  # An empty player, for before the state is fetched.
+  def default_player() do
+    %{
+      sprite_id: nil,
+      name: nil,
+      id: nil,
+      in_jail: false,
+      jail_turns: 0,
+      money: 0,
+      cards: []
+    }
+  end
+
   def render(assigns) do
     # TODO: buttons
     # - Buy house
@@ -328,6 +341,7 @@ defmodule MonopolyWeb.GameLive do
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
         player={@game.current_player}
+        player={Enum.find(@game.players, default_player(), fn player -> player.id == @id end)}
         current_player_id={@game.current_player.id}
         properties={get_properties(@game.players, @id)}
         on_roll_dice={JS.push("roll_dice")}
