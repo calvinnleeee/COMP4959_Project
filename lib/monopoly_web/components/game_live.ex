@@ -6,8 +6,7 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   alias MonopolyWeb.Components.BuyModal
-  alias MonopolyWeb.Components.UpgradeProperty
-  alias MonopolyWeb.Components.DowngradeProperty
+  alias MonopolyWeb.Components.PropertyActionModal
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -31,7 +30,10 @@ defmodule MonopolyWeb.GameLive do
         is_doubles: false,
         doubles_notification: nil,
         jail_notification: nil,
-        show_buy_modal: false
+        show_buy_modal: false,
+        show_upgrade_modal: false,
+        show_downgrade_modal: false
+
       )
     }
   end
@@ -286,7 +288,11 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def handle_event("cancel_buying", _params, socket) do
-    {:noreply, assign(socket, show_buy_modal: false)}
+    {:noreply, assign(socket,
+      show_buy_modal: false,
+      show_upgrade_modal: false,
+      show_downgrade_modal: false
+      )}
   end
 
   def get_properties(players, id) do
@@ -342,35 +348,7 @@ defmodule MonopolyWeb.GameLive do
         end_turn={@end_turn}
       />
 
-    <!-- Modal for buying property -->
-      <%= if @show_buy_modal do %>
-        <BuyModal.buy_modal
-          id="buy-modal"
-          show={@show_buy_modal}
-          property={Enum.at(@game.properties, @game.current_player.position)}
-          on_cancel={hide_modal("buy-modal")}
-        />
-      <% end %>
-
-    <!-- Modal for upgrading property -->
-      <%= if @show_buy_modal do %>
-        <UpgradeProperty.upgrade_prop_modal
-          id="upgrade-prop-modal"
-          show={@show_buy_modal}
-          property={Enum.at(@game.properties, @game.current_player.position)}
-          on_cancel={hide_modal("buy-modal")}
-        />
-      <% end %>
-
-    <!-- Modal for downgrading property -->
-      <%= if @show_buy_modal do %>
-        <DowngradeProperty.downgrade_prop_modal
-          id="downgrade-prop-modal"
-          show={@show_buy_modal}
-          property={Enum.at(@game.properties, @game.current_player.position)}
-          on_cancel={hide_modal("buy-modal")}
-        />
-      <% end %>
+    <!-- Modal for property action: buy || upgrade(buy) || downgrade(sell) -->
 
 
     </div>
