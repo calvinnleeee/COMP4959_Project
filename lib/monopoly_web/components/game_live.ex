@@ -5,7 +5,6 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
-  alias MonopolyWeb.Components.BuyModal
   alias MonopolyWeb.Components.PropertyActionModal
   alias GameObjects.Game
 
@@ -151,6 +150,7 @@ defmodule MonopolyWeb.GameLive do
 
       # Prepare notifications
       player = new_game.current_player
+      property = Enum.at(new_game.properties, player.position)
 
       jail_notification =
         if player.turns_taken == 3 do
@@ -174,6 +174,7 @@ defmodule MonopolyWeb.GameLive do
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
+          buy_prop: buyable(property, player),
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
@@ -349,6 +350,17 @@ defmodule MonopolyWeb.GameLive do
       />
 
     <!-- Modal for property action: buy || upgrade(buy) || downgrade(sell) -->
+      <%= if @show_property_modal do %>
+        <PropertyActionModal.property_action_modal
+          id="property-modal"
+          show={@show_property_modal}
+          property={@property}
+          buy_prop={@can_buy}
+          upgrade_prop={@can_upgrade}
+          sell_prop={@can_downgrade}
+          on_cancel={hide_modal("property-modal")}
+        />
+      <% end %>
 
 
     </div>
