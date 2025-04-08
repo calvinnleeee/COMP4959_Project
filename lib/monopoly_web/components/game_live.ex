@@ -58,7 +58,7 @@ defmodule MonopolyWeb.GameLive do
         roll: game.current_player.id == id && !game.current_player.rolled,
         upgrade_prop: upgradeable(property, player),
         sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == id
+        end_turn: game.current_player.id == id && game.current_player.rolled
       )
     }
   end
