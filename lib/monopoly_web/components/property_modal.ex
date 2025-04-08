@@ -1,13 +1,9 @@
-defmodule MonopolyWeb.Components.PropertyActionModal do
+defmodule MonopolyWeb.Components.PropertyModal do
   use Phoenix.Component
   import MonopolyWeb.CoreComponents
 
   @doc """
-  Renders a modal for buying/upgrading/downgrading property based on props
-
-  TODO buy property modal is shown underneath the dashboard (z-index needs to be updated)
-  TODO when buy modal pops up, i can press leave to not buy it, end turn,
-  then the turn counter doesn't increment (next player never gets their turn ???)
+    Renders a modal for buying/upgrading/downgrading property based on props
   """
   attr :id, :string, required: true
   attr :class, :string, default: ""

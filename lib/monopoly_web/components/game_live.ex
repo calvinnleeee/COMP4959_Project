@@ -5,7 +5,7 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
-  alias MonopolyWeb.Components.PropertyActionModal
+  alias MonopolyWeb.Components.PropertyModal
   import MonopolyWeb.Components.CardModal
   import MonopolyWeb.Components.RentModal
   import MonopolyWeb.Components.JailScreen
@@ -77,6 +77,12 @@ defmodule MonopolyWeb.GameLive do
   defp sellable(property, player) do
     property.owner != nil && property.owner.id == player.id
   end
+
+  # Check whether the tile is property or not
+  defp is_property_tile?(tile) do
+    tile.type in ["brown", "blue", "railroad", "utility", "light blue", "pink", "orange", "red", "yellow", "green", "dark blue"]
+  end
+
 
   # If it is now the user's turn, enable necessary buttons
   def handle_info(%{event: "turn_ended", payload: game}, socket) do
@@ -156,6 +162,12 @@ defmodule MonopolyWeb.GameLive do
         Game.roll_dice(id)
 
       card = new_game.active_card
+      show_prop_modal = is_property_tile?(new_loc)
+
+      # show property modal
+      buy_flag = show_prop_modal && buyable(new_loc, player)
+      upgrade_flag = show_prop_modal && upgradeable(new_loc, player)
+      sell_flag = show_prop_modal && sellable(new_loc, player)
 
       # Prepare notifications
       player = new_game.current_player
@@ -183,11 +195,13 @@ defmodule MonopolyWeb.GameLive do
 
           # If player did not roll doubles, or is/was in jail, disable rolling dice
           roll: !player.rolled && !player.in_jail,
-          upgrade_prop: upgradeable(new_loc, player),
-          sell_prop: sellable(new_loc, player),
+          upgrade_prop: upgrade_flag,
+          sell_prop: sell_flag,
           end_turn: player.rolled || player.in_jail,
-          show_property_modal: true,
-          buy_prop: buyable(new_loc, player),
+
+          # regarding property
+          show_property_modal: show_prop_modal,
+          buy_prop: buy_flag,
           property: property,
 
           # Dice results for dashboard
@@ -198,7 +212,7 @@ defmodule MonopolyWeb.GameLive do
           # Notifications for dashboard
           jail_notification: jail_notification,
           doubles_notification: doubles_notification,
-          show_buy_modal: buyable(new_loc, player),
+
           # If player got an instant-play card, display it
           show_card_modal:
             card != nil && elem(card.effect, 0) != :get_out_of_jail && player.id == id,
@@ -384,7 +398,7 @@ defmodule MonopolyWeb.GameLive do
           <%= if @show_property_modal do %>
             <%= @game.current_player.money %>
 
-        <PropertyActionModal.property_action_modal
+        <PropertyModal.property_modal
               id="property-modal"
               show={@show_property_modal}
               property={@property}
