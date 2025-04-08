@@ -19,7 +19,6 @@ defmodule MonopolyWeb.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
-
   @doc """
   Renders a modal.
 

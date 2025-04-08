@@ -141,6 +141,7 @@ defmodule MonopolyWeb.GameLive do
 
       # If player got an instant-play card, display it
       card = new_game.active_card
+
       if card != nil && Enum.at(card.effect, 0) != "get_out_of_jail" do
         display_card(card)
       end
@@ -286,11 +287,12 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def handle_event("cancel_buying", _params, socket) do
-    {:noreply, assign(socket,
-      show_buy_modal: false,
-      show_upgrade_modal: false,
-      show_downgrade_modal: false
-      )}
+    {:noreply,
+     assign(socket,
+       show_buy_modal: false,
+       show_upgrade_modal: false,
+       show_downgrade_modal: false
+     )}
   end
 
   def get_properties(players, id) do
@@ -318,7 +320,7 @@ defmodule MonopolyWeb.GameLive do
 
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
-
+      
     <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
@@ -328,7 +330,7 @@ defmodule MonopolyWeb.GameLive do
           </div>
         <% end %>
       </div>
-
+      
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
         player={@game.current_player}
@@ -345,7 +347,7 @@ defmodule MonopolyWeb.GameLive do
         roll={@roll}
         end_turn={@end_turn}
       />
-
+      
     <!-- Modal for property action: buy || upgrade(buy) || downgrade(sell) -->
       <%= if @show_property_modal do %>
         <PropertyActionModal.property_action_modal
@@ -358,8 +360,6 @@ defmodule MonopolyWeb.GameLive do
           on_cancel={hide_modal("property-modal")}
         />
       <% end %>
-
-
     </div>
     """
   end
