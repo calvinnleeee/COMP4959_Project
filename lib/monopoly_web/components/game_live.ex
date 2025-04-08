@@ -318,55 +318,59 @@ defmodule MonopolyWeb.GameLive do
     ~H"""
     <div id="session-id-hook" phx-hook="SessionId"></div>
 
-    <div class="game-container">
-      <h1 class="text-xl mb-4">Monopoly Game</h1>
+    <%= if @game.winner == nil do %>
+      <div class="game-container">
+        <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-    <!-- Placeholder for game board -->
-      <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-        Game board will be here
-        <%= if @game.current_player.in_jail do %>
-          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            IN JAIL (Turn {@game.current_player.jail_turns})
-          </div>
+      <!-- Placeholder for game board -->
+        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+          Game board will be here
+          <%= if @game.current_player.in_jail do %>
+            <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+              IN JAIL (Turn {@game.current_player.jail_turns})
+            </div>
+          <% end %>
+        </div>
+
+      <!-- Player dashboard with dice results and all notifications -->
+        <.player_dashboard
+          player={Enum.find(@game.players, default_player(), fn player -> player.id == @id end)}
+          current_player_id={@game.current_player.id}
+          properties={get_properties(@game.players, @id)}
+          on_roll_dice={JS.push("roll_dice")}
+          on_end_turn={JS.push("end_turn")}
+          dice_result={@dice_result}
+          dice_values={@dice_values}
+          is_doubles={@is_doubles}
+          doubles_notification={@doubles_notification}
+          doubles_count={get_doubles(@game.players, @id)}
+          jail_notification={@jail_notification}
+          roll={@roll}
+          end_turn={@end_turn}
+        />
+
+      <!-- Modal for buying property : @id or "buy-modal"-->
+        <%= if @show_buy_modal do %>
+          <.buy_modal
+            id="buy-modal"
+            show={@show_buy_modal}
+            property={Enum.at(@game.properties, @game.current_player.position)}
+            on_cancel={hide_modal("buy-modal")}
+          />
+        <% end %>
+
+      <!-- Modal for displaying card effects : @id or "card-modal"-->
+        <%= if @show_card_modal && @game.active_card do %>
+          <.card_modal
+            id="card-modal"
+            show={@show_card_modal}
+            card={@game.active_card}
+          />
         <% end %>
       </div>
-
-    <!-- Player dashboard with dice results and all notifications -->
-      <.player_dashboard
-        player={Enum.find(@game.players, default_player(), fn player -> player.id == @id end)}
-        current_player_id={@game.current_player.id}
-        properties={get_properties(@game.players, @id)}
-        on_roll_dice={JS.push("roll_dice")}
-        on_end_turn={JS.push("end_turn")}
-        dice_result={@dice_result}
-        dice_values={@dice_values}
-        is_doubles={@is_doubles}
-        doubles_notification={@doubles_notification}
-        doubles_count={get_doubles(@game.players, @id)}
-        jail_notification={@jail_notification}
-        roll={@roll}
-        end_turn={@end_turn}
-      />
-
-    <!-- Modal for buying property : @id or "buy-modal"-->
-      <%= if @show_buy_modal do %>
-        <.buy_modal
-          id="buy-modal"
-          show={@show_buy_modal}
-          property={Enum.at(@game.properties, @game.current_player.position)}
-          on_cancel={hide_modal("buy-modal")}
-        />
-      <% end %>
-
-    <!-- Modal for displaying card effects : @id or "card-modal"-->
-      <%= if @show_card_modal && @game.active_card do %>
-        <.card_modal
-          id="card-modal"
-          show={@show_card_modal}
-          card={@game.active_card}
-        />
-      <% end %>
-    </div>
+    <% else %>
+      <h1 class="text-xl font-bold">Game over! Winner: {@game.winner.name}</h1>
+    <% end %>
     """
   end
 
