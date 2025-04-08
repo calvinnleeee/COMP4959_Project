@@ -38,15 +38,15 @@ open up 2~4 browsers to load up the players
 	!! this will crash sometimes when errors happen during turns
 (x) player turn cannot be ended (button disabled) if they have yet to roll
 (x) doubles allows extra roll
-  ( ) if a player rolls double, roll dice and end turn should be disabled until the tile action is taken
+  (x) if a player rolls double, roll dice and end turn should be disabled until the tile action is taken
 (x) 3 doubles sends a player to jail
 ( ) player loses and is notified when money < 0
 
 after above is done and checked:
 ( ) add handling of landing on tiles
-	( ) land on property/railroad/utility
+	(x) land on property/railroad/utility
 		(x) handle buy
-		( ) buy modal cannot exit when clicked outside (must force player to click buy or leave)
+		(x) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
 	(x) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
