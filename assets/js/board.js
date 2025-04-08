@@ -195,7 +195,7 @@ export function loadBoard(gameState) {
         setupControls();
         console.log("game: ");
         console.log(game.players)
-        drawScene(game);
+        drawScene();
     });
 }
 
@@ -218,7 +218,7 @@ function updateViewMatrix() {
 
     mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
 
-    requestAnimationFrame(drawScene(game)); // Smoothly update view
+    requestAnimationFrame(drawScene); // Smoothly update view
 }
 
 function setupControls() {
@@ -236,7 +236,7 @@ function setupControls() {
         lastX = e.clientX;
         angleY += dx * 0.005;
         updateViewMatrix();
-        drawScene(game);
+        drawScene();
     });
 }
 
@@ -253,8 +253,12 @@ function getBoardPosition(pos) {
     return [0, height, 0];
 }
 
-export function drawScene(gameState) {
+export function updateGameState(gameState) {
     game = gameState;
+    drawScene();
+}
+
+function drawScene() {
     console.log("Drawing")
     console.log(game);
     console.log(game.players);

@@ -5,7 +5,7 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import {drawScene, loadBoard} from "./board"
+import {loadBoard, updateGameState} from "./board"
 
 let Hooks = {}
 Hooks.SessionId = {
@@ -25,7 +25,7 @@ Hooks.BoardCanvas = {
   },
 
   updated() {
-    drawScene(JSON.parse(this.el.dataset.game));
+    updateGameState(JSON.parse(this.el.dataset.game));
   }
 }
 
