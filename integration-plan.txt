@@ -10,6 +10,7 @@ open up 2~4 browsers to load up the players
 !! BUGS !! - delete if they are fixed
 - money is not updating properly (calvin: played a game for a few turns, player 1 won even though
 	both players had money ???)
+- some rare instances where a community card modal is shown for all players ? (need double checking)
 
 
 ( ) player can set a name (currently not handled)
@@ -50,12 +51,11 @@ after above is done and checked:
 	(x) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
 		(x) need visual indication that a player drew a card
-	(x) land on tax/parking
+	( ) land on tax/parking
 	  (x) update money
-( ) handle landing on another player's property
-	( ) need indicator that you landed on someone's property, and rent paid needs to be shown
-	( ) money needs to update after rent paid
-( ) handle landing on tax tile
-	( ) need indicator that you landed on a tile and you'll lose money
+		( ) modal needs to be shown when landing on tax/parking
+(x) handle landing on another player's property
+	(x) need indicator that you landed on someone's property, and rent paid needs to be shown
+	(x) money needs to update after rent paid
 ( ) handle passing go
 	( ) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
