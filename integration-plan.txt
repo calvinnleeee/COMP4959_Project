@@ -52,3 +52,10 @@ after above is done and checked:
 		(x) need visual indication that a player drew a card
 	(x) land on tax/parking
 	  (x) update money
+( ) handle landing on another player's property
+	( ) need indicator that you landed on someone's property, and rent paid needs to be shown
+	( ) money needs to update after rent paid
+( ) handle landing on tax tile
+	( ) need indicator that you landed on a tile and you'll lose money
+( ) handle passing go
+	( ) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)

@@ -126,7 +126,11 @@ defmodule MonopolyWeb.GameLive do
   # All other events can be handled the same
   def handle_info(%{event: _, payload: game}, socket) do
     id = socket.assigns.id
-    {:noreply, assign(socket, game: game)}
+    {:noreply, assign(
+      socket,
+      game: game,
+      player: Enum.find(game.players, fn player -> player.id == id end)
+    )}
   end
 
   # Handle session_id coming from JS hook via pushEvent
@@ -214,7 +218,8 @@ defmodule MonopolyWeb.GameLive do
           doubles_notification: doubles_notification,
           show_buy_modal: buyable(new_loc, player),
           # If player got an instant-play card, display it
-          show_card_modal: card != nil && elem(card.effect, 0) != :get_out_of_jail
+          show_card_modal:
+            card != nil && elem(card.effect, 0) != :get_out_of_jail && new_game.current_player.id == id
         )
       }
     else
