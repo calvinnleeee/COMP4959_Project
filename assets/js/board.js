@@ -1,4 +1,5 @@
-export function loadBoard() {
+export function loadBoard(game) {
+    console.log(game);
     // === WebGL Setup ===
     let canvas = document.getElementById("webgl-canvas");
     canvas.width = canvas.clientWidth;
