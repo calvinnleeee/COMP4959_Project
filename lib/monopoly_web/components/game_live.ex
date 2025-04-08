@@ -353,15 +353,18 @@ defmodule MonopolyWeb.GameLive do
       <div class="game-container">
         <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-      <!-- Placeholder for game board -->
-        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-          Game board will be here
-          <%= if @game.current_player.in_jail do %>
-            <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-              IN JAIL (Turn {@game.current_player.jail_turns})
-            </div>
-          <% end %>
-        </div>
+      <!-- Game board container -->
+<div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
+  <!-- WebGL canvas fills the container -->
+  <canvas id="webgl-canvas" class="w-full h-full block"></canvas>
+
+  <%= if @game.current_player.in_jail do %>
+    <div class="absolute top-2 left-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+      IN JAIL (Turn <%= @game.current_player.jail_turns %>)
+    </div>
+  <% end %>
+</div>
+
 
       <!-- Player dashboard with dice results and all notifications -->
         <.player_dashboard
