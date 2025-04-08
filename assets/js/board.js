@@ -165,7 +165,10 @@ function setupScene() {
     players = [
         { id: 1, position: 1, color: [1, 0, 0] },  // Red
         { id: 2, position: 10, color: [0, 1, 0] }, // Green
-        { id: 3, position: 20, color: [0, 0, 1] }  // Blue
+        { id: 3, position: 20, color: [0, 0, 1] },
+        { id: 4, position: 11, color: [1, 1, 0] },
+        { id: 5, position: 12, color: [1, 0, 1] },
+        { id: 6, position: 13, color: [0, 1, 1] }  // Blue
     ];
 }
 
@@ -285,8 +288,9 @@ function drawScene() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     // === Draw Players ===
-    players.forEach(player => {
-        const actualPos = game.players[player.id - 1].position;
+    game.players.forEach(player => {
+        // const actualPos = game.players[player.id - 1].position;
+        const actualPos = player.position;
         console.log(actualPos);
         let pos = getBoardPosition(actualPos);
 
@@ -302,7 +306,8 @@ function drawScene() {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, playerIndexBuffer);
 
         gl.uniform1i(useTextureUniform, 0); // Use solid color
-        gl.uniform3fv(colorUniform, player.color); // Player color
+        gl.uniform3fv(colorUniform, players[player.sprite_id].color); // Player color
+        // gl.uniform3fv(colorUniform, players.color); // Player color
 
         gl.drawElements(gl.TRIANGLES, playerIndices.length, gl.UNSIGNED_SHORT, 0);
     });
