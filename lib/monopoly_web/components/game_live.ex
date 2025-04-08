@@ -348,7 +348,6 @@ defmodule MonopolyWeb.GameLive do
           id="buy-modal"
           show={@show_buy_modal}
           property={Enum.at(@game.properties, @game.current_player.position)}
-          on_cancel={hide_modal("buy-modal")}
         />
       <% end %>
     </div>
