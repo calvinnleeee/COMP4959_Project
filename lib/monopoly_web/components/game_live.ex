@@ -162,7 +162,7 @@ defmodule MonopolyWeb.GameLive do
         Game.roll_dice(id)
 
       card = new_game.active_card
-      show_prop_modal = is_property_tile?(new_loc)
+      show_prop_modal = is_property_tile?(new_loc) && (new_loc.owner == nil || new_loc.owner.id == player.id)
 
       # show property modal
       buy_flag = show_prop_modal && buyable(new_loc, player)
