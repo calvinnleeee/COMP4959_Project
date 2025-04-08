@@ -143,9 +143,6 @@ defmodule MonopolyWeb.GameLive do
       {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
 
-      IO.inspect(player.position, label: "New player position")
-      IO.inspect(Enum.at(new_game.properties, player.position), label: "Current tile")
-
       # If player got an instant-play card, display it
       card = new_game.active_card
 
@@ -182,7 +179,7 @@ defmodule MonopolyWeb.GameLive do
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
-          show_property_modal: true,
+          show_property_modal: buyable(new_loc, player),
           property: property,
 
           # Dice results for dashboard
@@ -192,9 +189,7 @@ defmodule MonopolyWeb.GameLive do
 
           # Notifications for dashboard
           jail_notification: jail_notification,
-          doubles_notification: doubles_notification,
-
-          show_property_modal: buyable(new_loc, player)
+          doubles_notification: doubles_notification
         )
       }
     else
