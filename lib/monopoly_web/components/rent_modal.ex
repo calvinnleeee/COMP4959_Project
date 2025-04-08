@@ -13,11 +13,18 @@ defmodule MonopolyWeb.Components.RentModal do
   attr :on_cancel, :any, default: nil, doc: "JS command for cancel action"
 
   def rent_modal(assigns) do
+    owner_name = if assigns.property.owner == nil do
+      ""
+    else
+      assigns.property.owner.name
+    end
+    assigns = assign(assigns, owner_name: owner_name)
+
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
       <div class="card-modal-content p-6">
-        <h3 class="text-lg font-bold mb-4">You landed on {@property.owner.name}'s {@property.name}!</h3>
-        <p class="mb-6">You need to pay ${Property.charge_rent(@property, @dice_result)} to {@property.owner.name}.</p>
+        <h3 class="text-lg font-bold mb-4">You landed on {@owner_name}'s {@property.name}!</h3>
+        <p class="mb-6">You need to pay ${Property.charge_rent(@property, @dice_result)} to {@owner_name}.</p>
       </div>
     </.modal>
     """

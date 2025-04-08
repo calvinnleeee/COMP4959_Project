@@ -5,7 +5,7 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
-  import MonopolyWeb.Components.BuyModal
+  import MonopolyWeb.Components.PropertyModal
   import MonopolyWeb.Components.CardModal
   import MonopolyWeb.Components.RentModal
   import MonopolyWeb.Components.TaxModal
@@ -37,7 +37,8 @@ defmodule MonopolyWeb.GameLive do
           is_doubles: false,
           doubles_notification: nil,
           jail_notification: nil,
-          show_buy_modal: false,
+          upgrade_prop: false,
+          show_property_modal: false,
           show_card_modal: false,
           show_rent_modal: false,
           show_tax_modal: false
@@ -192,7 +193,9 @@ defmodule MonopolyWeb.GameLive do
           # Notifications for dashboard
           jail_notification: jail_notification,
           doubles_notification: doubles_notification,
-          show_buy_modal: buyable(new_loc, player),
+          show_property_modal:
+            (new_loc.type not in ["community", "chance", "tax", "parking", "jail", "go"]) &&
+            (new_loc.owner == nil || new_loc.owner.id == id) && new_game.current_player.id == id,
           # If player got an instant-play card, display it
           show_card_modal:
             card != nil && elem(card.effect, 0) != :get_out_of_jail && new_game.current_player.id == id,
@@ -216,7 +219,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can buy
-    if player.id == id && assigns.show_buy_modal do
+    if player.id == id && assigns.show_property_modal do
       # Buy the property and get new game state
       {:ok, game} =
         Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
@@ -230,7 +233,7 @@ defmodule MonopolyWeb.GameLive do
           # Check if player can afford further upgrades
           upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player),
           sell_prop: true,
-          show_buy_modal: false
+          show_property_modal: false
         )
       }
     else
@@ -245,7 +248,8 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can downgrade the prop
-    if player.id == id && assigns.downgrade_prop do
+    # if player.id == id && assigns.downgrade_prop do
+    if player.id == id && assigns.show_property_modal do
       # Downgrade the property and get new game state
       {:ok, game} =
         Game.downgrade_property(
@@ -303,7 +307,16 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def handle_event("cancel_buying", _params, socket) do
-    {:noreply, assign(socket, show_buy_modal: false)}
+    {:noreply, assign(socket, show_property_modal: false)}
+  end
+
+  def handle_event("close_card", _params, socket) do
+    {:noreply, assign(socket, show_card_modal: false)}
+  end
+
+  def handle_event("delete_game", _params, socket) do
+    _ = Game.delete_game()
+    {:noreply, push_navigate(socket, to: "/", replace: true)}
   end
 
   def get_properties(players, id) do
@@ -374,11 +387,13 @@ defmodule MonopolyWeb.GameLive do
             end_turn={@end_turn}
           />
 
-          <!-- Modal for buying property : @id or "buy-modal"-->
-          <%= if @show_buy_modal do %>
-            <.buy_modal
-              id="buy-modal"
-              show={@show_buy_modal}
+          <!-- Modal for displaying property actions -->
+          <%= if @show_property_modal do %>
+            <.property_modal
+              id="property-modal"
+              player={@player}
+              show={@show_property_modal}
+              can_upgrade={@upgrade_prop}
               property={Enum.at(@game.properties, @game.current_player.position)}
             />
           <% end %>
@@ -389,6 +404,7 @@ defmodule MonopolyWeb.GameLive do
               id="card-modal"
               show={@show_card_modal}
               card={@game.active_card}
+              on_cancel={JS.push("close_card")}
             />
           <% end %>
 
@@ -414,7 +430,13 @@ defmodule MonopolyWeb.GameLive do
       </div>
 
     <% else %>
-      <h1 class="text-xl font-bold">Game over! Winner: {@game.winner.name}</h1>
+      <h1 class="text-xl font-bold mb-6">Game over! Winner: {@game.winner.name}</h1>
+      <button
+        phx-click="delete_game"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Reset
+      </button>
     <% end %>
     """
   end

@@ -8,12 +8,11 @@ ideally integrate and test before next part/step
 open up 2~4 browsers to load up the players
 
 !! BUGS !! - delete if they are fixed
-- money is not updating properly (calvin: played a game for a few turns, player 1 won even though
-	both players had money ???)
 - some rare instances where a community card modal is shown for all players ? (need double checking)
-- once players start building up a lot of properties, sometimes crashes occur and a player just wins
-  (error log mentions line 19 of rent modal, accessing some nil or %{} value)
-	(might have something to do with owning all properties of a colour)
+- sending a player to jail should end their turn on the first turn (when they don't have card)
+- active_card only changed on ending turn -> if a player rolls doubles, lands on a card and then
+	a property, they will get the card popup twice
+- sometimes a player just randomly drops...?
 
 
 ( ) player can set a name (currently not handled)
@@ -51,9 +50,10 @@ after above is done and checked:
 		(x) handle buy
 		(x) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
-	(x) land on card
+	( ) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
 		(x) need visual indication that a player drew a card
+		( ) need visual indication that player obtained a get out of jail card
 	(x) land on tax/parking
 	  (x) update money
 		(x) modal needs to be shown when landing on tax/parking
@@ -62,3 +62,9 @@ after above is done and checked:
 	(x) money needs to update after rent paid
 ( ) handle passing go
 	( ) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
+
+Jail things
+( ) player moves to jail successfully (card or landing on go to jail)
+( ) player cannot roll when entering the jail
+( ) jail needs end turn button
+(x) jail card correctly applies
