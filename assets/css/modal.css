@@ -6,14 +6,4 @@
     --nice-blue: rgb(55, 128, 153);
 }
 
-.modal.buy {
-    border: 2px solid var(--bright-yellow);
-}
 
-.btn-primary {
-    background-color: var(--nice-blue);
-    color: white;
-}
-.btn-primary:hover {
-    background-color: var(--dark-yellow);
-}

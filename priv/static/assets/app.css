@@ -1246,6 +1246,10 @@ select {
   animation: spin 1s linear infinite;
 }
 
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
@@ -1784,6 +1788,10 @@ select {
   opacity: 0.4;
 }
 
+.opacity-50 {
+  opacity: 0.5;
+}
+
 .shadow {
   --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
@@ -2115,19 +2123,6 @@ select {
   --bright-yellow: rgb(250, 223, 130);
   --dark-yellow: rgb(209, 189, 110);
   --nice-blue: rgb(55, 128, 153);
-}
-
-.modal.buy {
-  border: 2px solid var(--bright-yellow);
-}
-
-.btn-primary {
-  background-color: var(--nice-blue);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: var(--dark-yellow);
 }
 
 /* This file is for your main application CSS */

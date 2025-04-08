@@ -136,7 +136,7 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
+      {:ok, {dice, sum, double}, new_loc, new_game} =
         Game.roll_dice(id)
 
       # If player got an instant-play card, display it
@@ -320,7 +320,7 @@ defmodule MonopolyWeb.GameLive do
 
     <div class="game-container">
       <h1 class="text-xl mb-4">Monopoly Game</h1>
-      
+
     <!-- Placeholder for game board -->
       <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
         Game board will be here
@@ -330,7 +330,7 @@ defmodule MonopolyWeb.GameLive do
           </div>
         <% end %>
       </div>
-      
+
     <!-- Player dashboard with dice results and all notifications -->
       <.player_dashboard
         player={@game.current_player}
@@ -347,9 +347,11 @@ defmodule MonopolyWeb.GameLive do
         roll={@roll}
         end_turn={@end_turn}
       />
-      
+
     <!-- Modal for property action: buy || upgrade(buy) || downgrade(sell) -->
       <%= if @show_property_modal do %>
+        <%= @game.current_player.money %>
+
         <PropertyActionModal.property_action_modal
           id="property-modal"
           show={@show_property_modal}
