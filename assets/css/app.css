@@ -2,4 +2,5 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "./player_dashboard.css";
+@import "./font.css";
 /* This file is for your main application CSS */

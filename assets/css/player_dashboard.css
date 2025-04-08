@@ -111,6 +111,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-size: 1.2rem;
 }
 
 .roll-dice-btn, .upgrade-prop-btn, .sell-prop-btn {

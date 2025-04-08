@@ -81,8 +81,7 @@ defmodule MonopolyWeb.GameLive do
           game: game,
           roll: true,
           upgrade_prop: upgradeable(property, player),
-          sell_prop: sellable(property, player),
-          end_turn: true
+          sell_prop: sellable(property, player)
         )
       }
     else
@@ -343,9 +342,6 @@ defmodule MonopolyWeb.GameLive do
   end
 
   def render(assigns) do
-    # TODO: buttons
-    # - Buy house
-    # - Sell house
     ~H"""
     <div id="session-id-hook" phx-hook="SessionId"></div>
 
@@ -354,17 +350,16 @@ defmodule MonopolyWeb.GameLive do
         <h1 class="text-xl mb-4">Monopoly Game</h1>
 
       <!-- Game board container -->
-<div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
-  <!-- WebGL canvas fills the container -->
-  <canvas id="webgl-canvas" class="w-full h-full block"></canvas>
+        <div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
+          <!-- WebGL canvas fills the container -->
+          <canvas id="webgl-canvas" class="w-full h-full block"></canvas>
 
-  <%= if @game.current_player.in_jail do %>
-    <div class="absolute top-2 left-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-      IN JAIL (Turn <%= @game.current_player.jail_turns %>)
-    </div>
-  <% end %>
-</div>
-
+          <%= if @game.current_player.in_jail do %>
+            <div class="absolute top-2 left-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+              IN JAIL (Turn <%= @game.current_player.jail_turns %>)
+            </div>
+          <% end %>
+        </div>
 
       <!-- Player dashboard with dice results and all notifications -->
         <.player_dashboard
