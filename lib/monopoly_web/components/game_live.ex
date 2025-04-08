@@ -267,7 +267,7 @@ defmodule MonopolyWeb.GameLive do
     if assigns.game.current_player.id == id do
       # Call backend to end the turn and get new game state
       {:ok, game} = Game.end_turn(id)
-      Logger.info("Game ended turn: i crashed here -> #{inspect(game)}")
+
       # Disable all buttons
       {
         :noreply,
