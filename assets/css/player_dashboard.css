@@ -95,11 +95,12 @@
 
 .dashboard-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin: 5px 0;
 }
 
-.roll-dice-btn, .end-turn-btn {
+.roll-dice-btn, .end-turn-btn, .upgrade-prop-btn, .sell-prop-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -112,7 +113,7 @@
   transition: background-color 0.2s;
 }
 
-.roll-dice-btn {
+.roll-dice-btn, .upgrade-prop-btn, .sell-prop-btn {
   background-color: #3498db;
   color: white;
 }
@@ -122,11 +123,11 @@
   color: white;
 }
 
-.roll-dice-btn:hover, .end-turn-btn:hover {
+.roll-dice-btn:hover, .end-turn-btn:hover, .upgrade-prop-btn:hover, .sell-prop-btn:hover {
   opacity: 0.9;
 }
 
-.roll-dice-btn:disabled, .end-turn-btn:disabled {
+.roll-dice-btn:disabled, .end-turn-btn:disabled, .upgrade-prop-btn:disabled, .sell-prop-btn:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
   opacity: 0.7;

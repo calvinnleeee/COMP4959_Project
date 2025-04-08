@@ -25,6 +25,8 @@ defmodule MonopolyWeb.GameLive do
         id: nil,
         roll: false,
         end_turn: false,
+        upgrade_prop: false,
+        sell_prop: false,
         dice_result: nil,
         dice_values: nil,
         is_doubles: false,
@@ -186,7 +188,7 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
-  # Player buys or upgrades property they are on
+  # Player upgrades property they are on
   def handle_event("buy_prop", _params, socket) do
     assigns = socket.assigns
     id = assigns.id
@@ -214,6 +216,35 @@ defmodule MonopolyWeb.GameLive do
     end
   end
 
+  # Player upgrades property they are on
+  def handle_event("upgrade_prop", _params, socket) do
+    assigns = socket.assigns
+    id = assigns.id
+    player = assigns.game.current_player
+
+    # Verify that it is the player's turn and they can upgrade
+    if player.id == id && assigns.upgrade_prop do
+      # Buy the property and get new game state
+      {:ok, game} =
+        Game.upgrade_property(
+          id,
+          Enum.at(assigns.game.properties, player.position)
+        )
+
+      {
+        :noreply,
+        assign(
+          socket,
+          game: game,
+          # Check if player can afford further upgrades
+          upgrade_prop: upgradeable(Enum.at(game.properties, player.position), player)
+        )
+      }
+    else
+      {:noreply, socket}
+    end
+  end
+
   # Player sells or downgrades property they are on
   def handle_event("sell_prop", _params, socket) do
     assigns = socket.assigns
@@ -221,7 +252,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can downgrade the prop
-    if player.id == id && assigns.downgrade_prop do
+    if player.id == id && assigns.sell_prop do
       # Downgrade the property and get new game state
       {:ok, game} =
         Game.downgrade_property(
@@ -229,7 +260,7 @@ defmodule MonopolyWeb.GameLive do
           Enum.at(assigns.game.properties, player.position)
         )
 
-      property = Enum.at(assigns.game.properties, player.position)
+      property = Enum.at(game.properties, player.position)
 
       {
         :noreply,
@@ -339,6 +370,8 @@ defmodule MonopolyWeb.GameLive do
           properties={get_properties(@game.players, @id)}
           on_roll_dice={JS.push("roll_dice")}
           on_end_turn={JS.push("end_turn")}
+          on_upgrade_prop={JS.push("upgrade_prop")}
+          on_sell_prop={JS.push("sell_prop")}
           dice_result={@dice_result}
           dice_values={@dice_values}
           is_doubles={@is_doubles}
@@ -347,6 +380,8 @@ defmodule MonopolyWeb.GameLive do
           jail_notification={@jail_notification}
           roll={@roll}
           end_turn={@end_turn}
+          upgrade_prop={@upgrade_prop}
+          sell_prop={@sell_prop}
         />
 
       <!-- Modal for buying property : @id or "buy-modal"-->

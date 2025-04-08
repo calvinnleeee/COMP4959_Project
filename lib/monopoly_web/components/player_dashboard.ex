@@ -8,6 +8,8 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   attr :current_player_id, :string, default: nil, doc: "ID of the current active player"
   attr :on_roll_dice, JS, default: %JS{}, doc: "JS command for roll dice action"
   attr :on_end_turn, JS, default: %JS{}, doc: "JS command for end turn action"
+  attr :on_upgrade_prop, JS, default: %JS{}, doc: "JS command for upgrade prop action"
+  attr :on_sell_prop, JS, default: %JS{}, doc: "JS command for sell prop action"
   attr :properties, :list, default: [], doc: "List of properties owned by player"
   attr :dice_result, :integer, default: nil, doc: "Result of the dice roll"
   attr :dice_values, :any, default: nil, doc: "Individual dice values as a tuple"
@@ -17,6 +19,8 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   attr :jail_notification, :string, default: nil, doc: "Notification for jail"
   attr :roll, :boolean, default: false, doc: "Whether player can roll dice"
   attr :end_turn, :boolean, default: false, doc: "Whether player can end their turn"
+  attr :upgrade_prop, :boolean, default: false, doc: "Whether player can upgrade property"
+  attr :sell_prop, :boolean, default: false, doc: "Whether player can sell property"
 
   def player_dashboard(assigns) do
     # Get player color based on sprite_id
@@ -64,6 +68,22 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
             class="end-turn-btn">
             <.icon name="hero-arrow-right" class="h-4 w-4" />
             End Turn
+          </button>
+
+          <button
+            phx-click={@on_upgrade_prop}
+            disabled={not @upgrade_prop}
+            class="upgrade-prop-btn">
+            <.icon name="hero-arrow-up" class="h-4 w-4" />
+            Upgrade Property
+          </button>
+
+          <button
+            phx-click={@on_sell_prop}
+            disabled={not @sell_prop}
+            class="sell-prop-btn">
+            <.icon name="hero-arrow-down" class="h-4 w-4" />
+            Sell Property
           </button>
         </div>
 
