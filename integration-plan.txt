@@ -64,10 +64,10 @@ after above is done and checked:
 	( ) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
 
 Jail things
-( ) player moves to jail successfully (card or landing on go to jail)
-( ) player cannot roll when entering the jail
-( ) jail needs end turn button
-( ) jail roll dice result should be shown with the end turn button
+(?) player moves to jail successfully (card or landing on go to jail)
+(?) player cannot roll when entering the jail
+(x) jail needs end turn button
+(x) jail roll dice result should be shown with the end turn button
 (x) jail card correctly applies
 
 Upgrades

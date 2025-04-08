@@ -44,7 +44,7 @@ defmodule MonopolyWeb.Components.PropertyModal do
           </button>
           <button
             phx-click="sell_prop"
-            class={"px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 #{if !@can_sell, do: " hidden"}"}
+            class={"px-4 py-2 bg-orange-500 text-white rounded hover:bg-green-600 #{if !@can_sell, do: " hidden"}"}
           >
             Sell
           </button>

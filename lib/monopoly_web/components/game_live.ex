@@ -355,6 +355,7 @@ defmodule MonopolyWeb.GameLive do
         <%= if @player != nil && @game.current_player.in_jail && @game.current_player.id == @id do %>
           <.jail_screen
             player={@game.current_player}
+            dice={@dice_values}
             on_roll_dice={JS.push("roll_dice")}
             on_end_turn={JS.push("end_turn")}
           />
