@@ -327,7 +327,11 @@ function drawScene() {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, boardBuffer);
     gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
+    gl.enableVertexAttribArray(positionAttrib);
+
     gl.vertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+    gl.enableVertexAttribArray(texCoordAttrib);
+
     gl.uniform1i(useTextureUniform, 1); // Use texture
     gl.bindBuffer(gl.ARRAY_BUFFER, boardBuffer);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -353,7 +357,10 @@ function drawScene() {
         gl.uniformMatrix4fv(matrixUniform, false, mvpMatrix);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, playerBuffer);
-        gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+        gl.enableVertexAttribArray(positionAttrib);
+        // Disable texCoordAttrib when using playerBuffer (no texture data)
+        gl.disableVertexAttribArray(texCoordAttrib);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, playerIndexBuffer);
 
