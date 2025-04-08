@@ -103,7 +103,7 @@ defmodule MonopolyWeb.GameLive do
     # Re-activate player if they are reconnecting
     game =
       if !player.active do
-        {:ok, new_game} = Game.join_game(id)
+        {:ok, new_game} = Game.set_player_active(id)
         new_game
       else
         game
