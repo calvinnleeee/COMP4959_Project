@@ -1,11 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     // === WebGL Setup ===
-    let canvas = document.createElement("canvas");
-    canvas.id = "webgl-canvas";
-    canvas.width = 1000;
-    canvas.height = 1000;
+    let canvas = document.getElementById("webgl-canvas");
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
     canvas.style.border = "2px solid white";
-    document.body.appendChild(canvas);
     
 
     let gl = canvas.getContext("webgl");
@@ -76,6 +74,25 @@ document.addEventListener("DOMContentLoaded", function () {
             return shader;
         }
 
+        function resizeCanvasToDisplaySize(canvas) {
+            const realToCSSPixels = window.devicePixelRatio || 1;
+
+            // Lookup the size the browser is displaying the canvas in CSS pixels
+            const displayWidth = Math.floor(canvas.clientWidth * realToCSSPixels);
+            const displayHeight = Math.floor(canvas.clientHeight * realToCSSPixels);
+
+            // Check if the canvas is not the same size
+            if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+                canvas.width = displayWidth;
+                canvas.height = displayHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+
+                // Update your projection matrix
+                mat4.perspective(projectionMatrix, Math.PI / 3, canvas.width / canvas.height, 0.1, 10);
+            }
+        }
+
+
         function createProgram(gl, vShader, fShader) {
             const program = gl.createProgram();
             gl.attachShader(program, vShader);
@@ -100,13 +117,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         // === Board as a 3D Plane with texture coordinates ===
+        const BOARD_SIZE = 0.95;
+
         const boardVertices = new Float32Array([
-            // Positions        // Texture Coordinates
-            -0.8, 0.0, -0.8, 0.0, 0.0,  // Bottom-left
-            0.8, 0.0, -0.8, 1.0, 0.0,  // Bottom-right
-            -0.8, 0.0, 0.8, 0.0, 1.0,  // Top-left
-            0.8, 0.0, 0.8, 1.0, 1.0   // Top-right
+            -BOARD_SIZE, 0.0, -BOARD_SIZE, 0.0, 0.0,
+            BOARD_SIZE, 0.0, -BOARD_SIZE, 1.0, 0.0,
+            -BOARD_SIZE, 0.0, BOARD_SIZE, 0.0, 1.0,
+            BOARD_SIZE, 0.0, BOARD_SIZE, 1.0, 1.0
         ]);
+
 
         const playerVertices = new Float32Array([
             // Front face
@@ -210,6 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ];
 
         function drawScene(playerPosition) {
+            resizeCanvasToDisplaySize(canvas)
             gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.enable(gl.DEPTH_TEST);
