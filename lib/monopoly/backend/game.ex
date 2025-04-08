@@ -3,7 +3,6 @@ defmodule GameObjects.Game do
   This module represents the Game object, which holds vital state information and defines
   the methods for handling game logic.
   """
-  require Logger
   use GenServer
   alias GameObjects.Game
   alias GameObjects.{Deck, Player, Property, Dice}
@@ -371,7 +370,7 @@ defmodule GameObjects.Game do
 
   # Step 1: Check if the current tile is a property (not community, chance, tax, etc.)
   defp is_property_tile(current_tile) do
-    current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"]
+    current_tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail", "parking"]
   end
 
   # Step 2: Get the owner of the property
@@ -960,7 +959,7 @@ defmodule GameObjects.Game do
 
     cond do
       # Check that the tile is a property
-      tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail"] ->
+      tile.type not in ["community", "chance", "tax", "go", "jail", "go_to_jail", "parking"] ->
         if GameObjects.Property.is_owned(tile) do
           {:reply, {:err, "Property already owned"}, state}
         else
@@ -1005,6 +1004,8 @@ defmodule GameObjects.Game do
             :ets.insert(@game_store, {:game, updated_state})
             MonopolyWeb.Endpoint.broadcast("game_state", "property_bought", updated_state)
             {:reply, {:ok, updated_state}, updated_state}
+          else
+            {:reply, {:err, "Not enough funds to purchase property."}, state}
           end
         end
 
