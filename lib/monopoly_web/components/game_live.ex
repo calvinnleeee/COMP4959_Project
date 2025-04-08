@@ -6,11 +6,8 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.BuyModal
-<<<<<<< HEAD
   import MonopolyWeb.Components.CardModal
-=======
   import MonopolyWeb.Components.JailScreen
->>>>>>> feature/princeton/jail_screen
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -373,30 +370,30 @@ defmodule MonopolyWeb.GameLive do
         on_roll_dice={JS.push("roll_dice")}
         on_end_turn={JS.push("end_turn")}
         />
-      <%else %>
+        <%else %>
 
-    <!-- Placeholder for game board -->
-      <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-        Game board will be here
-      </div>
+        <!-- Placeholder for game board -->
+        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+          Game board will be here
+        </div>
 
-    <!-- Player dashboard with dice results and all notifications -->
-      <.player_dashboard
-        player={@player}
-        current_player={@game.current_player}
-        on_roll_dice={JS.push("roll_dice")}
-        on_end_turn={JS.push("end_turn")}
-        dice_result={@dice_result}
-        dice_values={@dice_values}
-        is_doubles={@is_doubles}
-        doubles_notification={@doubles_notification}
-        doubles_count={get_doubles(@game.players, @id)}
-        jail_notification={@jail_notification}
-        roll={@roll}
-        end_turn={@end_turn}
-      />
+        <!-- Player dashboard with dice results and all notifications -->
+        <.player_dashboard
+          player={@player}
+          current_player={@game.current_player}
+          on_roll_dice={JS.push("roll_dice")}
+          on_end_turn={JS.push("end_turn")}
+          dice_result={@dice_result}
+          dice_values={@dice_values}
+          is_doubles={@is_doubles}
+          doubles_notification={@doubles_notification}
+          doubles_count={get_doubles(@game.players, @id)}
+          jail_notification={@jail_notification}
+          roll={@roll}
+          end_turn={@end_turn}
+        />
 
-      <!-- Modal for buying property : @id or "buy-modal"-->
+        <!-- Modal for buying property : @id or "buy-modal"-->
         <%= if @show_buy_modal do %>
           <.buy_modal
             id="buy-modal"
@@ -406,7 +403,7 @@ defmodule MonopolyWeb.GameLive do
           />
         <% end %>
 
-      <!-- Modal for displaying card effects : @id or "card-modal"-->
+        <!-- Modal for displaying card effects : @id or "card-modal"-->
         <%= if @show_card_modal && @game.active_card do %>
           <.card_modal
             id="card-modal"
@@ -414,10 +411,11 @@ defmodule MonopolyWeb.GameLive do
             card={@game.active_card}
           />
         <% end %>
+        <% end %>
       </div>
+
     <% else %>
       <h1 class="text-xl font-bold">Game over! Winner: {@game.winner.name}</h1>
-    <% end %>
     <%end%>
     """
   end
