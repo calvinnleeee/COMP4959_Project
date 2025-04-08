@@ -23,7 +23,7 @@ defmodule MonopolyWeb.Components.LobbyModal do
                 <tr>
                   <td class="py-1 text-md text-gray-800 flex items-center gap-2">
                     <img
-                      src={"/images/sprites/" <> get_sprite_filename(player.sprite_id)}
+                      src={get_sprite_filename(player.sprite_id)}
                       alt="Player Sprite"
                       class="h-15 w-15 inline-block"
                     />
