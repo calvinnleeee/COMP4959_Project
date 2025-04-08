@@ -11,6 +11,9 @@ open up 2~4 browsers to load up the players
 - money is not updating properly (calvin: played a game for a few turns, player 1 won even though
 	both players had money ???)
 - some rare instances where a community card modal is shown for all players ? (need double checking)
+- once players start building up a lot of properties, sometimes crashes occur and a player just wins
+  (error log mentions line 19 of rent modal, accessing some nil or %{} value)
+	(might have something to do with owning all properties of a colour)
 
 
 ( ) player can set a name (currently not handled)
@@ -43,7 +46,7 @@ open up 2~4 browsers to load up the players
 ( ) player loses and is notified when money < 0
 
 after above is done and checked:
-( ) add handling of landing on tiles
+(x) add handling of landing on tiles
 	(x) land on property/railroad/utility
 		(x) handle buy
 		(x) buy modal cannot exit when clicked outside (must force player to click buy or leave)
@@ -51,9 +54,9 @@ after above is done and checked:
 	(x) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
 		(x) need visual indication that a player drew a card
-	( ) land on tax/parking
+	(x) land on tax/parking
 	  (x) update money
-		( ) modal needs to be shown when landing on tax/parking
+		(x) modal needs to be shown when landing on tax/parking
 (x) handle landing on another player's property
 	(x) need indicator that you landed on someone's property, and rent paid needs to be shown
 	(x) money needs to update after rent paid

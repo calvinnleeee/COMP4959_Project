@@ -8,6 +8,7 @@ defmodule MonopolyWeb.GameLive do
   import MonopolyWeb.Components.BuyModal
   import MonopolyWeb.Components.CardModal
   import MonopolyWeb.Components.RentModal
+  import MonopolyWeb.Components.TaxModal
   import MonopolyWeb.Components.JailScreen
   alias GameObjects.Game
 
@@ -38,7 +39,8 @@ defmodule MonopolyWeb.GameLive do
           jail_notification: nil,
           show_buy_modal: false,
           show_card_modal: false,
-          show_rent_modal: false
+          show_rent_modal: false,
+          show_tax_modal: false
         )
       }
     end
@@ -193,10 +195,13 @@ defmodule MonopolyWeb.GameLive do
           show_buy_modal: buyable(new_loc, player),
           # If player got an instant-play card, display it
           show_card_modal:
-            card != nil && elem(card.effect, 0) != :get_out_of_jail && player.id == id,
+            card != nil && elem(card.effect, 0) != :get_out_of_jail && new_game.current_player.id == id,
           # If player landed on another player's property, let them know
           show_rent_modal:
-            card == nil && new_loc.owner != nil && new_loc.owner.id != id
+            card == nil && new_loc.owner != nil && new_loc.owner.id != id,
+          # If player landed on a tax or parking tile, display it
+          show_tax_modal:
+            card == nil && new_loc.type in ["parking", "tax"] && new_game.current_player.id == id
         )
       }
     else
@@ -394,6 +399,15 @@ defmodule MonopolyWeb.GameLive do
               show={@show_rent_modal}
               property={Enum.at(@game.properties, @game.current_player.position)}
               dice_result={@dice_result}
+            />
+          <% end %>
+
+          <!-- Modal for displaying tax/parking payments : @id or "tax-modal"-->
+          <%= if @show_tax_modal do %>
+            <.tax_modal
+              id="tax_modal"
+              show={@show_tax_modal}
+              tile={Enum.at(@game.properties, @game.current_player.position)}
             />
           <% end %>
         <% end %>
