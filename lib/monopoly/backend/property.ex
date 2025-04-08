@@ -241,6 +241,7 @@ defmodule GameObjects.Property do
 
   @doc """
   function to take in a player and a property and upgrade all properties of that type to the next level. returns a list of properties
+
   """
   def upgrade_set(property, player) do
     player_properties = Player.get_properties(player)

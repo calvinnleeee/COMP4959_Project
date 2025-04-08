@@ -14,7 +14,7 @@ defmodule MonopolyWeb.Components.JailScreen do
       <div class="jail-image">
         <img src="/images/jail_scene.png" alt="Jail scene" class="mx-auto" />
       </div>
-      <p class="text-lg mb-4">Turns remaining in jail: <%= @player.jail_turns %></p>\
+      <p class="text-lg mb-4">Turns remaining in jail: <%= @player.jail_turns %></p>
       <div class="flex justify-center gap-4 mb-6">
         <button
           phx-click={@on_roll_dice}

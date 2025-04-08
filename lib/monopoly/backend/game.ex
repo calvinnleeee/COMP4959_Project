@@ -39,12 +39,15 @@ defmodule GameObjects.Game do
   ##############################################################
   # Public API functions
 
+
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
+
   # Initialize a new Player instance and add it to the Game.
   # Assumes the player's client will have a PID and web socket.
+
   def join_game(session_id) do
     GenServer.call(__MODULE__, {:join_game, session_id})
   end
@@ -60,6 +63,7 @@ defmodule GameObjects.Game do
   end
 
   # Delete the active game instance from the ETS table.
+
   def delete_game() do
     GenServer.call(__MODULE__, :delete_game)
   end
@@ -68,6 +72,7 @@ defmodule GameObjects.Game do
   def get_state() do
     GenServer.call(__MODULE__, :get_state)
   end
+
 
   # End the current player's turn.
   def end_turn(session_id) do
@@ -105,6 +110,8 @@ defmodule GameObjects.Game do
   end
 
   # Initialization implementation for the GenServer.
+
+
   @impl true
   def init(_) do
     unless :ets.whereis(@game_store) != :undefined do
@@ -700,7 +707,7 @@ defmodule GameObjects.Game do
     else
       {:reply, {:err, "Need at least 2 players"}, state}
     end
-  end
+end
 
   @doc """
     Deletes the game from the ETS table if it exists.

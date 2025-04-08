@@ -5,9 +5,14 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.BuyModal
+<<<<<<< HEAD
   import MonopolyWeb.Components.JailScreen
   import MonopolyWeb.Components.PlayerDashboard
   alias GameObjects.Game
+=======
+  import MonopolyWeb.Components.PlayerDashboard
+  import MonopolyWeb.Components.JailScreen
+>>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
 
   # Connect the player, sub to necessary PubSubs
   # State includes the game state, player's struct, which buttons are enabled,
@@ -196,6 +201,86 @@ defmodule MonopolyWeb.GameLive do
     # Use backend's Dice module to roll the dice
     {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
 
+<<<<<<< HEAD
+=======
+    # Get current doubles count or initialize to 0
+    current_doubles_count = Map.get(socket.assigns, :doubles_count, 0)
+
+    # Calculate new doubles count
+    new_doubles_count = if is_doubles, do: current_doubles_count + 1, else: 0
+
+    # Get previous rolls for jail check or initialize to empty list
+    previous_rolls = Map.get(socket.assigns, :previous_rolls, [])
+
+    # Check if player goes to jail (3 consecutive doubles)
+    # Using the backend's check_for_jail function
+    goes_to_jail = new_doubles_count >= 3
+
+
+    # Add current roll to the beginning of the list (most recent first)
+    updated_rolls = [{{die1, die2}, sum, is_doubles} | previous_rolls]
+
+>>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
+    # Get current player
+    current_player = socket.assigns.current_player
+
+    # Calculate new jail turns; if doubles then jail turns become 0,
+    # otherwise decrement jail_turns by 1
+    new_jail_turns = if is_doubles, do: 0, else: current_player.jail_turns - 1
+
+    # Determine if the player should remain in jail:
+    # If they rolled doubles or have exhausted their jail turns (i.e., new_jail_turns == 0),
+    # then they are no longer in jail.
+    in_jail = if is_doubles or new_jail_turns == 0, do: false, else: true
+
+    # Update player state
+    updated_player = current_player
+<<<<<<< HEAD
+      |> Map.put(:has_rolled, true)
+      |> Map.put(:jail_turns, new_jail_turns)
+      |> Map.put(:in_jail, in_jail)
+=======
+      |> Map.put(:has_rolled, !is_doubles || goes_to_jail) # Only mark as rolled if not doubles or going to jail
+      |> Map.put(:in_jail, goes_to_jail || current_player.in_jail)
+      |> Map.put(:jail_turns, if(goes_to_jail, do: 3, else: current_player.jail_turns))
+>>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
+
+
+      # Prepare notifications with an additional condition for served time
+      jail_notification =
+        cond do
+          is_doubles ->
+            "You rolled doubles! You're out of jail."
+          new_jail_turns == 0 ->
+            "You have served your time. You're out of jail."
+          true ->
+            "No doubles. Wait another turn."
+        end
+
+    final_doubles_count = if goes_to_jail, do: 0, else: new_doubles_count
+
+    # Create updated socket with all assigns explicitly defined
+    {:noreply, assign(socket, %{
+      current_player: updated_player,
+      dice_result: sum,
+      dice_values: {die1, die2},
+      is_doubles: is_doubles,
+<<<<<<< HEAD
+      doubles_count: 0,
+      previous_rolls: [],
+=======
+      doubles_count: final_doubles_count,
+      previous_rolls: updated_rolls,
+>>>>>>> fa45ab223e3fd95f088d3767f7a8eff913656812
+      jail_notification: jail_notification,
+      doubles_notification: nil
+    })}
+  end
+
+  def handle_event("jail_roll", _params, socket) do
+    # Use backend's Dice module to roll the dice
+    {{die1, die2}, sum, is_doubles} = GameObjects.Dice.roll()
+
     # Get current player
     current_player = socket.assigns.current_player
 
@@ -339,6 +424,7 @@ defmodule MonopolyWeb.GameLive do
     {:noreply, assign(socket, show_buy_modal: false)}
   end
 
+
   def get_properties(players, id) do
     if id == nil do
       []
@@ -371,36 +457,27 @@ defmodule MonopolyWeb.GameLive do
         dice={@dice_values}
         result={@jail_notification}
       />
+      <% else %>
+      <!-- Placeholder for game board -->
+        <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
+          Game board will be here
+        </div>
 
-      <%else %>
+        <!-- Player dashboard with dice results and all notifications -->
+        <.player_dashboard
+          player={@current_player}
+          current_player_id={@current_player.id}
+          properties={@player_properties}
+          on_roll_dice={JS.push("roll_dice")}
+          on_end_turn={JS.push("end_turn")}
+          dice_result={@dice_result}
+          dice_values={@dice_values}
+          is_doubles={@is_doubles}
+          doubles_notification={@doubles_notification}
+          doubles_count={@doubles_count}
+          jail_notification={@jail_notification}
+        />
 
-
-    <!-- Placeholder for game board -->
-      <div class="game-board bg-green-200 h-96 w-full flex items-center justify-center">
-        Game board will be here
-        <%= if @game.current_player.in_jail do %>
-          <div class="absolute bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            IN JAIL (Turn {@game.current_player.jail_turns})
-          </div>
-        <% end %>
-      </div>
-
-    <!-- Player dashboard with dice results and all notifications -->
-      <.player_dashboard
-        player={@game.current_player}
-        current_player_id={@game.current_player.id}
-        properties={get_properties(@game.players, @id)}
-        on_roll_dice={JS.push("roll_dice")}
-        on_end_turn={JS.push("end_turn")}
-        dice_result={@dice_result}
-        dice_values={@dice_values}
-        is_doubles={@is_doubles}
-        doubles_notification={@doubles_notification}
-        doubles_count={get_doubles(@game.players, @id)}
-        jail_notification={@jail_notification}
-        roll={@roll}
-        end_turn={@end_turn}
-      />
 
     <!-- Modal for buying property : @id or "buy-modal"-->
       <%= if @show_buy_modal do %>
