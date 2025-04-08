@@ -262,7 +262,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can downgrade the prop
-    if player.id == id && assigns.downgrade_prop do
+    if player.id == id && assigns.sell_prop do
       # Downgrade the property and get new game state
       {:ok, game} =
         Game.downgrade_property(

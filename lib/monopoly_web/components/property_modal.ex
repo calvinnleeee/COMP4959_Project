@@ -22,6 +22,7 @@ defmodule MonopolyWeb.Components.PropertyModal do
 
         <p class="mb-6">
           Cost: <span class="font-semibold">${@property.buy_cost}</span>
+          Type: <span class="font-semibold"><%= @property.type %></span>
         </p>
 
         <div class="flex gap-4">
