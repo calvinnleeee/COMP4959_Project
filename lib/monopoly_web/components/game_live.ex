@@ -29,10 +29,7 @@ defmodule MonopolyWeb.GameLive do
         is_doubles: false,
         doubles_notification: nil,
         jail_notification: nil,
-        show_buy_modal: false,
-        show_upgrade_modal: false,
-        show_downgrade_modal: false
-
+        show_property_modal: false
       )
     }
   end
@@ -178,6 +175,8 @@ defmodule MonopolyWeb.GameLive do
           upgrade_prop: upgradeable(new_loc, player),
           sell_prop: sellable(new_loc, player),
           end_turn: player.rolled || player.in_jail,
+          show_property_modal: true,
+          property: property,
 
           # Dice results for dashboard
           dice_result: sum,
@@ -186,9 +185,7 @@ defmodule MonopolyWeb.GameLive do
 
           # Notifications for dashboard
           jail_notification: jail_notification,
-          doubles_notification: doubles_notification,
-
-          show_buy_modal: buyable(new_loc, player)
+          doubles_notification: doubles_notification
         )
       }
     else
@@ -355,9 +352,9 @@ defmodule MonopolyWeb.GameLive do
           id="property-modal"
           show={@show_property_modal}
           property={@property}
-          buy_prop={@can_buy}
-          upgrade_prop={@can_upgrade}
-          sell_prop={@can_downgrade}
+          buy_prop={@buy_prop}
+          upgrade_prop={@upgrade_prop}
+          sell_prop={@sell_prop}
           on_cancel={hide_modal("property-modal")}
         />
       <% end %>
