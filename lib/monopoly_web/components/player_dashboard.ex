@@ -217,7 +217,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   defp property_color(property) do
     case property.type do
       "brown" -> "#93572D"
-      "light blue" -> "#70ECF2"#6FECF2
+      "light blue" -> "#70ECF2"
       "pink" -> "#FF66F2"
       "orange" -> "#FE9B4F"
       "red" -> "#FE5E51"
