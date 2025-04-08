@@ -139,7 +139,7 @@ defmodule MonopolyWeb.GameLive do
       {:ok, {dice, sum, _}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
 
-      double = elem.at(dice, 0) == elem.at(dice, 1)
+      double = elem(dice, 0) == elem(dice, 1)
 
       # If player got an instant-play card, display it
       card = new_game.active_card
