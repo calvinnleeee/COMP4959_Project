@@ -14,7 +14,7 @@ defmodule MonopolyWeb.Components.PropertyModal do
   attr :sell_prop, :boolean, default: false
   attr :on_cancel, :any, default: nil
 
-  def property_action_modal(assigns) do
+  def property_modal(assigns) do
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
       <div class={"modal buy " <> @class}>
