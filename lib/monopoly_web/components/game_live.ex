@@ -170,14 +170,10 @@ defmodule MonopolyWeb.GameLive do
       was_jailed = player.in_jail
 
       # Call the backend roll_dice endpoint
-      {:ok, {dice, sum, _}, _new_pos, new_loc, new_game} =
+      {:ok, {dice, sum, double}, _new_pos, new_loc, new_game} =
         Game.roll_dice(id)
 
-      double = elem(dice, 0) == elem(dice, 1)
       card = new_game.active_card
-      if card != nil && Enum.at(Tuple.to_list(card.effect), 0) != "get_out_of_jail" do
-        display_card(card)
-      end
 
       # Prepare notifications
       player = new_game.current_player

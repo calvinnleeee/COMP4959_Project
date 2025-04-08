@@ -961,6 +961,10 @@ select {
   z-index: 0;
 }
 
+.z-10 {
+  z-index: 10;
+}
+
 .z-50 {
   z-index: 50;
 }
@@ -1664,10 +1668,6 @@ select {
   font-weight: 600;
 }
 
-.italic {
-  font-style: italic;
-}
-
 .leading-10 {
   line-height: 2.5rem;
 }
@@ -1892,7 +1892,7 @@ select {
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   padding: 12px;
-  z-index: 100;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
