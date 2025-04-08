@@ -250,10 +250,10 @@ function getBoardPosition(pos) {
     let half = 0.8;
     let height = 0.00;
 
-    if (pos >= 1 && pos <= 10) return [-half + (pos - 1) * step, height, -half];
-    if (pos >= 11 && pos <= 20) return [half, height, -half + (pos - 10) * step];
-    if (pos >= 21 && pos <= 30) return [half - (pos - 20) * step, height, half];
-    if (pos >= 31 && pos <= 40) return [-half, height, half - (pos - 30) * step];
+    if (pos >= 0 && pos <= 9) return [-half + (pos) * step, height, -half];
+    if (pos >= 10 && pos <= 19) return [half, height, -half + (pos - 10) * step];
+    if (pos >= 20 && pos <= 29) return [half - (pos - 20) * step, height, half];
+    if (pos >= 30 && pos <= 39) return [-half, height, half - (pos - 30) * step];
     return [0, height, 0];
 }
 
