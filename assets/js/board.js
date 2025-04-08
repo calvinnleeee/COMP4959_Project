@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+export function loadBoard() {
     // === WebGL Setup ===
     let canvas = document.getElementById("webgl-canvas");
     canvas.width = canvas.clientWidth;
@@ -322,4 +322,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
         setInterval(updatePlayers, 1000);
     }
-});
+}

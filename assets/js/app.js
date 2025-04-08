@@ -21,7 +21,7 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import board from "./board"
+import {loadBoard} from "./board"
 
 let Hooks = {}
 Hooks.SessionId = {
@@ -32,6 +32,16 @@ Hooks.SessionId = {
       localStorage.setItem("session_id", id)
     }
     this.pushEvent("set_session_id", { id: id })
+  }
+}
+
+Hooks.BoardCanvas = {
+  mounted() {
+    loadBoard();
+  },
+
+  updated() {
+    // Optionally, handle updates (if the element might be changed by LiveView)
   }
 }
 

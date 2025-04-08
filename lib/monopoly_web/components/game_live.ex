@@ -352,7 +352,7 @@ defmodule MonopolyWeb.GameLive do
       <!-- Game board container -->
         <div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
           <!-- WebGL canvas fills the container -->
-          <canvas id="webgl-canvas" class="w-full h-full block"></canvas>
+          <canvas id="webgl-canvas" class="w-full h-full block" phx-hook="BoardCanvas"></canvas>
 
           <%= if @game.current_player.in_jail do %>
             <div class="absolute top-2 left-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
