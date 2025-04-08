@@ -7,6 +7,11 @@ handle testing with at least 2 players, ideally 4
 ideally integrate and test before next part/step
 open up 2~4 browsers to load up the players
 
+!! BUGS !! - delete if they are fixed
+- money is not updating properly (calvin: played a game for a few turns, player 1 won even though
+	both players had money ???)
+
+
 ( ) player can set a name (currently not handled)
 (x) each player can join the game
 	(x) when a new player joins, all views update to show new players in lobby
@@ -39,11 +44,11 @@ open up 2~4 browsers to load up the players
 after above is done and checked:
 ( ) add handling of landing on tiles
 	( ) land on property/railroad/utility
-		( ) handle buy/auction
+		(x) handle buy
 		( ) buy modal cannot exit when clicked outside (must force player to click buy or leave)
 		(x) update on player's dashboard once bought
 	(x) land on card
 	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
-		( ) need visual indication that a player has moved
+		(x) need visual indication that a player drew a card
 	(x) land on tax/parking
 	  (x) update money
