@@ -141,7 +141,7 @@ defmodule MonopolyWeb.GameLive do
 
       # If player got an instant-play card, display it
       card = new_game.active_card
-      if card != nil && Enum.at(card.effect, 0) != "get_out_of_jail" do
+      if card != nil && elem(card.effect, 0) != "get_out_of_jail" do
         display_card(card)
       end
 
