@@ -5,7 +5,9 @@ defmodule MonopolyWeb.GameLive do
   use MonopolyWeb, :live_view
   import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
-  import MonopolyWeb.Components.BuyModal
+  alias MonopolyWeb.Components.BuyModal
+  alias MonopolyWeb.Components.UpgradeProperty
+  alias MonopolyWeb.Components.DowngradeProperty
   alias GameObjects.Game
 
   # Connect the player, sub to necessary PubSubs
@@ -30,35 +32,6 @@ defmodule MonopolyWeb.GameLive do
         doubles_notification: nil,
         jail_notification: nil,
         show_buy_modal: false
-      )
-    }
-  end
-
-  # Handle session_id coming from JS hook via pushEvent
-  def handle_event("set_session_id", %{"id" => id}, socket) do
-    game = socket.assigns.game
-    player = Enum.find(game.players, fn player -> player.id == id end)
-    property = Enum.at(game.properties, player.position)
-
-    # Re-activate player if they are reconnecting
-    game =
-      if !player.active do
-        {:ok, new_game} = Game.join_game(id)
-        new_game
-      else
-        game
-      end
-
-    {
-      :noreply,
-      assign(
-        socket,
-        game: game,
-        id: id,
-        roll: game.current_player.id == id && !game.current_player.rolled,
-        upgrade_prop: upgradeable(property, player),
-        sell_prop: sellable(property, player),
-        end_turn: game.current_player.id == id
       )
     }
   end
@@ -122,6 +95,35 @@ defmodule MonopolyWeb.GameLive do
   # TODO: display acquired card on screen
   defp display_card(card) do
     nil
+  end
+
+  # Handle session_id coming from JS hook via pushEvent
+  def handle_event("set_session_id", %{"id" => id}, socket) do
+    game = socket.assigns.game
+    player = Enum.find(game.players, fn player -> player.id == id end)
+    property = Enum.at(game.properties, player.position)
+
+    # Re-activate player if they are reconnecting
+    game =
+      if !player.active do
+        {:ok, new_game} = Game.join_game(id)
+        new_game
+      else
+        game
+      end
+
+    {
+      :noreply,
+      assign(
+        socket,
+        game: game,
+        id: id,
+        roll: game.current_player.id == id && !game.current_player.rolled,
+        upgrade_prop: upgradeable(property, player),
+        sell_prop: sellable(property, player),
+        end_turn: game.current_player.id == id
+      )
+    }
   end
 
   # When starting turn, player first clicks roll dice button
@@ -340,15 +342,37 @@ defmodule MonopolyWeb.GameLive do
         end_turn={@end_turn}
       />
 
-    <!-- Modal for buying property : @id or "buy-modal"-->
+    <!-- Modal for buying property -->
       <%= if @show_buy_modal do %>
-        <.buy_modal
+        <BuyModal.buy_modal
           id="buy-modal"
           show={@show_buy_modal}
           property={Enum.at(@game.properties, @game.current_player.position)}
           on_cancel={hide_modal("buy-modal")}
         />
       <% end %>
+
+    <!-- Modal for upgrading property -->
+      <%= if @show_buy_modal do %>
+        <UpgradeProperty.upgrade_prop_modal
+          id="upgrade-prop-modal"
+          show={@show_buy_modal}
+          property={Enum.at(@game.properties, @game.current_player.position)}
+          on_cancel={hide_modal("buy-modal")}
+        />
+      <% end %>
+
+    <!-- Modal for downgrading property -->
+      <%= if @show_buy_modal do %>
+        <DowngradeProperty.downgrade_prop_modal
+          id="downgrade-prop-modal"
+          show={@show_buy_modal}
+          property={Enum.at(@game.properties, @game.current_player.position)}
+          on_cancel={hide_modal("buy-modal")}
+        />
+      <% end %>
+
+
     </div>
     """
   end

@@ -1,9 +1,9 @@
-defmodule MonopolyWeb.Components.SellHouse do
+defmodule MonopolyWeb.Components.UpgradeProperty do
   use Phoenix.Component
   import MonopolyWeb.CoreComponents
 
   @doc """
-  Renders a Buy Modal for confirming property purchase.
+  Renders an Upgrade Property Modal to build up to five houses on the property the player owned.
   """
   attr :id, :string, required: true
   attr :class, :string, default: ""
@@ -12,31 +12,28 @@ defmodule MonopolyWeb.Components.SellHouse do
   attr :on_buy, :any, default: nil, doc: "JS command or event for buying"
   attr :on_cancel, :any, default: nil, doc: "JS command for cancel action"
 
-  def buy_modal(assigns) do
+  def upgrade_prop_modal(assigns) do
     ~H"""
     <.modal id={@id} show={@show} on_cancel={@on_cancel || hide_modal(@id)}>
       <%!-- comment out for design adjustment: <div class="buy-modal-content p-6"> --%>
-
-      <%!-- :downgrade_property,
-      but we will need to include selling the property itself in that function.
-      players will have the ability to sell their house and their property,
-      but they must sell all houses of the full set of property before they can sell the property --%>
-
       <div class={"modal buy " <> @class}>
-        <h2 class="text-xl font-bold mb-4">Sell Property</h2>
+        <h2 class="text-xl font-bold mb-4">Upgrade Property</h2>
         <p class="mb-6">
-          <%= @property.name %> : <span class="font-semibold">$<%= @property.buy_cost %></span>
+          <%!-- What & How many to build --%>
+          <%= @property.name %>
+
+          <%!-- upgrades: an integer from 0-7 that represents the number of houses or hotels on the property. 0 is no houses, 1 is full set, 2,3,4,5 is house, 6 is a hotel. --%>
+
+          <span class="font-semibold">$<%= @property.buy_cost %></span>
+
         </p>
         <!-- property image -->
-
-        <p>Caution: You must sell all houses of the full set to sell your property.</p>
-
         <div class="flex gap-4">
-          <button phx-click="downgrade_property" class="btn btn-primary">
-            Sell Property
+          <button phx-click="upgrade_property" class="btn btn-primary">
+            Build House
           </button>
           <button phx-click="cancel_buying" class="btn btn-secondary">
-            Leave
+            Cancel
           </button>
         </div>
       </div>

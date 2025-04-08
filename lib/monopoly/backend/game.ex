@@ -447,7 +447,7 @@ defmodule GameObjects.Game do
 
   # Step 7: Broadcast the updated game state (for owned property)
   defp broadcast_updated_state(updated_game) do
-    MonopolyWeb.Endpoint.broadcast("game_state", "updated_state", updated_game)
+    MonopolyWeb.Endpoint.broadcast("game_state", "upgradable_property", updated_game)
     updated_game
   end
 

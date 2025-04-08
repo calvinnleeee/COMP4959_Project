@@ -1002,6 +1002,10 @@ select {
   margin-bottom: 1rem;
 }
 
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
 .mb-8 {
   margin-bottom: 2rem;
 }
@@ -2103,6 +2107,27 @@ select {
 .card-name {
   font-size: 0.9rem;
   font-weight: bold;
+}
+
+/* modal common styling */
+
+:root {
+  --bright-yellow: rgb(250, 223, 130);
+  --dark-yellow: rgb(209, 189, 110);
+  --nice-blue: rgb(55, 128, 153);
+}
+
+.modal.buy {
+  border: 2px solid var(--bright-yellow);
+}
+
+.btn-primary {
+  background-color: var(--nice-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--dark-yellow);
 }
 
 /* This file is for your main application CSS */
