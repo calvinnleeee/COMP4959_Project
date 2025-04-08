@@ -194,7 +194,7 @@ export function loadBoard(gameState) {
         console.log(projectionMatrix);
         setupControls();
         console.log("game: ");
-        console.log(game)
+        console.log(game.players)
         drawScene(game);
     });
 }
@@ -218,7 +218,7 @@ function updateViewMatrix() {
 
     mat4.lookAt(viewMatrix, [eyeX, 1.5, eyeZ], [0, 0, 0], [0, 1, 0]);
 
-    requestAnimationFrame(drawScene); // Smoothly update view
+    requestAnimationFrame(drawScene(game)); // Smoothly update view
 }
 
 function setupControls() {
@@ -236,7 +236,7 @@ function setupControls() {
         lastX = e.clientX;
         angleY += dx * 0.005;
         updateViewMatrix();
-        drawScene();
+        drawScene(game);
     });
 }
 
@@ -246,15 +246,19 @@ function getBoardPosition(pos) {
     let half = 0.8;
     let height = 0.00;
 
-    if (pos >= 1 && pos <= 10) return [-half + (pos - 1) * step, height, -half];
-    if (pos >= 11 && pos <= 20) return [half, height, -half + (pos - 10) * step];
-    if (pos >= 21 && pos <= 30) return [half - (pos - 20) * step, height, half];
-    if (pos >= 31 && pos <= 40) return [-half, height, half - (pos - 30) * step];
+    if (pos >= 1 && pos <= 11) return [-half + (pos - 1) * step, height, -half];
+    if (pos >= 11 && pos <= 21) return [half, height, -half + (pos - 10) * step];
+    if (pos >= 21 && pos <= 31) return [half - (pos - 20) * step, height, half];
+    if (pos >= 31 && pos <= 41) return [-half, height, half - (pos - 30) * step];
     return [0, height, 0];
 }
 
 export function drawScene(gameState) {
     game = gameState;
+    console.log("Drawing")
+    console.log(game);
+    console.log(game.players);
+    console.log("drawing game")
     resizeCanvasToDisplaySize(canvas);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

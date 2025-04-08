@@ -21,11 +21,11 @@ Hooks.SessionId = {
 
 Hooks.BoardCanvas = {
   mounted() {
-    loadBoard(this.el.dataset.game);
+    loadBoard(JSON.parse(this.el.dataset.game));
   },
 
   updated() {
-    drawScene(this.el.dataset.game);
+    drawScene(JSON.parse(this.el.dataset.game));
   }
 }
 
