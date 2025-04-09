@@ -183,7 +183,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
                     <%= if property.upgrades == 6 do %>
                       <span class="hotel">H</span>
                     <% else %>
-                      <span class="houses"><%= property.upgrades - 2 %></span>
+                      <span class="houses"><%= property.upgrades - 1 %></span>
                     <% end %>
                   </div>
                 <% end %>

@@ -384,7 +384,6 @@ defmodule GameObjects.Game do
   defp handle_property_ownership(updated_game, current_player, owner, current_tile, sum) do
     case owner.id == current_player.id do
       false ->
-        IO.inspect(current_tile)
         # If the player does not own the property, charge rent
         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
         # Step 4: Check if the player has enough money to pay the rent
@@ -402,11 +401,6 @@ defmodule GameObjects.Game do
       # Deduct rent from the player and add it to the owner
       {player_minus_rent, owner_plus_rent} =
         GameObjects.Player.lose_money(current_player, owner, prop_rent)
-
-      IO.inspect(current_player)
-      IO.inspect(owner)
-      IO.inspect(player_minus_rent)
-      IO.inspect(owner_plus_rent)
 
       # Step 5: Update players after rent payment
       updated_game =
@@ -778,6 +772,13 @@ defmodule GameObjects.Game do
                 prop_updated_game = update_property(player_updated_game, updated_property)
 
                 :ets.insert(@game_store, {:game, prop_updated_game})
+
+                MonopolyWeb.Endpoint.broadcast(
+                  "game_state",
+                  "property_upgraded",
+                  prop_updated_game
+                )
+
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
             end
           end
@@ -944,7 +945,7 @@ defmodule GameObjects.Game do
                 MonopolyWeb.Endpoint.broadcast(
                   "game_state",
                   "property_downgraded",
-                  player_updated_game
+                  prop_updated_game
                 )
 
                 {:reply, {:ok, prop_updated_game}, prop_updated_game}
