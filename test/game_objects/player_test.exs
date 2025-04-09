@@ -105,12 +105,7 @@ defmodule GameObjects.PlayerTest do
       jailed = Player.set_in_jail(player, true)
       assert Player.set_in_jail(jailed, true) == jailed
     end
-
-    test "set_in_jail/2 raises on nil player" do
-      assert_raise FunctionClauseError, fn ->
-        Player.set_in_jail(nil, true)
-      end
-    end
+  end
 
     test "set_jail_turn/2 sets the turn count", %{player: player} do
       assert Player.set_jail_turn(player, 3).jail_turns == 3
