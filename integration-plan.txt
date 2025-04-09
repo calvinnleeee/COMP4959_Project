@@ -1,0 +1,74 @@
+https://fullstackphoenix.com/tutorials/share-liveview-state-between-tabs
+integration plan:
+
+piece-by-piece starting in order from what the player interacts with from entering website to game completion
+
+handle testing with at least 2 players, ideally 4
+ideally integrate and test before next part/step
+open up 2~4 browsers to load up the players
+
+!! BUGS !! - delete if they are fixed
+- some rare instances where a community card modal is shown for all players ? (need double checking)
+- sending a player to jail should end their turn on the first turn (double check, rare bug somewhere?)
+- active_card only changed on ending turn -> if a player rolls doubles, lands on a card and then
+	a property, they will get the card popup twice
+- sometimes a player just randomly drops...?
+
+
+( ) player can set a name (currently not handled)
+(x) each player can join the game
+	(x) when a new player joins, all views update to show new players in lobby
+(x) a player can leave the lobby
+	(x) if a player leaves, all views are updated to remove that player's id
+	(x) next player in line becomes player 1 and can start game
+( ) each player's piece is handled (currently automatically assigned)
+(x) game start (button), all players redirect to game page
+
+(x) game page redirects to welcome/main if no game in session
+( ) user spectates or is kicked out if they are not a participant of the game
+
+(x) each player sees their own dashboard (currently shows current player's)
+	(x) current player roll dice button enabled
+	(x) other players' buttons disabled
+	(x) indicator of which player the user is should be shown
+(x) turn start for first player
+	(x) other players cannot act
+	(x) other players' dashboards don't update (only current player's)
+(x) first player rolls
+	( ) all players see updated position of first player (after graphics done)
+(x) first player ends turn, game successfully updates to start the next player (loop back to turn start)
+	!! this will crash sometimes when errors happen during turns
+(x) player turn cannot be ended (button disabled) if they have yet to roll
+(x) doubles allows extra roll
+  (x) if a player rolls double, roll dice and end turn should be disabled until the tile action is taken
+(x) 3 doubles sends a player to jail
+( ) player loses and is notified when money < 0
+
+after above is done and checked:
+(x) add handling of landing on tiles
+	(x) land on property/railroad/utility
+		(x) handle buy
+		(x) buy modal cannot exit when clicked outside (must force player to click buy or leave)
+		(x) update on player's dashboard once bought
+	(x) land on card
+	  (x) card is added to player's list or immediately takes affect (movement, changes in money)
+		(x) need visual indication that a player drew a card
+		(x) need visual indication that player obtained a get out of jail card
+	(x) land on tax/parking
+	  (x) update money
+		(x) modal needs to be shown when landing on tax/parking
+(x) handle landing on another player's property
+	(x) need indicator that you landed on someone's property, and rent paid needs to be shown
+	(x) money needs to update after rent paid
+(x) handle passing go
+	(x) indicator needed to show that go was passed and they gained 200 (maybe not needed if graphics are in)
+
+Jail things
+(?) player moves to jail successfully (card or landing on go to jail)
+(?) player cannot roll when entering the jail
+(x) jail needs end turn button
+(x) jail roll dice result should be shown with the end turn button
+(x) jail card correctly applies
+
+Upgrades
+( ) upgrades properly handled?

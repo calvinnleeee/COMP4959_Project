@@ -3,7 +3,7 @@ defmodule MonopolyWeb.Components.CardModal do
   import MonopolyWeb.CoreComponents
 
   @doc """
-  Renders a Card Modal for confirming property purchase.
+  Renders a Card Modal for when players gain a card.
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
@@ -16,7 +16,12 @@ defmodule MonopolyWeb.Components.CardModal do
       <div class="card-modal-content p-6">
         <h3 class="text-lg font-bold mb-4">You got a {@card.type} card!</h3>
         <h2 class="text-xl font-bold mb-4">{@card.name}</h2>
-        <p class="mb-6">You {elem(@card.effect, 0)} ${elem(@card.effect, 1)}.</p>
+        <%= if elem(@card.effect, 0) != :get_out_of_jail do %>
+          <p class="mb-6">You {elem(@card.effect, 0)} ${elem(@card.effect, 1)}.</p>
+        <% else %>
+          <p class="mb-6">You gained a Get Out of Jail Free card.</p>
+        <% end %>
+
       </div>
     </.modal>
     """
