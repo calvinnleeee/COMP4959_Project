@@ -16,6 +16,9 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## 🎮 How to Play
 
+1. 
+
+
 ## 🎲 Game Rule
 - careate a game and enter a lobby
 - 2-6 players, each with a specific starting token (car, hat, thimble, shoe, etc.).
@@ -84,16 +87,20 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## 👥 Team Members
 
+*in alphabetical order*
+
 | Frontend | Backend | QA | UI/UX | PM |
 |----------|----------|----------|----------|----------|
-| Caleb Chiang [![Github](./readme_assets/github-logo.png)](https://github.com/calebchiang)  | Abdulqaidr Abuharrus [![Github](./readme_assets/github-logo.png)](https://github.com/Abdo-Abuharrus211)    | Derek Tran [![Github](./readme_assets/github-logo.png)](https://github.com/ddderekk)      | Alex Deschenes| Calvin Lee [![Github](./readme_assets/github-logo.png)](https://github.com/calvinnleeee/)|
-| Echo Wang [![Github](./readme_assets/github-logo.png)](https://github.com/EchooWww)    | Clement Quanch [![Github](./readme_assets/github-logo.png)](https://github.com/Clement-Quach)    | Flora Deng [![Github](./readme_assets/github-logo.png)](https://github.com/FloraDeng00)   | Filip Budd [![Github](./readme_assets/github-logo.png)](https://github.com/filipbudd/) | Jesse McKenzie [![Github](./readme_assets/github-logo.png)](https://github.com/JDMCK)|
-| Princeton Dychinco [![Github](./readme_assets/github-logo.png)](https://github.com/pdychinco)    | Irix Xu [![Github](./readme_assets/github-logo.png)](https://github.com/IrisWRX)    | Inez Yoon [![Github](./readme_assets/github-logo.png)](https://github.com/Inez-y)       | 
-| Quincy Wong [![Github](./readme_assets/github-logo.png)](https://github.com/phoenixalpha204)    | Jaiden Duncan    | Niko Wang [![Github](./readme_assets/github-logo.png)](https://github.com/nzzzzzw)       | 
-| Saeyoung Park [![Github](./readme_assets/github-logo.png)](https://github.com/eesope/)    | Joanne Ho   | Richard Maceda [![Github](./readme_assets/github-logo.png)](https://github.com/Organic-156)      | 
-|    | Matthew Yoon    |        | 
-|     | Nathan Yau [![Github](./readme_assets/github-logo.png)](https://github.com/nathan-yau)    |        | 
-|     | Erick Deau [![Github](./readme_assets/github-logo.png)](https://github.com/eric-deau)   |        | 
+| Alex Deschenes | Abdulqaidr Abuharrus [![Github](./readme_assets/github-logo.png)](https://github.com/Abdo-Abuharrus211) | Derek Tran [![Github](./readme_assets/github-logo.png)](https://github.com/ddderekk) | Filip Budd [![Github](./readme_assets/github-logo.png)](https://github.com/filipbudd/) | Calvin Lee [![Github](./readme_assets/github-logo.png)](https://github.com/calvinnleeee/) |
+| Caleb Chiang [![Github](./readme_assets/github-logo.png)](https://github.com/calebchiang) | Clement Quanch [![Github](./readme_assets/github-logo.png)](https://github.com/Clement-Quach) | Flora Deng [![Github](./readme_assets/github-logo.png)](https://github.com/FloraDeng00) | | Jesse McKenzie [![Github](./readme_assets/github-logo.png)](https://github.com/JDMCK) |
+| Echo Wang [![Github](./readme_assets/github-logo.png)](https://github.com/EchooWww) | Irix Xu [![Github](./readme_assets/github-logo.png)](https://github.com/IrisWRX) | Inez Yoon [![Github](./readme_assets/github-logo.png)](https://github.com/Inez-y) | | |
+| Princeton Dychinco [![Github](./readme_assets/github-logo.png)](https://github.com/pdychinco) | Jaiden Duncan | Niko Wang [![Github](./readme_assets/github-logo.png)](https://github.com/nzzzzzw) | | |
+| Quincy Wong [![Github](./readme_assets/github-logo.png)](https://github.com/phoenixalpha204) | Joanne Ho | Richard Maceda [![Github](./readme_assets/github-logo.png)](https://github.com/Organic-156) | | |
+| Saeyoung Park [![Github](./readme_assets/github-logo.png)](https://github.com/eesope/) | Matthew Yoon | | | |
+|  | Nathan Yau [![Github](./readme_assets/github-logo.png)](https://github.com/nathan-yau) | | | |
+|  | Erick Deau [![Github](./readme_assets/github-logo.png)](https://github.com/eric-deau) | | | |
+
+
 
 ## 💡 Learn more
 
