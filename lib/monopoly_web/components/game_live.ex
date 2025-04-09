@@ -235,7 +235,11 @@ defmodule MonopolyWeb.GameLive do
           dice_values: nil,
           is_doubles: false,
           doubles_notification: nil,
-          jail_notification: nil
+          jail_notification: nil,
+          show_property_modal: false,
+          show_card_modal: false,
+          show_rent_modal: false,
+          show_tax_modal: false
         )
       }
     else
@@ -288,7 +292,8 @@ defmodule MonopolyWeb.GameLive do
         jail_turns: 0,
         money: 0,
         cards: [],
-        active: true
+        active: true,
+        properties: []
       },
       fn player -> player.id == id end
     )
@@ -311,8 +316,6 @@ defmodule MonopolyWeb.GameLive do
         <h1 class="text-xl font-bold">You have run out of money. Better luck next time!</h1>
       <% true -> %>
         <div class="game-container">
-          <h1 class="text-xl mb-4">Monopoly Game</h1>
-
           <%= if @game.current_player.in_jail && @game.current_player.id == @id do %>
             <!-- Jail screen -->
             <.jail_screen
@@ -324,7 +327,7 @@ defmodule MonopolyWeb.GameLive do
           <% else %>
 
             <!-- Game board container -->
-            <div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
+            <div id="board-canvas" class="game-board h-[90vh] w-full relative">
               <!-- WebGL canvas fills the container -->
               <canvas
                 id="webgl-canvas"
