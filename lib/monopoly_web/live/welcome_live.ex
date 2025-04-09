@@ -75,7 +75,6 @@ defmodule MonopolyWeb.WelcomeLive do
     {:noreply, socket}
   end
 
-
   # Renders the LiveView HTML, including the modal if show_modal is true
   @impl true
   def render(assigns) do
