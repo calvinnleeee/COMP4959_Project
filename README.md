@@ -125,6 +125,9 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   
   To run test files:
   - Run `mix test`
+  - If you get 0 failtures, tests are successefully done
+  - If you want to add more unit tests, add `.exs` files in `/test`
+    - Currently availalbe tests:
   
   To debug on your local:
   - Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
@@ -154,8 +157,18 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## 💡 Learn more
 
+Phoenix Web Framework
   * Official website: https://www.phoenixframework.org/
   * Guides: https://hexdocs.pm/phoenix/overview.html
   * Docs: https://hexdocs.pm/phoenix
   * Forum: https://elixirforum.com/c/phoenix-forum
   * Source: https://github.com/phoenixframework/phoenix
+
+Elixir
+  * Official website: https://elixir-lang.org/
+  * Guides: https://hexdocs.pm/elixir/introduction.html
+  * Docs: https://elixir-lang.org/docs.html
+  * Blog: https://elixir-lang.org/blog/ 
+
+Monopoly (boardgame)
+  * Wikipedia: https://en.wikipedia.org/wiki/Monopoly_(game)
