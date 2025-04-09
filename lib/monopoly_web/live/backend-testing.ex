@@ -488,8 +488,8 @@ defmodule MonopolyWeb.BackendTestingLive do
               <h2 style="font-size: 30px; margin-top: 20px">{prop.id}: {prop.name} ({prop.type})</h2>
               Cost: ${prop.buy_cost} <br \ /> Rent: {inspect(prop.rent_cost)} <br \ />
               Upgrade: {prop.upgrades} <br \ /> Owner:
-              <span style="font-weight: 800">{if prop.owner, do: prop.owner.name, else: "None"}</span>
-              <span style="font-weight: 800">({if prop.owner, do: prop.owner.id, else: "None"})</span>
+              <span style="font-weight: 800">{if prop.owner, do: prop.owner, else: "None"}</span>
+              <span style="font-weight: 800">({if prop.owner, do: prop.owner, else: "None"})</span>
             </li>
           <% end %>
         </ul>

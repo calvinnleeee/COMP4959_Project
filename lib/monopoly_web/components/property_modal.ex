@@ -19,7 +19,7 @@ defmodule MonopolyWeb.Components.PropertyModal do
       property.owner == nil && property.buy_cost != nil && property.buy_cost <= player.money
     can_upgrade =
       property.owner != nil &&
-      property.owner.id == player.id &&
+      property.owner == player.id &&
       property.house_price != nil &&
       cond do
         0 < property.upgrades &&
@@ -32,7 +32,7 @@ defmodule MonopolyWeb.Components.PropertyModal do
         true ->
           false
       end
-    can_sell = property.owner != nil && property.owner.id == player.id
+    can_sell = property.owner != nil && property.owner == player.id
     assigns =
       assign(assigns, can_buy: can_buy, can_upgrade: can_upgrade, can_sell: can_sell)
 

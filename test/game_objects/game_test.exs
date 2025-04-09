@@ -204,12 +204,12 @@ defmodule GameObjects.GameTest do
 
       # Simulate buying the property
       updated_player = %{player | money: player.money - property.buy_cost}
-      updated_property = %{property | owner: player}
+      updated_property = %{property | owner: player.id}
 
       game = %{game | players: [updated_player], properties: [updated_property]}
       :ets.insert(Game.Store, {:game, game})
 
-      assert updated_property.owner == player
+      assert updated_property.owner == player.id
     end
 
     test "validates complete property transaction" do
@@ -223,7 +223,7 @@ defmodule GameObjects.GameTest do
         money: initial_money - property.buy_cost,
         properties: [property]
       }
-      updated_property = %{property | owner: player}
+      updated_property = %{property | owner: player.id}
 
       game = %{game |
         players: [updated_player],
@@ -232,7 +232,7 @@ defmodule GameObjects.GameTest do
       :ets.insert(Game.Store, {:game, game})
 
       assert updated_player.money == initial_money - property.buy_cost
-      assert updated_property.owner == player
+      assert updated_property.owner == player.id
       assert length(updated_player.properties) == 1
     end
   end
@@ -258,12 +258,12 @@ defmodule GameObjects.GameTest do
 
       # Simulate buying the property
       updated_player = %{player | money: player.money - property.buy_cost}
-      updated_property = %{property | owner: player}
+      updated_property = %{property | owner: player.id}
 
       game = %{game | players: [updated_player], properties: [updated_property]}
       :ets.insert(Game.Store, {:game, game})
 
-      assert updated_property.owner == player
+      assert updated_property.owner == player.id
     end
 
     test "validates complete player turn" do
@@ -312,7 +312,7 @@ defmodule GameObjects.GameTest do
       assert updated_property.upgrades == property.upgrades - 1
     end
   end
-  
+
   describe "player turn mechanics" do
     test "player can roll dice on their turn" do
       game = create_test_game(1)

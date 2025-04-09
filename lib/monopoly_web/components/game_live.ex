@@ -139,11 +139,11 @@ defmodule MonopolyWeb.GameLive do
           # Notifications for dashboard
           jail_notification: jail_notification,
           doubles_notification: doubles_notification,
-          show_property_modal: new_loc.buy_cost && (new_loc.owner == nil || new_loc.owner.id == id),
+          show_property_modal: new_loc.buy_cost && (new_loc.owner == nil || new_loc.owner == id),
           # If player got a card, display it
           show_card_modal: card != nil,
           # If player landed on another player's property, let them know
-          show_rent_modal: new_loc.owner && new_loc.owner.id != id,
+          show_rent_modal: new_loc.owner && new_loc.owner != id,
           # If player landed on a tax or parking tile, display it
           show_tax_modal: new_loc.type in ["parking", "tax"]
         )

@@ -356,7 +356,7 @@ defmodule GameObjects.Game do
       if GameObjects.Property.is_owned(current_tile) do
         # Step 1: Get owner of the property
         stored_owner = get_property_owner(current_tile)
-        owner = Enum.find(updated_game.players, fn p -> p.id == stored_owner.id end)
+        owner = Enum.find(updated_game.players, fn p -> p.id == stored_owner end)
 
         # Step 2: Compare owner and current player to see if rent needs to be paid
         handle_property_ownership(updated_game, current_player, owner, current_tile, sum)
@@ -381,7 +381,7 @@ defmodule GameObjects.Game do
 
   # Step 3: Handle the case where the property is owned
   defp handle_property_ownership(updated_game, current_player, owner, current_tile, sum) do
-    case owner.id == current_player.id do
+    case owner == current_player.id do
       false ->
         # If the player does not own the property, charge rent
         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
@@ -431,7 +431,7 @@ defmodule GameObjects.Game do
       Enum.map(updated_game.players, fn p ->
         cond do
           p.id == current_player.id -> player_minus_rent
-          p.id == owner.id -> owner_plus_rent
+          p.id == owner-> owner_plus_rent
           true -> p
         end
       end)
@@ -736,7 +736,7 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          if property.owner === nil || property.owner.id != current_player.id do
+          if property.owner === nil || property.owner != current_player.id do
             {:reply, {:err, "You don't own this property"}, state}
           else
             {updated_property, cost} = Property.build_upgrade(property)
@@ -777,7 +777,7 @@ defmodule GameObjects.Game do
         if current_player.id != session_id do
           {:reply, {:err, "Not your turn"}, state}
         else
-          if property.owner === nil || property.owner.id != current_player.id do
+          if property.owner === nil || property.owner != current_player.id do
             {:reply, {:err, "You don't own this property"}, state}
           else
             {updated_property, cost} = Property.sell_upgrade(property)

@@ -16,7 +16,13 @@ defmodule MonopolyWeb.Components.RentModal do
     owner_name = if assigns.property.owner == nil do
       ""
     else
-      assigns.property.owner.name
+      players = assigns.game.players
+      owner_id = assigns.property.owner
+
+      case Enum.find(players, fn player -> player.id == owner_id end) do
+        nil -> ""
+        player -> player.name
+      end
     end
     rent =
       if assigns.property.type in [
