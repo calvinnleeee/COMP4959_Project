@@ -1,9 +1,18 @@
-# Fix:  Added guard in set_money/2 to reject non-integer amounts
-#       Prevent negative amounts in lose_money/2 to avoid logic inversion
-#       Guarded add_money/2 to accept integers only
-#       Jail turn must be a non-negative integer — added guard
-#       add_card/2 only accepts valid %Card{} structs
 defmodule GameObjects.PlayerTest do
+  @moduledoc """
+  This module is for testing lib/monopoly/backend/player.ex
+
+  Tests are based on functionalities:
+    - Creating players
+    - Getter functions
+    - Money management
+    - Movement
+    - Jail logic
+    - Properties
+    - Cards
+
+  Two players are hard-coded for easy testings.
+  """
   use ExUnit.Case
   alias GameObjects.Player
 
