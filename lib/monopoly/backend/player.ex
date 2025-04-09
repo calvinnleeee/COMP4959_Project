@@ -167,6 +167,14 @@ defmodule GameObjects.Player do
   end
 
   @doc """
+  Sets the player's rolled status to 'rolled'. Returns a Player struct.
+  """
+  @spec set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t()
+  def set_rolled(player, rolled) do
+    %{player | rolled: rolled}
+  end
+
+  @doc """
   Creates a new Player with jail_turn set to 'num'. Returns a Player struct.
   """
   @spec set_jail_turn(__MODULE__.t(), integer()) :: __MODULE__.t()
