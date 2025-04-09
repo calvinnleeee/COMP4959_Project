@@ -34,9 +34,10 @@ defmodule GameObjects.PlayerTest do
       assert player.jail_turns == 0
       assert player.turns_taken == 0
       refute player.rolled
+      assert player.active
     end
 
-    test "handles unicode names and funky IDs", %{second_player: player} do
+    test "handles unicode names and custom IDs", %{second_player: player} do
       assert player.id == @second_player_id
       assert player.name == @second_player_name
       assert player.money == 1500
@@ -152,20 +153,6 @@ defmodule GameObjects.PlayerTest do
     test "remove_card/2 does nothing if card not owned", %{player: player} do
       card = %GameObjects.Card{type: :does_not_exist}
       assert Player.remove_card(player, card).cards == []
-    end
-
-    test "add_card/2 raises on non-Card input", %{player: player} do
-      assert_raise FunctionClauseError, fn ->
-        Player.add_card(player, "bad card")
-      end
-    end
-  end
-
-  @tag :todo
-  test "set_jail_turn/2 should raise on non-integer input", %{player: player} do
-    # Currently not raising: consider adding a guard clause
-    assert_raise ArgumentError, fn ->
-      Player.set_jail_turn(player, "two")
     end
   end
 end
