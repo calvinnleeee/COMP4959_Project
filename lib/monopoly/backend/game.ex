@@ -397,27 +397,24 @@ defmodule GameObjects.Game do
 
   # Step 4: Handle rent payment (if the player can afford it)
   defp handle_rent_payment(updated_game, current_player, owner, prop_rent) do
-    if GameObjects.Player.get_money(current_player) >= prop_rent do
-      # Deduct rent from the player and add it to the owner
-      {player_minus_rent, owner_plus_rent} =
-        GameObjects.Player.lose_money(current_player, owner, prop_rent)
+    # Deduct rent from the player and add it to the owner
+    {player_minus_rent, owner_plus_rent} =
+      GameObjects.Player.lose_money(current_player, owner, prop_rent)
 
-      # Step 5: Update players after rent payment
-      updated_game =
-        update_players_after_rent(
-          updated_game,
-          current_player,
-          owner,
-          player_minus_rent,
-          owner_plus_rent
-        )
+    # Step 5: Update players after rent payment
+    updated_game =
+      update_players_after_rent(
+        updated_game,
+        current_player,
+        owner,
+        player_minus_rent,
+        owner_plus_rent
+      )
 
-      # Step 6: Store the updated game state
-      store_updated_game_state(updated_game)
-    else
-      # Player can't afford the rent, return state
-      updated_game
-    end
+    # Step 6: Store the updated game state
+    store_updated_game_state(updated_game)
+    # Player can't afford the rent, return state
+    updated_game
   end
 
   # Step 5: Update the game state with the new player and owner states
@@ -431,13 +428,15 @@ defmodule GameObjects.Game do
     updated_players =
       Enum.map(updated_game.players, fn p ->
         cond do
-          p.id == current_player.id -> player_minus_rent
+          p.id == current_player.id -> player_lost_condition(player_minus_rent)
           p.id == owner.id -> owner_plus_rent
           true -> p
         end
       end)
 
-    %{updated_game | players: updated_players, current_player: player_minus_rent}
+    updated_current_player = player_lost_condition(player_minus_rent)
+
+    %{updated_game | players: updated_players, current_player: updated_current_player}
   end
 
   # Step 6: Store the updated game state in the ETS table
@@ -464,11 +463,12 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
-    updated_player = if passed_go do
-      Player.add_money(updated_player, @go_bonus)
-    else
-      updated_player
-    end
+    updated_player =
+      if passed_go do
+        Player.add_money(updated_player, @go_bonus)
+      else
+        updated_player
+      end
 
     updated_player =
       cond do
