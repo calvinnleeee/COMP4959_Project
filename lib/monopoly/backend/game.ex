@@ -462,6 +462,12 @@ defmodule GameObjects.Game do
     updated_player = Player.move(player, steps)
     passed_go = old_position + steps >= 40 && !player.in_jail
 
+    updated_player = if passed_go do
+      Player.add_money(updated_player, @go_bonus)
+    else
+      updated_player
+    end
+
     updated_player =
       cond do
         updated_player.position == @income_tax_position ->
@@ -477,9 +483,6 @@ defmodule GameObjects.Game do
 
         updated_player.position == @parking_tax_position ->
           Player.lose_money(updated_player, @parking_tax_fee)
-
-        passed_go ->
-          Player.add_money(updated_player, @go_bonus)
 
         true ->
           updated_player
