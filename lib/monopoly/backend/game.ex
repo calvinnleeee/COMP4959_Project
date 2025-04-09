@@ -275,6 +275,7 @@ defmodule GameObjects.Game do
   # Handle the result of rolling the dice if a player is not in jail.
   defp handle_normal_roll(game) do
     current_player = game.current_player
+    game = %{game | active_card: nil}
 
     # Step 1: Roll the dice
     {dice, sum, is_doubles} = Dice.roll()
@@ -383,6 +384,7 @@ defmodule GameObjects.Game do
   defp handle_property_ownership(updated_game, current_player, owner, current_tile, sum) do
     case owner.id == current_player.id do
       false ->
+        IO.inspect(current_tile)
         # If the player does not own the property, charge rent
         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
         # Step 4: Check if the player has enough money to pay the rent
@@ -400,6 +402,11 @@ defmodule GameObjects.Game do
       # Deduct rent from the player and add it to the owner
       {player_minus_rent, owner_plus_rent} =
         GameObjects.Player.lose_money(current_player, owner, prop_rent)
+
+      IO.inspect(current_player)
+      IO.inspect(owner)
+      IO.inspect(player_minus_rent)
+      IO.inspect(owner_plus_rent)
 
       # Step 5: Update players after rent payment
       updated_game =
@@ -431,7 +438,7 @@ defmodule GameObjects.Game do
       Enum.map(updated_game.players, fn p ->
         cond do
           p.id == current_player.id -> player_minus_rent
-          p.id == owner-> owner_plus_rent
+          p.id == owner.id -> owner_plus_rent
           true -> p
         end
       end)
