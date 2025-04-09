@@ -380,6 +380,7 @@ defmodule MonopolyWeb.GameLive do
             <.rent_modal
               id="rent_modal"
               show={@show_rent_modal}
+              players={@game.players}
               property={Enum.at(@game.properties, @game.current_player.position)}
               dice_result={if @dice_result != nil do @dice_result else 0 end}
             />

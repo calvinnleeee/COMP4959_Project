@@ -8,22 +8,25 @@ defmodule MonopolyWeb.Components.RentModal do
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
+  attr :players, :list, required: true, doc: "List of players in the game"
   attr :property, :map, required: true, doc: "Property that was landed on"
   attr :dice_result, :integer, required: true, doc: "Die result for the turn"
   attr :on_cancel, :any, default: nil, doc: "JS command for cancel action"
 
   def rent_modal(assigns) do
-    owner_name = if assigns.property.owner == nil do
-      ""
-    else
-      players = assigns.game.players
-      owner_id = assigns.property.owner
+    owner_name =
+      if assigns.property.owner == nil do
+        ""
+      else
+        players = assigns.players
+        owner_id = assigns.property.owner
 
-      case Enum.find(players, fn player -> player.id == owner_id end) do
-        nil -> ""
-        player -> player.name
+        case Enum.find(players, fn player -> player.id == owner_id end) do
+          nil -> ""
+          player -> player.name
+        end
       end
-    end
+
     rent =
       if assigns.property.type in [
         "brown",
