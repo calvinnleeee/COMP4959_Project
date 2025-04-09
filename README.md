@@ -17,14 +17,14 @@
 
 
 ## 💻 How To Run
-To start your Phoenix server:
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+To play with your friends, visit [Website]() from your favourite browser.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+To run the game locally, [`localhost:4000`](http://localhost:4000).
+
+
+
 
 ## 🎮 How to Play
 
@@ -48,10 +48,6 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 8. Repeat until only one player survives!
 (add image)
-
-### Play Flowchart
-(add the flowchart)
-
 
 
 ## 🎲 Game Rule
@@ -92,6 +88,10 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
       - If LUXURY TAX, pay ($100)
       - If INCOME TAX, pay (10%) OR ($100), whichever is lower
     - Hand over the turn to the next player
+
+## 👾 Play Flowchart
+
+![Game playing flowchart](./readme_assets/play-flowchart.png)
 
 ## 🔀 Game Logic Flowchart
 - Player joins game
