@@ -327,7 +327,7 @@ defmodule MonopolyWeb.GameLive do
           <% else %>
 
             <!-- Game board container -->
-            <div id="board-canvas" class="game-board w-full relative">
+            <div id="board-canvas" class="game-board w-full relative" style="height: calc(100vh - 6rem);">
               <!-- WebGL canvas fills the container -->
               <canvas
                 id="webgl-canvas"
