@@ -165,7 +165,7 @@ defmodule MonopolyWeb.GameLive do
       {:ok, game} =
         Game.buy_property(id, Enum.at(assigns.game.properties, player.position))
 
-      {:noreply, assign(socket, game: game, show_property_modal: false)}
+      {:noreply, assign(socket, game: game)}
     else
       {:noreply, socket}
     end
@@ -186,7 +186,7 @@ defmodule MonopolyWeb.GameLive do
           Enum.at(assigns.game.properties, player.position)
         )
 
-      {:noreply, assign(socket, game: game, show_property_modal: false)}
+      {:noreply, assign(socket, game: game)}
     else
       {:noreply, socket}
     end
@@ -207,7 +207,7 @@ defmodule MonopolyWeb.GameLive do
           Enum.at(assigns.game.properties, player.position)
         )
 
-      {:noreply, assign(socket, game: game, show_property_modal: false)}
+      {:noreply, assign(socket, game: game)}
     else
       {:noreply, socket}
     end

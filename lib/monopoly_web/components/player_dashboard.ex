@@ -178,7 +178,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
                 title={"#{property.name}#{if property_mortgaged?(property), do: " (Mortgaged)", else: ""}"}
               >
                 <div class="property-initial"><%= String.first(property.name) %></div>
-                <%= if property.upgrades && property.upgrades > 1 && !Enum.member?(["railroad", "utility"], property) do %>
+                <%= if property.upgrades && property.upgrades > 1 && !Enum.member?(["railroad", "utility"], property.type) do %>
                   <div class="property-buildings">
                     <%= if property.upgrades == 6 do %>
                       <span class="hotel">H</span>
