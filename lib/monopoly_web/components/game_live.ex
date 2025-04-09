@@ -139,13 +139,13 @@ defmodule MonopolyWeb.GameLive do
           # Notifications for dashboard
           jail_notification: jail_notification,
           doubles_notification: doubles_notification,
-          show_property_modal: new_loc.buy_cost && (!new_loc.owner || new_loc.owner.id == id),
+          show_property_modal: new_loc.buy_cost && (new_loc.owner == nil || new_loc.owner.id == id),
           # If player got a card, display it
           show_card_modal: card != nil,
           # If player landed on another player's property, let them know
-          show_rent_modal: card == nil && new_loc.owner && new_loc.owner.id != id,
+          show_rent_modal: new_loc.owner && new_loc.owner.id != id,
           # If player landed on a tax or parking tile, display it
-          show_tax_modal: card == nil && new_loc.type in ["parking", "tax"]
+          show_tax_modal: new_loc.type in ["parking", "tax"]
         )
       }
     else
@@ -313,33 +313,44 @@ defmodule MonopolyWeb.GameLive do
         <div class="game-container">
           <h1 class="text-xl mb-4">Monopoly Game</h1>
 
-          <!-- Game board container -->
-          <div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
-            <!-- WebGL canvas fills the container -->
-            <canvas
-              id="webgl-canvas"
-              class="w-full h-full block"
-              phx-hook="BoardCanvas"
-              data-game={Jason.encode!(@game)}>
-            </canvas>
-          </div>
+          <%= if @game.current_player.in_jail && @game.current_player.id == @id do %>
+            <!-- Jail screen -->
+            <.jail_screen
+              player={@game.current_player}
+              dice={@dice_values}
+              on_roll_dice={JS.push("roll_dice")}
+              on_end_turn={JS.push("end_turn")}
+            />
+          <% else %>
 
-          <!-- Player dashboard with dice results and all notifications -->
-          <.player_dashboard
-            player={get_player(@game.players, @id)}
-            current_player_id={@game.current_player.id}
-            properties={get_properties(@game.players, @id)}
-            on_roll_dice={JS.push("roll_dice")}
-            on_end_turn={JS.push("end_turn")}
-            dice_result={@dice_result}
-            dice_values={@dice_values}
-            is_doubles={@is_doubles}
-            doubles_notification={@doubles_notification}
-            doubles_count={get_doubles(@game.players, @id)}
-            jail_notification={@jail_notification}
-            roll={@roll}
-            end_turn={@end_turn}
-          />
+            <!-- Game board container -->
+            <div id="board-canvas" class="game-board bg-green-200 h-96 w-full relative">
+              <!-- WebGL canvas fills the container -->
+              <canvas
+                id="webgl-canvas"
+                class="w-full h-full block"
+                phx-hook="BoardCanvas"
+                data-game={Jason.encode!(@game)}>
+              </canvas>
+            </div>
+
+            <!-- Player dashboard with dice results and all notifications -->
+            <.player_dashboard
+              player={get_player(@game.players, @id)}
+              current_player_id={@game.current_player.id}
+              properties={get_properties(@game.players, @id)}
+              on_roll_dice={JS.push("roll_dice")}
+              on_end_turn={JS.push("end_turn")}
+              dice_result={@dice_result}
+              dice_values={@dice_values}
+              is_doubles={@is_doubles}
+              doubles_notification={@doubles_notification}
+              doubles_count={get_doubles(@game.players, @id)}
+              jail_notification={@jail_notification}
+              roll={@roll}
+              end_turn={@end_turn}
+            />
+          <% end %>
 
           <!-- Modal for displaying property actions -->
           <%= if @show_property_modal do %>
