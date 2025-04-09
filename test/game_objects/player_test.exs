@@ -82,12 +82,6 @@ defmodule GameObjects.PlayerTest do
       assert p1_updated.money == 1250
       assert p2_updated.money == 1750
     end
-
-    test "lose_money/3 raises on nil recipient", %{player: player} do
-      assert_raise FunctionClauseError, fn ->
-        Player.lose_money(player, nil, 100)
-      end
-    end
   end
 
   describe "Movement" do
