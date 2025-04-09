@@ -277,6 +277,8 @@ COMP4959_PROJECT
 ## 🐛 Known Bugs
 
 - Although player(s) leave the game, their properties and player blocks on the board are still remaining.
+- Only one lobby is available:
+  - If a malicious player blocks(stays) in a lobby as a player 1, no one can play a gmae.
 
 
 ## 👥 Team Members
