@@ -70,6 +70,10 @@ defmodule MonopolyWeb.WelcomeLive do
     {:noreply, assign(socket, players: [], show_modal: false)}
   end
 
+  # Catch-all for handling game updates while someone is in the lobby
+  def handle_info(%{event: _,}, socket) do
+    {:noreply, socket}
+  end
 
   # Renders the LiveView HTML, including the modal if show_modal is true
   @impl true

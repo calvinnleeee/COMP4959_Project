@@ -331,7 +331,6 @@ defmodule GameObjects.GameTest do
 
       assert {:err, "Not your turn"} = Game.roll_dice("player_1")
     end
-
   end
 
   describe "game winner" do
@@ -379,7 +378,6 @@ defmodule GameObjects.GameTest do
       assert updated_game.current_player.money == 1450  # 1500 - 50 (jail fee)
     end
   end
-
 
   describe "property upgrade limits" do
     test "property cannot upgrade beyond hotel (level 6)" do
@@ -462,6 +460,40 @@ defmodule GameObjects.GameTest do
       {:ok, updated_game} = Game.end_turn("p1")
 
       assert updated_game.current_player.id == "p3"
+    end
+  end
+
+  describe "turn order mechanics" do
+    test "validates turn advancement after end_turn" do
+      # Setup 3 players
+      players = [
+        create_test_player("p1", "P1", 0),
+        create_test_player("p2", "P2", 1),
+        create_test_player("p3", "P3", 2)
+      ]
+
+      # Create initial game state with first player having rolled
+      first_player = %{Enum.at(players, 0) | rolled: true}
+      game = %Game{
+        players: [first_player | tl(players)],
+        properties: [],
+        deck: [],
+        current_player: first_player,
+        turn: 0,
+        active_card: nil,
+        winner: nil
+      }
+
+      # Set up game state
+      :ets.insert(Game.Store, {:game, game})
+      :sys.replace_state(Game, fn _ -> game end)
+
+      # End turn and verify next player
+      {:ok, updated_game} = Game.end_turn("p1")
+
+      assert updated_game.current_player.id == "p2"
+      assert updated_game.turn == 1
+      refute updated_game.current_player.rolled
     end
   end
 
