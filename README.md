@@ -100,7 +100,7 @@ Or run it locally:
 
 ## ⚙️ Play Flowchart
 
-![Game playing flowchart](./readme_assets/play-flowchart.png)
+  ![Game playing flowchart](./readme_assets/play-flowchart.png)
 
 ## 🔀 Game Logic Flowchart
 - ➕ Player Joins Game  
@@ -131,7 +131,7 @@ Or run it locally:
 
 
 ### Install Dependencies
-```bash
+```
 mix setup
 ```
 
