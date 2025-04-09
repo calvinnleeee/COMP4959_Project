@@ -49,6 +49,11 @@ defmodule GameObjects.PlayerTest do
       assert Player.get_id(player) == @player_id
       assert Player.get_name(player) == @player_name
       assert Player.get_money(player) == 1500
+      assert Player.get_sprite_id(player) == @player_sprite_id
+      assert Player.get_position(player) == 0
+      assert Player.get_properties(player) == []
+      assert Player.get_cards(player) == []
+      assert Player.get_in_jail(player) == false
     end
   end
 
