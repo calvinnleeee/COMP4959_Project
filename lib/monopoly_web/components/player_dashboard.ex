@@ -256,21 +256,6 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   # Helper functions for property attributes
   defp property_mortgaged?(property), do: Map.get(property, :mortgaged, false)
 
-  defp property_has_houses?(property) do
-    upgrades = property.upgrades || 0
-    upgrades > 1 && upgrades < 6
-  end
-
-  defp property_has_hotel?(property) do
-    upgrades = property.upgrades || 0
-    upgrades >= 6
-  end
-
-  defp get_house_count(property) do
-    upgrades = property.upgrades || 0
-    if upgrades >= 2 && upgrades <= 5, do: upgrades - 1, else: 0
-  end
-
   # Calculate the value of upgrades (houses/hotels) for total worth
   defp calculate_upgrades_value(property) do
     upgrades = property.upgrades || 0

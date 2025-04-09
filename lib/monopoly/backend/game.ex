@@ -278,7 +278,7 @@ defmodule GameObjects.Game do
     game = %{game | active_card: nil}
 
     # Step 1: Roll the dice
-    {dice, sum, is_doubles} = Dice.roll()
+    {dice, sum, is_doubles} = {{1, 1}, 2, true} #Dice.roll()
 
     # Step 2: Update the player's turn state based on whether they rolled doubles
     current_player = update_player_turns(current_player, is_doubles)

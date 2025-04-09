@@ -3,7 +3,6 @@ defmodule MonopolyWeb.GameLive do
   The VHM board which communicates with the backend Game server.
   """
   use MonopolyWeb, :live_view
-  import MonopolyWeb.CoreComponents
   import MonopolyWeb.Components.PlayerDashboard
   import MonopolyWeb.Components.PropertyModal
   import MonopolyWeb.Components.CardModal

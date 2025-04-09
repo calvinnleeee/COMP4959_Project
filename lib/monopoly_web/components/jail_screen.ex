@@ -1,6 +1,7 @@
 defmodule MonopolyWeb.Components.JailScreen do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
+  import MonopolyWeb.Helpers.SpriteHelper
 
   attr :player, :map, required: true, doc: "The player data to display"
   attr :dice, :any, required: true, doc: "The dice rolled by the player (tuple)"
@@ -10,8 +11,13 @@ defmodule MonopolyWeb.Components.JailScreen do
     ~H"""
     <div id="jail-screen" class="jail-screen max-w-lg my-12 mx-auto p-6 bg-gray-100 border border-gray-300 rounded-lg text-center">
       <h1 class="text-2xl font-bold text-gray-800 mb-4">Jail Screen</h1>
-      <div class="jail-image">
+      <div class="jail-image" style="position: relative;">
         <img src="/images/jail_scene.png" alt="Jail scene" class="mx-auto" />
+        <img
+          src={"/images/sprites/" <> get_sprite_filename(@player.sprite_id)}
+          alt="Player Sprite"
+          style="position: absolute; width: 25%; top: 6%; left: 37%;"
+        />
       </div>
       <p class="text-lg mb-4">Turns remaining in jail: <%= 3 - @player.jail_turns %></p>
       <div class="flex flex-col justify-center gap-4 mb-6">
