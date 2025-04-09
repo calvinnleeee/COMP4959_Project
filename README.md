@@ -2,7 +2,19 @@
 
 ## 🏫 BCIT COMP4959 Project
 
-Elixir / Phoenix implementation of the board game Monopoly.
+
+  ✨ Ever dreamed of owning property in Vancouver? ✨
+
+  Play **Vancouver Housing Market** with your friends and live out your real estate fantasies.
+
+  Without the crushing mortgage, you'll start with $1,500, which is enough to buy several properties and a bucket of bluberries *just like our grandparents*!
+
+  Buy up propertie**s** without a down payment, charge rent, and send your misbehaving buddies to jail... where there’s actually enough room to hold them.
+
+  **Vancouver Housing Market** is inpired by the classic board game Monopoly, with an Elixir/Phoenix implementation.
+
+  Now it’s your turn to make your dream come true—own your favourite neighbourhood! 
+
 
 ## 💻 How To Run
 To start your Phoenix server:
