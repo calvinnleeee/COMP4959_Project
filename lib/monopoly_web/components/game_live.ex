@@ -178,7 +178,7 @@ defmodule MonopolyWeb.GameLive do
     player = assigns.game.current_player
 
     # Verify that it is the player's turn and they can upgrade
-    if player.id == id && assigns.upgrade_prop do
+    if player.id == id && assigns.show_property_modal do
       # Buy the property and get new game state
       {:ok, game} =
         Game.upgrade_property(
