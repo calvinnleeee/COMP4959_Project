@@ -255,6 +255,14 @@ defmodule MonopolyWeb.GameLive do
     {:noreply, assign(socket, show_card_modal: false)}
   end
 
+  def handle_event("close_rent", _params, socket) do
+    {:noreply, assign(socket, show_rent_modal: false)}
+  end
+
+  def handle_event("close_tax", _params, socket) do
+    {:noreply, assign(socket, show_tax_modal: false)}
+  end
+
   def handle_event("close_go", _params, socket) do
     {:noreply, assign(socket, passed_go: false)}
   end
@@ -362,6 +370,7 @@ defmodule MonopolyWeb.GameLive do
               player={get_player(@game.players, @id)}
               show={@show_property_modal}
               property={Enum.at(@game.properties, @game.current_player.position)}
+              on_cancel={JS.push("cancel_buying")}
             />
           <% end %>
 
@@ -383,6 +392,7 @@ defmodule MonopolyWeb.GameLive do
               players={@game.players}
               property={Enum.at(@game.properties, @game.current_player.position)}
               dice_result={if @dice_result != nil do @dice_result else 0 end}
+              on_cancel={JS.push("close_rent")}
             />
           <% end %>
 
@@ -392,6 +402,7 @@ defmodule MonopolyWeb.GameLive do
               id="tax_modal"
               show={@show_tax_modal}
               tile={Enum.at(@game.properties, @game.current_player.position)}
+              on_cancel={JS.push("close_tax")}
             />
           <% end %>
 
