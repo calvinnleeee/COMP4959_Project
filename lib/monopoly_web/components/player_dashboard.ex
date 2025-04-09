@@ -2,6 +2,7 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
   import MonopolyWeb.CoreComponents
+  import MonopolyWeb.Helpers.SpriteHelper
 
   # Main player dashboard component
   attr :player, :map, required: true, doc: "The player data to display"
@@ -26,6 +27,11 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
     <div id="player-dashboard" class="player-dashboard">
       <div class="dashboard-header">
         <div class="player-name" style={"color: #{@color};"}>
+          <img
+            src={"/images/sprites/" <> get_sprite_filename(@player.sprite_id)}
+            alt="Player Sprite"
+            class="h-15 w-15 inline-block"
+          />
           <%= @player.name %>
         </div>
 
@@ -172,12 +178,12 @@ defmodule MonopolyWeb.Components.PlayerDashboard do
                 title={"#{property.name}#{if property_mortgaged?(property), do: " (Mortgaged)", else: ""}"}
               >
                 <div class="property-initial"><%= String.first(property.name) %></div>
-                <%= if property_has_houses?(property) || property_has_hotel?(property) do %>
+                <%= if property.upgrades && property.upgrades > 1 && !Enum.member?(["railroad", "utility"], property) do %>
                   <div class="property-buildings">
-                    <%= if property_has_hotel?(property) do %>
+                    <%= if property.upgrades == 6 do %>
                       <span class="hotel">H</span>
                     <% else %>
-                      <span class="houses"><%= get_house_count(property) %></span>
+                      <span class="houses"><%= property.upgrades - 2 %></span>
                     <% end %>
                   </div>
                 <% end %>
