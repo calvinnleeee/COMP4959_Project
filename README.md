@@ -94,7 +94,6 @@
   - 📚 [Property Reference](https://en.wikibooks.org/wiki/Monopoly/Properties_reference)
   - Option to buy if unowned. If declined, it goes to **auction**.
   - If owned, pay **rent** to the owner.  
-      ![Paying rent is...amazing...!](image-14.png)
 
 - **Utilities (BC Hydro, Fortis)**  
   - 🚰 [Utility Info](https://monopoly.fandom.com/wiki/Utility)  
@@ -107,7 +106,6 @@
 
 - **Community Chest / Chance**  
   - 📬 Draw a card  
-      ![Community Card](image-10.png)
   - [Community Chest](https://monopoly.fandom.com/wiki/Community_Chest)  
   - [Chance](https://monopoly.fandom.com/wiki/Chance#Cards)
 
