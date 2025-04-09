@@ -287,14 +287,14 @@ COMP4959_PROJECT
 
 | Frontend | Backend | QA | UI/UX | PM |
 |----------|----------|----------|----------|----------|
-| Alex Deschenes | Abdulqaidr Abuharrus [![Github](./readme_assets/github-logo.png)](https://github.com/Abdo-Abuharrus211) | Derek Tran [![Github](./readme_assets/github-logo.png)](https://github.com/ddderekk) | Filip Budd [![Github](./readme_assets/github-logo.png)](https://github.com/filipbudd/) | Calvin Lee [![Github](./readme_assets/github-logo.png)](https://github.com/calvinnleeee/) |
-| Caleb Chiang [![Github](./readme_assets/github-logo.png)](https://github.com/calebchiang) | Clement Quanch [![Github](./readme_assets/github-logo.png)](https://github.com/Clement-Quach) | Flora Deng [![Github](./readme_assets/github-logo.png)](https://github.com/FloraDeng00) | | Jesse McKenzie [![Github](./readme_assets/github-logo.png)](https://github.com/JDMCK) |
-| Echo Wang [![Github](./readme_assets/github-logo.png)](https://github.com/EchooWww) | Irix Xu [![Github](./readme_assets/github-logo.png)](https://github.com/IrisWRX) | Inez Yoon [![Github](./readme_assets/github-logo.png)](https://github.com/Inez-y) | | |
-| Princeton Dychinco [![Github](./readme_assets/github-logo.png)](https://github.com/pdychinco) | Jaiden Duncan | Niko Wang [![Github](./readme_assets/github-logo.png)](https://github.com/nzzzzzw) | | |
-| Quincy Wong [![Github](./readme_assets/github-logo.png)](https://github.com/phoenixalpha204) | Joanne Ho | Richard Maceda [![Github](./readme_assets/github-logo.png)](https://github.com/Organic-156) | | |
-| Saeyoung Park [![Github](./readme_assets/github-logo.png)](https://github.com/eesope/) | Matthew Yoon | | | |
-|  | Nathan Yau [![Github](./readme_assets/github-logo.png)](https://github.com/nathan-yau) | | | |
-|  | Erick Deau [![Github](./readme_assets/github-logo.png)](https://github.com/eric-deau) | | | |
+| Alex Deschenes | Abdulqaidr Abuharrus [🔗](https://github.com/Abdo-Abuharrus211) | Derek Tran [🔗](https://github.com/ddderekk) | Filip Budd [🔗](https://github.com/filipbudd/) | Calvin Lee [🔗](https://github.com/calvinnleeee/) |
+| Caleb Chiang [🔗](https://github.com/calebchiang) | Clement Quanch [🔗](https://github.com/Clement-Quach) | Flora Deng [🔗](https://github.com/FloraDeng00) | | Jesse McKenzie [🔗](https://github.com/JDMCK) |
+| Echo Wang [🔗](https://github.com/EchooWww) | Irix Xu [🔗](https://github.com/IrisWRX) | Inez Yoon [🔗](https://github.com/Inez-y) | | |
+| Princeton Dychinco [🔗](https://github.com/pdychinco) | Jaiden Duncan | Niko Wang [🔗](https://github.com/nzzzzzw) | | |
+| Quincy Wong [🔗](https://github.com/phoenixalpha204) | Joanne Ho | Richard Maceda [🔗](https://github.com/Organic-156) | | |
+| Saeyoung Park [🔗](https://github.com/eesope/) | Matthew Yoon | | | |
+|  | Nathan Yau [🔗](https://github.com/nathan-yau) | | | |
+|  | Erick Deau [🔗](https://github.com/eric-deau) | | | |
 
 
 
