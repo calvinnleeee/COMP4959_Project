@@ -155,9 +155,96 @@ Then visit: [`localhost:4000`](http://localhost:4000)
 
 
 ## 📁 File Structure
-
+```
+COMP4959_PROJECT
+├── _build/                           # Elixir build artifacts (auto-generated)
+├── .elixir_ls/                       # Language server files (used by editors like VSCode)
+├── assets/                           # Frontend assets (CSS, JS, Tailwind config)
+│   ├── css/                          # Custom stylesheets
+│   │   ├── app.css                   # Base CSS imports (via Tailwind)
+│   │   ├── font.css                  # Font styling
+│   │   └── player_dashboard.css      # Styles specific to player dashboard UI
+│   ├── js/                           # JavaScript code for frontend interactivity
+│   │   ├── app.js                    # Main JS entrypoint
+│   │   ├── board.js                  # JS logic for board UI
+│   │   └── vendor/                   # External JS libs (e.g. Phoenix topbar)
+│   │       └── topbar.js
+│   └── tailwind.config.js            # Tailwind CSS configuration
+├── config/                           # Elixir config files for different environments
+│   ├── config.exs                    # Base config (runs for all environments)
+│   ├── dev.exs                       # Development environment config
+│   ├── prod.exs                      # Production environment config
+│   ├── runtime.exs                   # Runtime config (used in production releases)
+│   └── test.exs                      # Test environment config
+├── deps/                             # Installed dependencies (auto-managed)
+├── lib/                              # Main application logic
+│   ├── monopoly/                     # Game backend logic (game engine)
+│   │   ├── backend/                  # Core game modules
+│   │   │   ├── auction.ex            # Logic for auctions
+│   │   │   ├── bank.ex               # Bank money logic
+│   │   │   ├── card.ex               # Community Chest & Chance cards
+│   │   │   ├── deck.ex               # Deck shuffling/drawing
+│   │   │   ├── dice.ex               # Dice rolling logic
+│   │   │   ├── game.ex               # Main game controller/logic
+│   │   │   ├── mailer.ex             # Email sending (likely unused in this app)
+│   │   │   ├── player.ex             # Player struct & logic
+│   │   │   ├── property.ex           # Property logic (ownership, rent, etc.)
+│   │   │   └── tile.ex               # Board tiles (actions, movement, etc.)
+│   ├── monopoly_web/                 # Web interface (Phoenix LiveView UI)
+│   │   ├── components/               # LiveView + Heex components
+│   │   │   ├── *_modal.ex            # Modals for buying, tax, property, etc.
+│   │   │   ├── game_live.ex          # Main game screen LiveView
+│   │   │   ├── jail_screen.ex        # Jail-specific UI
+│   │   │   └── core_components.ex    # Shared UI components
+│   │   ├── controllers/              # Page routing controllers
+│   │   │   ├── error_*.ex            # Error page rendering
+│   │   │   ├── page_controller.ex    # Default homepage controller
+│   │   │   └── page_html.ex          # Page templates
+│   │   ├── helpers/                  # View helpers
+│   │   │   └── sprite_helper.ex      # Helps render sprite images
+│   │   ├── live/                     # Other LiveViews
+│   │   │   ├── backend-testing.ex    # LiveView for testing backend directly
+│   │   │   └── welcome_live.ex       # Lobby / home LiveView
+│   │   ├── endpoint.ex               # Entry point for the Phoenix server
+│   │   ├── router.ex                 # URL routes
+│   │   ├── telemetry.ex              # Phoenix telemetry metrics
+│   │   ├── gettext.ex                # Internationalization support
+│   │   └── monopoly_web.ex           # Root web module
+│   └── monopoly.ex                   # App startup module (entrypoint)
+├── priv/                             # Private assets (DB, static, i18n)
+│   ├── data/                         # Game data
+│   │   ├── cards.json                # Community Chest / Chance cards
+│   │   └── properties.json           # Board properties
+│   ├── gettext/                      # Translation files
+│   │   └── en/LC_MESSAGES/errors.po
+│   ├── repo/migrations/              # Ecto migrations for DB (bidding?)
+│   │   └── 20250321...create_bids.exs
+│   ├── static/                       # Static assets served directly
+│   │   ├── app.css                   # Tailwind output CSS
+│   │   └── images/sprites/           # Game token images and board graphics
+│   │       ├── Piece_*.png           # Token pieces (Dog, Car, Boot, etc.)
+│   │       ├── board_image.png       # Board visual
+│   │       ├── jail_scene.png        # Jail scene graphic
+│   │       └── logo.svg              # Game logo
+│   ├── favicon.ico
+│   └── robots.txt
+├── test/                             # Unit and integration tests
+│   ├── game_objects/                 # Tests for game logic modules (deck, dice, etc.)
+│   ├── monopoly_web/                 # Tests for LiveView and web components
+│   ├── support/                      # Test helpers and shared test setup
+│   │   ├── conn_case.ex
+│   │   └── test_helper.exs
+├── .formatter.exs                    # Code formatting config
+├── .gitignore                        # Git ignored files list
+├── integration-plan.txt              # Project planning doc
+├── mix.exs                           # Main Elixir project config
+├── mix.lock                          # Dependency lockfile
+├── readme_assets                     # Image files for README.md
+└── README.md                         # Project overview
+```
 ## 🐛 Known Bugs
 
+(need to add more on real testing)
 ## 👥 Team Members
 
 *Alphabetically ordered*
