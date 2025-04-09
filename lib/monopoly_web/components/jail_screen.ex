@@ -16,7 +16,7 @@ defmodule MonopolyWeb.Components.JailScreen do
         <img
           src={"/images/sprites/" <> get_sprite_filename(@player.sprite_id)}
           alt="Player Sprite"
-          style="position: absolute; width: 25%; top: 6%; left: 37%;"
+          style="position: absolute; width: 25%; top: 6%; left: 37%; image-rendering: pixelated;"
         />
       </div>
       <p class="text-lg mb-4">Turns remaining in jail: <%= 3 - @player.jail_turns %></p>

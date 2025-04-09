@@ -70,8 +70,8 @@ defmodule GameObjects.Game do
   end
 
   # End the current player's turn.
-  def end_turn(session_id) do
-    GenServer.call(__MODULE__, {:end_turn, session_id})
+  def end_turn(session_id, force \\ false) do
+    GenServer.call(__MODULE__, {:end_turn, session_id, force})
   end
 
   # Roll the dice for the current player.
@@ -551,11 +551,12 @@ defmodule GameObjects.Game do
     player.
 
     session_id: the session ID of the player ending their turn
+    force: whether to end the turn even if player has not rolled, default false
 
     Replies with :ok
   """
   @impl true
-  def handle_call({:end_turn, session_id}, _from, state) do
+  def handle_call({:end_turn, session_id, force}, _from, state) do
     case :ets.lookup(@game_store, :game) do
       [] ->
         {:reply, {:err, "No active game found."}, state}
@@ -564,7 +565,7 @@ defmodule GameObjects.Game do
         current_player = game.current_player
 
         if GameObjects.Player.get_id(current_player) == session_id do
-          if current_player.rolled do
+          if current_player.rolled || force do
             # For Checking whether the current_player should be game over
             updated_player =
               current_player
@@ -1059,6 +1060,8 @@ defmodule GameObjects.Game do
         end
       end)
 
+    winner = game_over_condition(updated_players)
+
     updated_current_player =
       if state.current_player.id == session_id and state.current_player.active do
         %{state.current_player | active: false}
@@ -1068,7 +1071,14 @@ defmodule GameObjects.Game do
 
     # Frontend should check whether the current player is inactive or not.
     # If so, FE should call end turn for the inactive player.
-    updated_state = %{state | players: updated_players, current_player: updated_current_player}
+    updated_state =
+      %{
+        state |
+        players: updated_players,
+        current_player: updated_current_player,
+        winner: winner
+      }
+
 
     :ets.insert(@game_store, {:game, updated_state})
     MonopolyWeb.Endpoint.broadcast("game_state", "player_inactive", updated_state)

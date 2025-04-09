@@ -422,9 +422,7 @@ defmodule MonopolyWeb.GameLive do
   def terminate(_reason, socket) do
     id = socket.assigns.id
     {:ok, game} = Game.set_player_inactive(id)
-    if game.current_player.id == id do
-      if game.current_player.rolled, do: Game.end_turn(id), else: Game.roll_dice(id)
-    end
+    if game.current_player.id == id, do: Game.end_turn(id, true)
     :ok
   end
 end
