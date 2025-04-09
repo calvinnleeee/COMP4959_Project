@@ -60,7 +60,7 @@ defmodule GameObjects.PropertyTest do
 			property = Property.new(0, "test", "brown", 100, 200, 2, 50, 0)
 
 			property = Property.set_owner(property, player1)
-			assert Property.get_owner(property) == player1
+			assert Property.get_owner(property) == player1.id
 		end
 	end
 
@@ -262,7 +262,7 @@ defmodule GameObjects.PropertyTest do
 		cards: [], in_jail: true, jail_turns: 0}
 		property = Property.new(0, "test", "brown", 100, [100, 200, 300], 3, 50, 51)
 		property = Property.buy_property_simple(property, player)
-		assert Property.get_owner(property) == player
+		assert Property.get_owner(property) == player.id
 	end
 
 	describe "is_owned(property)" do
