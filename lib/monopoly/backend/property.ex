@@ -95,7 +95,11 @@ defmodule GameObjects.Property do
   uses get_pid to get the pid of the player
   """
   def set_owner(property, player) do
-    %__MODULE__{property | owner: player.id}
+    if player != nil do
+      %__MODULE__{property | owner: player.id}
+    else
+      %__MODULE__{property | owner: nil}
+    end
   end
 
   @doc """
