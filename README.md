@@ -14,6 +14,8 @@
   **Vancouver Housing Market** is inpired by the classic board game Monopoly, with an Elixir/Phoenix implementation.
 
   Now it’s your turn to make your dream come true—own your favourite neighbourhood! 
+  
+  ![Game Board](./readme_assets/board.png)
 
 
 ## 💻 How To Run
@@ -34,20 +36,40 @@ Or run it locally:
 
 3. Click **Join the Lobby**  
    *(insert image here)*
+   ![Vancouver Housing Market Lobby](image-12.png)
 
 4. Once everyone’s in, click **Start Game**  
+   - Start Game
    *(insert image here)*
+![alt text](image.png)
+
+  - Starting Screen
+![alt text](image-1.png)
 
 5. On your turn, select from available buttons  
    *(insert image here)*
+   - Roll Dice
+   ![alt text](image-2.png)
+
+   - End Turn
+   ![alt text](image-3.png)
+
 
 6. No need to do math—we’ve got that covered!
 
+   - Property Modal
+
+   ![alt text](image-5.png)
+   ![alt text](image-6.png)
+   ![alt text](image-7.png)
+
 7. Wait for your friends’ turns  
    *(insert image here)*
+   ![It's not your turn when buttons are not activated](image-9.png)
 
 8. Repeat until there’s only one player standing!  
    *(insert image here)*
+   ![Congrats! You draind all your friends money with your properties](image-13.png)
 
 
 ## 🎲 Game Rule
@@ -67,24 +89,30 @@ Or run it locally:
 - **Property Space**  
   - Option to buy if unowned. If declined, it goes to **auction**.
   - If owned, pay **rent** to the owner.  
+  ![Paying rent is...amazing...!](image-14.png)
+  ![Upgrade property](image-18.png)
   📚 [Property Reference](https://en.wikibooks.org/wiki/Monopoly/Properties_reference)
 
 - **Utilities (Water Works, Electric Company)**  
+![We love the clean BC water](image-15.png)
   💡 [Utility Info](https://monopoly.fandom.com/wiki/Utility)  
   - Pay 4× dice roll if owner has one utility  
   - Pay 10× if they own both
 
 - **Railroads**  
+![West Coast Express](image-11.png)
   🚆 [Railroads Info](https://monopoly.fandom.com/wiki/Railroads)  
   - Pay rent based on how many railroads the owner controls
 
 - **Community Chest / Chance**  
+![Community Card](image-10.png)
   📬 Draw a card  
   - [Community Chest](https://monopoly.fandom.com/wiki/Community_Chest)  
   - [Chance](https://monopoly.fandom.com/wiki/Chance#Cards)
 
 - **Jail**  
   🚔 [Jail Rules](https://monopoly.fandom.com/wiki/Jail)  
+  ![You're trapped in the BCIT jail!](image-8.png)
   - Just visiting? No problem.  
   - If sent to jail, you stay up to 3 turns. Escape options:
     - Pay $50
@@ -245,6 +273,20 @@ COMP4959_PROJECT
 ## 🐛 Known Bugs
 
 (need to add more on real testing)
+- Although player(s) leave the game, their properties and player blocks on the board are still remaining.
+- User cannot chose their action in a jail if they owns a Get Out of Jail Free card
+  - The card is used automatically
+- Server crashes under a certain condition
+  - `MonopolyWeb.WelcomeLive` module does not have a matching `handle_info/2` clause for the some boardcast events.
+  - `turn_ended`, `unowned_property` and `card_played` already exists 
+  - Maybe it's fixed now?
+- When a player doesn't have enough cash with properties and lands on someone else's property, they go bankrupt 
+  - selling properties is not triggered
+- Modals don't disappear after purchasing properties. 
+  - Users are trapped in an infinite loop of sell-buy until they click the close(Leave) button
+  - ![Buy property](image-16.png)
+  - ![Sell property](image-17.png)
+
 ## 👥 Team Members
 
 *Alphabetically ordered*
