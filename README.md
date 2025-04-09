@@ -16,7 +16,30 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## 🎮 How to Play
 
-1. 
+1. Call your friend(s) to play with!
+
+2. On your favourite browser, access [`localhost:4000`](http://localhost:4000) 
+
+3. Click the `Join the lobby` button
+(add image)
+
+4. If everyone's around, hit `Start game`
+(add image)
+
+5. On your turn, click the available buttons 
+(add image)
+
+6. Don't worry. The system will handle complex math for you!
+
+7. Wait for your friends turn
+(add image)
+
+8. Repeat until only one player survives!
+(add image)
+
+### Play Flowchart
+(add the flowchart)
+
 
 
 ## 🎲 Game Rule
