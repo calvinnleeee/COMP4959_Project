@@ -752,6 +752,21 @@ defmodule GameObjects.Game do
               true ->
                 updated_player = Player.lose_money(current_player, cost)
 
+                updated_player_properties =
+                  updated_player.properties
+                  |> Enum.map(fn property ->
+                    if property.id == updated_property.id do
+                      updated_property
+                    else
+                      property
+                    end
+                  end)
+
+                updated_player = %{
+                  updated_player
+                  | properties: updated_player_properties
+                }
+
                 player_updated_game = update_player(game, updated_player)
                 prop_updated_game = update_property(player_updated_game, updated_property)
 
