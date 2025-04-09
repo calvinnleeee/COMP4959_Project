@@ -169,7 +169,7 @@ defmodule GameObjects.Player do
   @doc """
   Sets the player's rolled status to 'rolled'. Returns a Player struct.
   """
-  @spec set_in_jail(__MODULE__.t(), boolean()) :: __MODULE__.t()
+  @spec set_rolled(__MODULE__.t(), boolean()) :: __MODULE__.t()
   def set_rolled(player, rolled) do
     %{player | rolled: rolled}
   end
