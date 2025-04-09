@@ -314,15 +314,6 @@ defmodule GameObjects.GameTest do
   end
 
   describe "player turn mechanics" do
-    # test "player can roll dice on their turn" do
-    #   game = create_test_game(1)
-    #   :ets.insert(Game.Store, {:game, game})
-
-    #   {:ok, _dice, new_pos, _tile, updated_game} = Game.roll_dice("player_1")
-    #   assert updated_game.current_player.rolled == true
-    #   assert new_pos != 0
-    # end
-
     test "player cannot roll twice in one turn" do
       game = create_test_game(1)
       player = %{Enum.at(game.players, 0) | rolled: true}
@@ -331,7 +322,6 @@ defmodule GameObjects.GameTest do
 
       assert {:err, "Not your turn"} = Game.roll_dice("player_1")
     end
-
   end
 
   describe "game winner" do
@@ -354,32 +344,6 @@ defmodule GameObjects.GameTest do
       assert game.winner == nil
     end
   end
-
-  # describe "jail mechanics" do
-  #   test "player must pay to get out after three failed rolls" do
-  #     game = create_test_game(1)
-  #     player = %{Enum.at(game.players, 0) |
-  #       in_jail: true,
-  #       position: 10,  # Jail position
-  #       jail_turns: 2,
-  #       money: 1500
-  #     }
-  #     game = %{game |
-  #       players: [player],
-  #       current_player: player
-  #     }
-  #     :ets.insert(Game.Store, {:game, game})
-
-  #     # Force non-doubles roll on third turn
-  #     :rand.seed(:exs1024, {1, 2, 3})
-  #     {:ok, _dice, new_pos, _tile, updated_game} = Game.roll_dice("player_1")
-
-  #     assert updated_game.current_player.in_jail == false
-  #     assert updated_game.current_player.position == new_pos
-  #     assert updated_game.current_player.money == 1450  # 1500 - 50 (jail fee)
-  #   end
-  # end
-
 
   describe "property upgrade limits" do
     test "property cannot upgrade beyond hotel (level 6)" do
@@ -497,7 +461,6 @@ defmodule GameObjects.GameTest do
       assert updated_game.turn == 1
       refute updated_game.current_player.rolled
     end
-
   end
 
 end
