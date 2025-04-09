@@ -29,15 +29,15 @@ defmodule GameObjects.DiceTest do
   	
   	#assume turns_taken increments from 0 after first double
  	test "double first turn" do
-  		assert Dice.check_for_jail(0, true) == false
-  	end
-  	
-	test "double second turn" do
   		assert Dice.check_for_jail(1, true) == false
   	end
   	
+	test "double second turn" do
+  		assert Dice.check_for_jail(2, true) == false
+  	end
+  	
 	test "double third turn" do
-  		assert Dice.check_for_jail(2, true) == true
+  		assert Dice.check_for_jail(3, true) == true
   	end
   end
   
