@@ -381,7 +381,7 @@ defmodule GameObjects.Game do
 
   # Step 3: Handle the case where the property is owned
   defp handle_property_ownership(updated_game, current_player, owner, current_tile, sum) do
-    case owner == current_player.id do
+    case owner.id == current_player.id do
       false ->
         # If the player does not own the property, charge rent
         prop_rent = GameObjects.Property.charge_rent(current_tile, sum)
