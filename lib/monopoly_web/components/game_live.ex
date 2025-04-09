@@ -70,6 +70,8 @@ defmodule MonopolyWeb.GameLive do
 
   # If it is now the user's turn, enable necessary buttons
   def handle_info(%{event: "turn_ended", payload: game}, socket) do
+    IO.puts("DA WINNER IS:")
+    IO.inspect(game.winner)
     if game.current_player.id == socket.assigns.id do
       player = game.current_player
       property = Enum.at(game.properties, player.position)
@@ -414,7 +416,15 @@ defmodule MonopolyWeb.GameLive do
 
   # Remove user from game
   def terminate(_reason, socket) do
-    Game.set_player_inactive(socket.assigns.id)
+    id = socket.assigns.id
+    {:ok, game} = Game.set_player_inactive(id)
+    if game.current_player.id == id do
+      if game.current_player.rolled do
+        Game.end_turn(id)
+      else
+        Game.roll_dice(id)
+      end
+    end
     :ok
   end
 end
