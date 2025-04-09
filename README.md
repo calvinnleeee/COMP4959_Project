@@ -120,6 +120,21 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## 🔍 How to test / debug
 
+  Install dependencies
+  - Run `mix setup` to install and setup dependencies
+  
+  To run test files:
+  - Run `mix test`
+  
+  To debug on your local:
+  - Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+
+  - visit [`localhost:4000`](http://localhost:4000) from your browser.
+
+
+## File Structure
+
+
 ## 👥 Team Members
 
 *in alphabetical order*
