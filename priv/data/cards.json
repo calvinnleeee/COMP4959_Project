@@ -1,0 +1,14 @@
+[
+    { "id": 0, "name": "Doctor's fees", "type": "community", "effect": ["pay", 50], "owned": false },
+    { "id": 1, "name": "Bank error in your favor", "type": "community", "effect": ["earn", 200], "owned": false },
+    { "id": 2, "name": "Get Out of Jail Free", "type": "community", "effect": ["get_out_of_jail", true], "owned": false },
+    { "id": 3, "name": "Holiday fund matures", "type": "community", "effect": ["earn", 100], "owned": false },
+    { "id": 4, "name": "Hospital Fees", "type": "community", "effect": ["pay", 50], "owned": false },
+  
+    { "id": 5, "name": "Bank pays you dividend of $50", "type": "chance", "effect": ["earn", 50], "owned": false },
+    { "id": 6, "name": "Pay poor tax of $50", "type": "chance", "effect": ["pay", 50], "owned": false },
+    { "id": 7, "name": "You have been elected Chairman of the Board", "type": "chance", "effect": ["pay", 100], "owned": false },
+    { "id": 8, "name": "Your building loan matures", "type": "chance", "effect": ["earn", 150], "owned": false },
+    { "id": 9, "name": "Get Out of Jail Free", "type": "chance", "effect": ["get_out_of_jail", true], "owned": false }
+  ]
+  

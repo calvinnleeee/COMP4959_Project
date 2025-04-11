@@ -1,0 +1,231 @@
+/* Player Dashboard Styling */
+.player-dashboard {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 300px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.player-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.turn-indicator {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  background-color: #ffd700;
+  color: #333;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: 5px;
+}
+
+.status-indicators {
+  height: 50px;
+  text-align: right;
+}
+
+.dashboard-status {
+  display: flex;
+  align-items: center;
+}
+
+.jail-status {
+  background-color: #ff4757;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dashboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.money-display, .total-worth {
+  background-color: #f7f7f7;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.money-display h3, .total-worth h3, .property-display h3, .card-collection h3 {
+  margin: 0 0 5px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.money-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+.worth-amount {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #3498db;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.roll-dice-btn, .end-turn-btn, .upgrade-prop-btn, .sell-prop-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 1.2rem;
+}
+
+.roll-dice-btn, .upgrade-prop-btn, .sell-prop-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.end-turn-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.roll-dice-btn:hover, .end-turn-btn:hover, .upgrade-prop-btn:hover, .sell-prop-btn:hover {
+  opacity: 0.9;
+}
+
+.roll-dice-btn:disabled, .end-turn-btn:disabled, .upgrade-prop-btn:disabled, .sell-prop-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.property-display {
+  background-color: #f7f7f7;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.property-tile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.property-initial {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.property-buildings {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.7rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #333;
+  border-radius: 3px;
+  padding: 1px 2px;
+  line-height: 1;
+}
+
+.mortgaged-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.7rem;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border-radius: 3px;
+  padding: 1px 2px;
+  line-height: 1;
+}
+
+.no-properties {
+  color: #7f8c8d;
+  font-style: italic;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.card-collection {
+  background-color: #f7f7f7;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.jail-free-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f1c40f;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.card-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: white;
+  color: #333;
+  height: 25px;
+  width: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.card-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+}

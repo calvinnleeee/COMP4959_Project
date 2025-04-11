@@ -1,0 +1,638 @@
+[
+  {
+      "id": 0,
+      "name": "GO",
+      "type": "go",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 1,
+      "name": "East Hastings",
+      "type": "brown",
+      "buy_cost": 60,
+      "rent_cost": [
+        2,
+        4,
+        10,
+        30,
+        90,
+        160,
+        250
+      ],
+      "house_price": 50,
+      "hotel_price": 50,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 2,
+      "name": "Community Chest",
+      "type": "community",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 3,
+      "name": "Chinatown",
+      "type": "brown",
+      "buy_cost": 60,
+      "rent_cost": [
+        4,
+        8,
+        20,
+        60,
+        180,
+        320,
+        450
+      ],
+      "house_price": 50,
+      "hotel_price": 50,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 4,
+      "name": "Income Tax",
+      "type": "tax",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 5,
+      "name": "Expo Line",
+      "type": "railroad",
+      "buy_cost": 200,
+      "rent_cost": [
+        25,
+        50,
+        100,
+        200
+      ],
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 6,
+      "name": "Renfrew-Collingwood",
+      "type": "light blue",
+      "buy_cost": 100,
+      "rent_cost": [
+        6,
+        12,
+        30,
+        90,
+        270,
+        400,
+        550
+      ],
+      "house_price": 50,
+      "hotel_price": 50,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 7,
+      "name": "Chance",
+      "type": "chance",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 8,
+      "name": "Hastings–Sunrise",
+      "type": "light blue",
+      "buy_cost": 100,
+      "rent_cost": [
+        6,
+        12,
+        30,
+        90,
+        270,
+        400,
+        550
+      ],
+      "house_price": 50,
+      "hotel_price": 50,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 9,
+      "name": "Kensington–Cedar Cottage",
+      "type": "light blue",
+      "buy_cost": 120,
+      "rent_cost": [
+        8,
+        16,
+        40,
+        100,
+        300,
+        450,
+        600
+      ],
+      "house_price": 50,
+      "hotel_price": 50,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 10,
+      "name": "Jail",
+      "type": "jail",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 11,
+      "name": "Fairview",
+      "type": "pink",
+      "buy_cost": 140,
+      "rent_cost": [
+        10,
+        20,
+        50,
+        150,
+        450,
+        625,
+        750
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 12,
+      "name": "Fortis BC",
+      "type": "utility",
+      "buy_cost": 150,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 13,
+      "name": "Oakridge",
+      "type": "pink",
+      "buy_cost": 140,
+      "rent_cost": [
+        10,
+        20,
+        50,
+        150,
+        450,
+        625,
+        750
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 14,
+      "name": "Marpole",
+      "type": "pink",
+      "buy_cost": 160,
+      "rent_cost": [
+        12,
+        24,
+        60,
+        180,
+        500,
+        700,
+        900
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 15,
+      "name": "Millenium Line",
+      "type": "railroad",
+      "buy_cost": 200,
+      "rent_cost": [
+        25,
+        50,
+        100,
+        200
+      ],
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 16,
+      "name": "Mount Pleasant",
+      "type": "orange",
+      "buy_cost": 180,
+      "rent_cost": [
+        14,
+        28,
+        70,
+        200,
+        550,
+        750,
+        950
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 17,
+      "name": "Community Chest",
+      "type": "community",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 18,
+      "name": "Coal Harbour",
+      "type": "orange",
+      "buy_cost": 180,
+      "rent_cost": [
+        14,
+        28,
+        70,
+        200,
+        550,
+        750,
+        950
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 19,
+      "name": "Killarney",
+      "type": "orange",
+      "buy_cost": 200,
+      "rent_cost": [
+        16,
+        32,
+        80,
+        220,
+        600,
+        800,
+        1000
+      ],
+      "house_price": 100,
+      "hotel_price": 100,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 20,
+      "name": "Not-so-free Parking",
+      "type": "parking",
+      "buy_cost": null,
+      "rent_cost": [200],
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 21,
+      "name": "Kitsilano",
+      "type": "red",
+      "buy_cost": 220,
+      "rent_cost": [
+        18,
+        36,
+        90,
+        250,
+        700,
+        875,
+        1050
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 22,
+      "name": "Chance",
+      "type": "chance",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 23,
+      "name": "Quilchena",
+      "type": "red",
+      "buy_cost": 220,
+      "rent_cost": [
+        18,
+        36,
+        90,
+        250,
+        700,
+        875,
+        1050
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 24,
+      "name": "Cambie",
+      "type": "red",
+      "buy_cost": 240,
+      "rent_cost": [
+        20,
+        40,
+        100,
+        300,
+        750,
+        925,
+        1100
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 25,
+      "name": "Canada Line",
+      "type": "railroad",
+      "buy_cost": 200,
+      "rent_cost": [
+        25,
+        50,
+        100,
+        200
+      ],
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 26,
+      "name": "Kerrisdale",
+      "type": "yellow",
+      "buy_cost": 260,
+      "rent_cost": [
+        22,
+        44,
+        110,
+        330,
+        800,
+        975,
+        1150
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 27,
+      "name": "Victoria–Fraserview",
+      "type": "yellow",
+      "buy_cost": 260,
+      "rent_cost": [
+        22,
+        44,
+        110,
+        330,
+        800,
+        975,
+        1150
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 28,
+      "name": "BC Hydro",
+      "type": "utility",
+      "buy_cost": 150,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 29,
+      "name": "Dunbar",
+      "type": "yellow",
+      "buy_cost": 280,
+      "rent_cost": [
+        24,
+        48,
+        120,
+        360,
+        850,
+        1025,
+        1200
+      ],
+      "house_price": 150,
+      "hotel_price": 150,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 30,
+      "name": "Go to Jail",
+      "type": "go_to_jail",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 31,
+      "name": "Arbutus Ridge",
+      "type": "green",
+      "buy_cost": 300,
+      "rent_cost": [
+        26,
+        52,
+        130,
+        390,
+        900,
+        1100,
+        1275
+      ],
+      "house_price": 200,
+      "hotel_price": 200,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 32,
+      "name": "South Granville",
+      "type": "green",
+      "buy_cost": 300,
+      "rent_cost": [
+        26,
+        52,
+        130,
+        390,
+        900,
+        1100,
+        1275
+      ],
+      "house_price": 200,
+      "hotel_price": 200,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 33,
+      "name": "Community Chest",
+      "type": "community",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 34,
+      "name": "Point Grey",
+      "type": "green",
+      "buy_cost": 320,
+      "rent_cost": [
+        28,
+        56,
+        150,
+        450,
+        1000,
+        1200,
+        1400
+      ],
+      "house_price": 200,
+      "hotel_price": 200,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 35,
+      "name": "West Coast Express",
+      "type": "railroad",
+      "buy_cost": 200,
+      "rent_cost": [
+        25,
+        50,
+        100,
+        200
+      ],
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 36,
+      "name": "Chance",
+      "type": "chance",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 37,
+      "name": "Shaughnessy Heights",
+      "type": "blue",
+      "buy_cost": 350,
+      "rent_cost": [
+        35,
+        70,
+        175,
+        500,
+        1100,
+        1300,
+        1500
+      ],
+      "house_price": 200,
+      "hotel_price": 200,
+      "upgrades": 0,
+      "owner": null
+    },
+    {
+      "id": 38,
+      "name": "Luxury Tax",
+      "type": "tax",
+      "buy_cost": null,
+      "rent_cost": null,
+      "house_price": null,
+      "hotel_price": null,
+      "upgrades": null,
+      "owner": null
+    },
+    {
+      "id": 39,
+      "name": "Southlands",
+      "type": "blue",
+      "buy_cost": 400,
+      "rent_cost": [
+        50,
+        100,
+        200,
+        600,
+        1400,
+        1700,
+        2000
+      ],
+      "house_price": 200,
+      "hotel_price": 200,
+      "upgrades": 0,
+      "owner": null
+    }
+  ]
